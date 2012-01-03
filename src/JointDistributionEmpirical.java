@@ -1,0 +1,191 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
+public class JointDistributionEmpirical extends JointDistribution {
+	boolean ready;
+	
+	int no_goods;
+	double precision;
+	double max_price;
+
+	int no_bins;
+
+	HashMap<List<Integer>, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
+	HashMap<List<Integer>, Integer>[] sum; // hash map from realized prices (as bins) to freq dist. sums, one per good
+	
+	// no_goods is the number of goods/auctions
+	public JointDistributionEmpirical(int no_goods, double precision, double max_price) {
+		reset(no_goods, precision, max_price);
+	}
+		
+	// Call this to reset the internal state. This is automatically
+	// called for you when you instantiate a new JointDistribution.
+	public void reset(int no_goods, double precision, double max_price) {
+		this.ready = false;
+	
+		this.no_goods = no_goods;
+		this.precision = precision;
+		this.max_price = max_price;
+		
+		this.no_bins = bin(max_price, precision) + 1;
+		
+		this.prob = new HashMap[no_goods];
+		
+		for (int i = 0; i<no_goods; i++)
+			this.prob[i] = new HashMap<List<Integer>, double[]>();
+
+		this.sum = new HashMap[no_goods];
+		
+		for (int i = 0; i<no_goods; i++)
+			this.sum[i] = new HashMap<List<Integer>, Integer>();
+	}
+	
+	// Call this once per realized price vector to populate the joint distribution
+	// realized.length must == no_goods from last reset()
+	public void populate(double[] realized) {
+		if (realized.length != no_goods)
+			throw new RuntimeException("length of realized price vector must == no_goods");
+
+		// for each good
+		int binned[] = new int[no_goods];
+		
+		for (int i = 0; i<no_goods; i++) {
+			// ensure we do not exceed the maximum price, or we will exceed array bounds later.
+			if (realized[i] > max_price)
+				realized[i] = max_price;
+
+			// bin the realized price for this good
+			binned[i] = bin(realized[i], precision);
+			
+			// create array with binned conditional prices only
+			Integer[] r_tmp = new Integer[i];
+			for (int j = 0; j<i; j++) 
+				r_tmp[j] = binned[j];
+			
+			List<Integer> r = Arrays.asList(r_tmp);
+
+			// get the distribution conditioned on earlier prices
+			double[] p = prob[i].get(r);
+			
+			if (p == null) {
+				// this is our first entry into the distribution; create it
+				p = new double[no_bins];
+			
+				p[ bin(realized[i], precision) ]++;
+				
+				prob[i].put(r, p);
+				sum[i].put(r, 1);
+			} else {
+				p[ bin(realized[i], precision) ]++;
+				
+				sum[i].put(r, sum[i].get(r) + 1);
+			}
+		}
+	}
+	
+	// Call this to normalize the collected data into a joint distribution
+	public void normalize() {
+		for (int i = 0; i<no_goods; i++) {
+			for (List<Integer> r : prob[i].keySet()) {				
+				double[] p = prob[i].get(r);
+				int s = sum[i].get(r);
+				
+				for (int j = 0; j<p.length; j++)
+					p[j] /= s;
+			}
+		}
+		
+		ready = true;
+	}
+	
+	@Override
+	public double getProb(double price, double[] realized) {
+		if (!ready)
+			throw new RuntimeException("must normalize first");
+		
+		if (realized == null)
+			realized = new double[0];
+		
+		if (realized.length == no_goods)
+			throw new IllegalArgumentException("no more goods");
+		
+		// bin the realized prices
+		Integer[] r_tmp = new Integer[realized.length];
+
+		for (int i = 0; i<realized.length; i++)
+			r_tmp[i] = bin(realized[i], precision);
+		
+		List<Integer> r = Arrays.asList(r_tmp);
+		
+		// get the price distribution conditional on realized prices
+		double[] p = prob[realized.length].get(r);
+		
+		if (p == null)
+			return 0.0; // TODO: should we return something else here?
+		
+		return p[ bin(price, precision) ];
+	}
+
+	@Override
+	public double getExpectedFinalPrice(double[] realized) {
+		if (!ready)
+			throw new RuntimeException("must normalize first");
+
+		if (realized == null)
+			realized = new double[0];
+
+		if (realized.length == no_goods)
+			throw new IllegalArgumentException("no more goods");
+
+		// bin the realized prices
+		Integer[] r_tmp = new Integer[realized.length];
+
+		for (int i = 0; i<realized.length; i++)
+			r_tmp[i] = bin(realized[i], precision);
+		
+		List<Integer> r = Arrays.asList(r_tmp);
+		
+		// get the price distribution conditional on realized prices
+		double[] p = prob[realized.length].get(r);
+				
+		if (p == null)
+			return 0.0; // TODO: should we return something else here?
+		
+		// compute expected final price
+		double efp = 0.0;
+		
+		for (int i = 0; i<p.length; i++)
+			efp += val(i, precision) * p[i];
+		
+		return efp;
+	}
+
+	public static void main(String args[]) {
+		// TESTING / EXAMPLE
+		JointDistributionEmpirical jde = new JointDistributionEmpirical(2, 1, 5);
+		
+		jde.populate(new double[] {1, 1});
+		jde.populate(new double[] {1, 2});
+		jde.populate(new double[] {1, 2});
+		jde.populate(new double[] {1, 5});
+		
+		jde.populate(new double[] {2, 2});
+		jde.populate(new double[] {2, 3});
+		jde.populate(new double[] {2, 3});
+		jde.populate(new double[] {2, 5});
+
+		jde.normalize();
+		
+		// get the expected final price of good 0; the list of conditional prices necessarily empty
+		System.out.println("efp({}) = " + jde.getExpectedFinalPrice(new double[] {}));
+		System.out.println("");
+		
+		// get the expected final price of good 1 for various values of good 0.
+		System.out.println("efp({0}) = " + jde.getExpectedFinalPrice(new double[] {0}));
+		System.out.println("efp({1}) = " + jde.getExpectedFinalPrice(new double[] {1}));
+		System.out.println("efp({2}) = " + jde.getExpectedFinalPrice(new double[] {2}));
+		System.out.println("efp({3}) = " + jde.getExpectedFinalPrice(new double[] {3}));
+	}
+}
