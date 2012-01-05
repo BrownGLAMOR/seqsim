@@ -187,5 +187,6 @@ public class JointDistributionEmpirical extends JointDistribution {
 		System.out.println("efp({1}) = " + jde.getExpectedFinalPrice(new double[] {1}));
 		System.out.println("efp({2}) = " + jde.getExpectedFinalPrice(new double[] {2}));
 		System.out.println("efp({3}) = " + jde.getExpectedFinalPrice(new double[] {3}));
+		
 	}
 }

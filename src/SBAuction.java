@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 // implements a sealed-bid auction with specified payment and allocation rule 
@@ -18,8 +19,6 @@ public abstract class SBAuction {
 	private int no_winners;
 	private double total_revenue;
 	private double last_ask_price; // the ask price of the previous round
-	
-
 	
 	public SBAuction(int auction_idx, double reserve_price, List<Agent> agents, AllocationRule ar, PaymentRule pr) {
 		this.auction_idx = auction_idx;
@@ -90,6 +89,22 @@ public abstract class SBAuction {
 		return bids;
 	}
 	
+	// return the "highest other bid" for agent agent_idx
+	public Double getHOB(int agent_idx) {
+		// list of bids to compare with
+		ArrayList<Bid> otherBids = new ArrayList<Bid>();
+		otherBids.addAll(bids);
+		otherBids.remove(agent_idx);
+		
+		double max_bid = otherBids.get(0).bid;
+		for (Bid b : otherBids) {
+			if (b.bid > max_bid)
+				max_bid = b.bid;
+		}
+		
+		return max_bid;
+	}
+	
 	// the price we asked for in the previous round (before solveAuction() was called)
 	public double getLastAskPrice() {
 		return last_ask_price;
@@ -123,4 +138,10 @@ public abstract class SBAuction {
 		for (Bid b : bids)
 			System.out.println("\t" + b.information());
 	}
+
 }
+
+
+
+
+

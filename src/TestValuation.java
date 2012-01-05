@@ -14,7 +14,7 @@ public class TestValuation extends Valuation {
 	@Override
 	public double getValue(Set<Integer> basket) {
 		if (basket.size() > 0)
-			return 1.0;
+			return 10.0;
 		else
 			return 0;
 	}
