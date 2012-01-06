@@ -4,6 +4,10 @@ public abstract class JointDistribution {
 	// given the list of realized prices.
 	public abstract double getProb(double price, double[] realized);
 
+	// get the probability mass function of the good numbered "realized.length",
+	// given the list of realized prices.
+	public abstract double[] getPMF(double[] realized);
+		
 	// get the expected price of the good numbered "realized.length", given list of
 	// realized prices.
 	public abstract double getExpectedFinalPrice(double[] realized);

@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +21,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 		
 	// Call this to reset the internal state. This is automatically
 	// called for you when you instantiate a new JointDistribution.
+	@SuppressWarnings("unchecked")
 	public void reset(int no_goods, double precision, double max_price) {
 		this.ready = false;
 	
@@ -31,12 +31,24 @@ public class JointDistributionEmpirical extends JointDistribution {
 		
 		this.no_bins = bin(max_price, precision) + 1;
 		
-		this.prob = new HashMap[no_goods];
+		// allocate a new probability hash map if we do not already have one
+		// -or- if the current one is not the right length
+		if (this.prob == null || this.prob.length != no_goods)
+			this.prob = new HashMap[no_goods];
+		else
+			for (HashMap<List<Integer>, double[]> p : this.prob)
+				p.clear();
 		
 		for (int i = 0; i<no_goods; i++)
 			this.prob[i] = new HashMap<List<Integer>, double[]>();
 
-		this.sum = new HashMap[no_goods];
+		// allocate a new sum hash map if we do not already have one
+		// -or- if the current one is not the right length
+		if (this.sum == null || this.sum.length != no_goods)
+			this.sum = new HashMap[no_goods];
+		else
+			for (HashMap<List<Integer>, Integer> s : this.sum)
+				s.clear();
 		
 		for (int i = 0; i<no_goods; i++)
 			this.sum[i] = new HashMap<List<Integer>, Integer>();
@@ -53,6 +65,8 @@ public class JointDistributionEmpirical extends JointDistribution {
 		
 		for (int i = 0; i<no_goods; i++) {
 			// ensure we do not exceed the maximum price, or we will exceed array bounds later.
+			// note that this bins all prices above max as the max, which could produce a skewed
+			// distribution.
 			if (realized[i] > max_price)
 				realized[i] = max_price;
 
@@ -129,6 +143,35 @@ public class JointDistributionEmpirical extends JointDistribution {
 	}
 
 	@Override
+	public double[] getPMF(double[] realized) {
+		if (!ready)
+			throw new RuntimeException("must normalize first");
+		
+		if (realized == null)
+			realized = new double[0];
+		
+		if (realized.length == no_goods)
+			throw new IllegalArgumentException("no more goods");
+		
+		// bin the realized prices
+		Integer[] r_tmp = new Integer[realized.length];
+
+		for (int i = 0; i<realized.length; i++)
+			r_tmp[i] = bin(realized[i], precision);
+		
+		List<Integer> r = Arrays.asList(r_tmp);
+		
+		// get the price distribution conditional on realized prices
+		double[] p = prob[realized.length].get(r);
+		
+		if (p == null)
+			return new double[no_goods]; // TODO: should we return something else here?
+		
+		return p;
+	}
+
+	
+	@Override
 	public double getExpectedFinalPrice(double[] realized) {
 		if (!ready)
 			throw new RuntimeException("must normalize first");
@@ -176,17 +219,59 @@ public class JointDistributionEmpirical extends JointDistribution {
 		jde.populate(new double[] {2, 3});
 		jde.populate(new double[] {2, 5});
 
+		jde.populate(new double[] {3, 5});
+		
+		jde.populate(new double[] {3, 5});
+		
 		jde.normalize();
 		
-		// get the expected final price of good 0; the list of conditional prices necessarily empty
-		System.out.println("efp({}) = " + jde.getExpectedFinalPrice(new double[] {}));
+		// get the PMF of good 0
+		double[] pmf;
+
+		System.out.print("pmf(0 | {}): ");
+		pmf = jde.getPMF(new double[] {});
+		
+		for (double p : pmf)
+			System.out.print(p + " ");
+		
+		System.out.println("");
+
+		// get PMF of good 1, cond. on price of good 0 being $1
+		System.out.print("pmf(1 | {1}): ");
+		pmf = jde.getPMF(new double[] {1});
+		
+		for (double p : pmf)
+			System.out.print(p + " ");
+		
+		System.out.println("");
+
+		// get PMF of good 1, cond. on price of good 0 being $2
+		System.out.print("pmf(1 | {2}): ");
+		pmf = jde.getPMF(new double[] {2});
+		
+		for (double p : pmf)
+			System.out.print(p + " ");
+		
 		System.out.println("");
 		
+		// get PMF of good 1, cond. on price of good 0 being $3
+		System.out.print("pmf(1 | {3}): ");
+		pmf = jde.getPMF(new double[] {3});
+		
+		for (double p : pmf)
+			System.out.print(p + " ");
+		
+		System.out.println("");
+		System.out.println("");
+		
+		// get the expected final price of good 0; the list of conditional prices necessarily empty
+		System.out.println("efp(0 | {}) = " + jde.getExpectedFinalPrice(new double[] {}));
+		
 		// get the expected final price of good 1 for various values of good 0.
-		System.out.println("efp({0}) = " + jde.getExpectedFinalPrice(new double[] {0}));
-		System.out.println("efp({1}) = " + jde.getExpectedFinalPrice(new double[] {1}));
-		System.out.println("efp({2}) = " + jde.getExpectedFinalPrice(new double[] {2}));
-		System.out.println("efp({3}) = " + jde.getExpectedFinalPrice(new double[] {3}));
+		System.out.println("efp(1 | {0}) = " + jde.getExpectedFinalPrice(new double[] {0}));
+		System.out.println("efp(1 | {1}) = " + jde.getExpectedFinalPrice(new double[] {1}));
+		System.out.println("efp(1 | {2}) = " + jde.getExpectedFinalPrice(new double[] {2}));
+		System.out.println("efp(1 | {3}) = " + jde.getExpectedFinalPrice(new double[] {3}));
 		
 	}
 }
