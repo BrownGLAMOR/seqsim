@@ -25,7 +25,7 @@ public class DMUValue extends Value {
 		
 		// create random values & sort them
 		double[] u = new double[no_goods];
-		double max_u = max_price / no_goods; // ensures v[no_goods] < max_price
+		double max_u = max_price / no_goods; // ensures v[i] < max_price for all i
 		
 		for (int i = 0; i<no_goods; i++)
 			u[i] = rng.nextDouble() * max_u;

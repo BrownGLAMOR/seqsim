@@ -19,7 +19,12 @@ public class SeqAuction {
 	double[][] bids;			// [good_id][agent_id] ==> bid amount by agent_id on good_id
 	double[] price;				// [good_id] ==> clearing_price (amount paid by winner)
 	int[] winner;				// [good_id] ==> agent_id (winner of auction good_id)
-
+	
+	int[] no_goods_won;			// [agent_id] ==> total cumulative number of goods this agent has won
+	double[] payment;			// [agent_id] ==> total cumulative payment for this agent
+	double[] valuation;			// [agent_id] ==> current valuation for the agent
+	double[] profit;			// [agent_id] ==> current profit for the agent
+	
 	// list of other agents
 	private SeqAgent[] agents;
 	
@@ -48,17 +53,43 @@ public class SeqAuction {
 		price = new double[no_goods];
 		winner = new int[no_goods];
 		
+		no_goods_won = new int[no_agents];
+		payment = new double[no_agents];
+		valuation = new double[no_agents];
+		profit = new double[no_agents];
+		
 		tmp = new int[no_agents];
+		
 		rng = new Random();
 	}
 	
 	// play the auction. it is safe to re-play the auction as many times as one wishes.
 	// the results are available in the public memory variables: bids, prices, hob, winner, etc.
 	public void play(boolean quiet) {
+		// reset our internal variables
+		for (int i = 0; i<no_goods; i++) {
+			fp[i] = 0.0;
+			sp[i] = 0.0;
+			price[i] = 0.0;
+			winner[i] = 0;
+			
+			for (int j = 0; j<no_agents; j++) {
+				bids[i][j] = 0.0;	
+			}
+		}
+
+		for (int j = 0; j<no_agents; j++) {
+			no_goods_won[j] = 0;
+			payment[j] = 0.0;
+			valuation[j] = 0.0;
+			profit[j] = 0.0;
+			tmp[j] = 0;
+		}
+		
 		// tell all the agents that we are playing a new game.
 		for (SeqAgent a : agents)
 			a.reset(this);
-		
+				
 		// play the game, one good at a time.
 		for (int i = 0; i<no_goods; i++) {
 			int cnt = 0;
@@ -90,17 +121,27 @@ public class SeqAuction {
 			}
 			
 			// choose a random winner from the set of winners
+			int winning_agent = tmp[rng.nextInt(cnt)];
+			winner[i] = winning_agent;
+
 			fp[i] = _fp;
 			sp[i] = _sp;
-			winner[i] = tmp[rng.nextInt(cnt)];
 			price[i] = nth_price == 1 ? _fp : _sp;
+
+			// record that winner has a payment obligation & an additional item won
+			// note that these are CUMULATIVE in the sense that they increase as the auction progresses.
+			// an agent may therefore query these during the course of the auction.
+			payment[winning_agent] += price[i];
+			no_goods_won[winning_agent] += 1; 
+			valuation[winning_agent] = agents[i].v.getValue(no_goods_won[winning_agent]);
+			profit[winning_agent] = valuation[winning_agent] - payment[winning_agent];
 			
 			// note that we do not explicitly post results back to the agent.
 			// if the agent desires to use auction information in its bidding
 			// decision for the next round, it should inspect the member
 			// variables of this auction (prices, bids, etc) during its getBid().			
 		}
-		
+				
 		// output debugging info
 		if (!quiet) {
 			System.out.println("GAME " + game_no);
@@ -108,12 +149,15 @@ public class SeqAuction {
 			for (int i = 0; i<no_goods; i++) {					
 				System.out.println("\tGood " + i + " [fp=" + fp[i] + ", sp=" + sp[i] + ", winner=" + winner[i] + ", price=" + price[i] + "]");
 
-				System.out.print("\t\tBids=[");
+				/*System.out.print("\t\tBids=[");
 				
 				for (int j = 0; j<no_agents; j++)
 					System.out.print(bids[i][j] + (j != no_agents-1 ? ", " : ""));
 				
 				System.out.println("");
+				*/
+				for (int j = 0; j<no_agents; j++)
+					System.out.println("\t\tAgent " + j + " [bid=" + bids[i][j] + ", no_goods=" + no_goods_won[j] + ", payment=" + payment[j] + ", value=" + valuation[j] + ", profit=" + profit[j] + "]");
 			}
 			
 			System.out.println("");
