@@ -17,22 +17,25 @@ public class FullMDPAgent extends Agent {
 			// Do MDP calculation when initiating agent
 			computeFullMDP(jde);
 
+
+			if (agent_idx==0){
 				System.out.println("\nAgent " + agent_idx + " Valuation:");
 					valuation.print();
+			}
+					/*
 
 				// Print out the mapping \pi: state --> optimal bid
 				System.out.println("\nAgent " + agent_idx + ": my /pi and V mapping: ");
-//				System.out.println("key set size = " + pi.keySet().size());
 				for (P_X_t pxt : pi.keySet()) {
 					System.out.println("pi("+pxt.toString()+") = " + pi.get(pxt));
 				}
 
 				for (P_X_t pxt : V.keySet()) {
 					System.out.println("V("+pxt.toString()+") = " + V.get(pxt));
-				}
-				
-			}
+				}				
+				*/
 
+	}
 
 	// Declare some variables. (X,t) is a state in MDP. Meaning: the set of goods obtained at step/auction t is X 		
 	ArrayList<Double> b, Q, Reward, f;
@@ -75,7 +78,6 @@ public class FullMDPAgent extends Agent {
 			for (double[] realized : genPrices) {
 				pxt = new P_X_t(realized,X,t);
 				V.put(pxt,valuation.getValue(X)); 
-//				System.out.println("setting state = "+pxt.toString());				
 			}
 		}
 
@@ -85,8 +87,6 @@ public class FullMDPAgent extends Agent {
 		// > Loop over auction t
 		for (t = no_slots-1; t>-1; t--){ 
 			 
-//			System.out.println("Agent " + agent_idx + ", t = " + t);
-
 			// list of possible bids (to maximize over)
 			b = new ArrayList<Double>();
 			b.add(0.0);
@@ -101,7 +101,6 @@ public class FullMDPAgent extends Agent {
 
     		// > Loop over possible realized historical prices
 			for (double[] realized : genPrices){				
-//				System.out.print("realized = ");
 				
 				// get conditional Distribution
 				f = new ArrayList<Double>();
@@ -122,7 +121,6 @@ public class FullMDPAgent extends Agent {
 	    		// > Loop over subsets of goods X = {0,...,t-1}
 	    		for (Set<Integer> X : genSet) {
 	    			pxt = new P_X_t(realized,X,t);
-//    				System.out.println("setting state = "+pxt.toString());
 
 	    			X_more = new HashSet<Integer>();
 		    		X_more.addAll(X);
@@ -132,30 +130,35 @@ public class FullMDPAgent extends Agent {
 		    		realized_plus = new double[realized.length+1];
     				for (int k = 0; k < realized.length; k++)
     					realized_plus[k] = realized[k];
-		    		
+		    		    				
 	    			// Compute Q(b,(realized,X,t)) for each bid b
 	    			Q = new ArrayList<Double>(); 
-		    		for (int i = 0; i < b.size(); i++) {
+		    		for (int i = 0; i < b.size(); i++) {		    			
 		    			temp2 = Reward.get(i);
+
 		    			// if agent wins round t
 		    			for (int j = 0; j < i; j++){
 		    				realized_plus[realized.length] = j*condDist.precision;
 		    				PXT = new P_X_t(realized_plus,X_more,t+1);
-//		    				System.out.println("PXT = "+PXT.toString());
 		    				temp2 += condDist.f.get(j)*V.get(PXT);
 		    			}
 		    			// if agent doesn't win round t
 		    			for (int j = i; j < condDist.f.size(); j++) {
 		    				realized_plus[realized.length] = j*condDist.precision;
-		    				
 		    				PXT = new P_X_t(realized_plus,X,t+1);
-//		    				System.out.println("PXT = "+PXT.toString());
-		    				temp2 += V.get(PXT);
 		    				temp2 += condDist.f.get(j)*V.get(PXT);
 		    			}
 		    			Q.add(temp2);
 		    		}
 
+		    		// print Q function
+		    		if (agent_idx == 0) {
+			    		System.out.print("Q(b,"+pxt.toString()+")=");
+			    		for (int i = 0; i < Q.size(); i++)
+			    			System.out.print(Q.get(i)+",");
+			    		System.out.println();
+		    		}
+		    		
 		    		// Find \pi_((realized,X,t)) = argmax_b Q(b,(realized,X,t))
 		    		max_value = Q.get(1);		// Value of largest Q((X,t),b) TODO: currently avoid bidding 0 by neglecting bid = 0.0; to fix later
 			    	max_idx = 1;				// Index of largest Q((X,t),b)
@@ -168,8 +171,6 @@ public class FullMDPAgent extends Agent {
 		    		// Now we found the optimal bid for state (X,t). Assign values to \pi((X,t)) and V((X,t))
 			    	V.put(pxt,Q.get(max_idx));
 		    		pi.put(pxt,b.get(max_idx));
-		    		System.out.println("pxt = "+pxt.toString());
-		    		System.out.println("key set size = " + pi.keySet().size());
 	    		}
     		}
 		    	
@@ -195,12 +196,15 @@ public class FullMDPAgent extends Agent {
 		// figure out realized HOBs
 		realized = new double[current_auction];
 		for (int i = 0; i < current_auction;i ++) {
-			realized[i] = results.get(i).getAuction().getHOB(agent_idx);
+			realized[i] = results.get(i).getAuction().getHOB(agent_idx);	// TODO: ad hoc way to make prices integers.
+			realized[i] = (int) realized[i];
 		}
 		
 		P_X_t state = new P_X_t(realized,goods_won,current_auction);			// Current state (realized,X,t)
 		HashMap<Integer, Double> bids = new HashMap<Integer, Double>();
 		bids.put(current_auction, pi.get(state));
+		
+		System.out.println("agent "+agent_idx+": state = "+state.toString()+", current auction = "+current_auction+", and bid = "+pi.get(state));
 /*		
 		if (valuation.getValue(0) > 0 && current_auction == 0 && bids.get(0) == 0) {
 			System.out.println("agent_idx: " + agent_idx + ", current_auction: " + current_auction + ", bid=" + bids.get(current_auction));

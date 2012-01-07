@@ -13,10 +13,12 @@ public class TestValuation extends Valuation {
 	
 	@Override
 	public double getValue(Set<Integer> basket) {
-		if (basket.size() > 0)
+		if (basket.size() == 2)
 			return 10.0;
+		else if (basket.size() == 1)
+			return 5.0;
 		else
-			return 0;
+			return 0.0;
 	}
 	
 	// Useless overrides... for formality purposes
