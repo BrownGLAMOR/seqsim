@@ -14,28 +14,25 @@ public class TestSeqAuction {
 		
 		// setup -- this is not time sensitive
 		SeqAgent[] agents = new RandomSeqAgent[no_agents];
-
 		for (int i = 0; i<no_agents; i++)
 			agents[i] = new RandomSeqAgent(i, new DMUValue(no_goods, max_price, rng));
 		
 		SeqAuction auction = new SeqAuction(agents, nth_price, no_goods);
 		
-		System.out.print("Playing simulations...");
+		System.out.println("Playing simulations...");
 		
 		// play lots of games -- this is the time sensitive part
 		long start = System.currentTimeMillis();
 		for (int i = 0; i<no_simulations; i++) {
 			// play the auction
-			auction.play(false);		// true=="quiet mode"
-			
+			auction.play(true);		// true=="quiet mode"
+
 			// do something with the results?
 		}
 		long finish = System.currentTimeMillis();
-		
 		System.out.println("done.");
-		
 		long elapsed = finish - start;
-		
+
 		System.out.println("Elapsed: " + elapsed + "ms.");
 		System.out.println("Rate: " + (no_simulations / (elapsed/1000.0)) + " auctions/second.");
 	}

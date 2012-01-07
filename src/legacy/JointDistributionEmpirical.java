@@ -1,3 +1,4 @@
+package legacy;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,9 +9,9 @@ import speed.MathOps;
 public class JointDistributionEmpirical extends JointDistribution {
 	boolean ready;
 	
-	int no_goods;
-	double precision;
-	double max_price;
+	public int no_goods;
+	public double precision;
+	public double max_price;
 
 	int no_bins;
 
