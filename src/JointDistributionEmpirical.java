@@ -2,6 +2,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import speed.MathOps;
+
 public class JointDistributionEmpirical extends JointDistribution {
 	boolean ready;
 	
@@ -50,8 +52,9 @@ public class JointDistributionEmpirical extends JointDistribution {
 			for (HashMap<List<Integer>, Integer> s : this.sum)
 				s.clear();
 		
+		int max_realizations = MathOps.ipow(this.no_bins, this.no_goods);
 		for (int i = 0; i<no_goods; i++)
-			this.sum[i] = new HashMap<List<Integer>, Integer>();
+			this.sum[i] = new HashMap<List<Integer>, Integer>(max_realizations);
 	}
 	
 	// Call this once per realized price vector to populate the joint distribution

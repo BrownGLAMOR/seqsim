@@ -98,7 +98,7 @@ public class SeqAuction {
 			// note that we do not explicitly post results back to the agent.
 			// if the agent desires to use auction information in its bidding
 			// decision for the next round, it should inspect the member
-			// variables of this auction (hob, prices, bids, etc) during its getBid().			
+			// variables of this auction (prices, bids, etc) during its getBid().			
 		}
 		
 		// output debugging info
