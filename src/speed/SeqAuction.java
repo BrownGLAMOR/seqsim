@@ -68,7 +68,7 @@ public class SeqAuction {
 	public void play(boolean quiet) {
 		// reset our internal variables
 		
-		// comemnted out those which really DON'T need to be cleared so long as the
+		// commented out those which really DON'T need to be cleared so long as the
 		// agent knows not to read array entries which havn't been populated yet.
 		// For example, if the agent it being asked to bid in auction n, it should
 		// only read information for auctions 0, ..., n-1
