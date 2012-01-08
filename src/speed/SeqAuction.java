@@ -67,7 +67,13 @@ public class SeqAuction {
 	// the results are available in the public memory variables: bids, prices, hob, winner, etc.
 	public void play(boolean quiet) {
 		// reset our internal variables
-		for (int i = 0; i<no_goods; i++) {
+		
+		// comemnted out those which really DON'T need to be cleared so long as the
+		// agent knows not to read array entries which havn't been populated yet.
+		// For example, if the agent it being asked to bid in auction n, it should
+		// only read information for auctions 0, ..., n-1
+		/*
+		 for (int i = 0; i<no_goods; i++) {
 			fp[i] = 0.0;
 			sp[i] = 0.0;
 			price[i] = 0.0;
@@ -77,13 +83,14 @@ public class SeqAuction {
 				bids[i][j] = 0.0;	
 			}
 		}
+		*/
 
 		for (int j = 0; j<no_agents; j++) {
 			no_goods_won[j] = 0;
 			payment[j] = 0.0;
-			valuation[j] = 0.0;
-			profit[j] = 0.0;
-			tmp[j] = 0;
+			//valuation[j] = 0.0;
+			//profit[j] = 0.0;
+			//tmp[j] = 0;
 		}
 		
 		// tell all the agents that we are playing a new game.
