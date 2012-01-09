@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import speed.JointDistribution;
+import speed.JointDistributionEmpirical;
+
 //Implements agent for Sequential SPSB auction based on MDP. Details of MDP is included in J's write up. 
 
 public class FullMDPAgent extends Agent {

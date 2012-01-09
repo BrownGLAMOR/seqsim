@@ -1,6 +1,5 @@
 package speed;
 
-
 public abstract class JointDistribution {
 	// get the probability of the good numbered "realized.length" taking on price "price",
 	// given the list of realized prices.
@@ -13,6 +12,9 @@ public abstract class JointDistribution {
 	// get the expected price of the good numbered "realized.length", given list of
 	// realized prices.
 	public abstract double getExpectedFinalPrice(double[] realized);
+	
+	// debug: get a print out of the JointDistribution
+	public abstract void output();
 	
 	//----- STATIC UTILITY FUNCTIONS BELOW THIS POINT -------
 	

@@ -1,5 +1,7 @@
 package legacy;
 
+import speed.JointDistributionEmpirical;
+
 // Simply testing "getPMF" in JointDistributionEmpirical. 
 public class TestgetPMF {
 	public static void main(String args[])

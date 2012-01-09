@@ -3,7 +3,6 @@ package speed;
 import java.util.Set;
 
 import legacy.CartesianProduct;
-import legacy.JointDistributionEmpirical;
 
 // Let's figure out how long it takes to do a full MDP calculation 
 

@@ -2,6 +2,8 @@ package legacy;
 import java.util.ArrayList;
 import java.util.List;
 
+import speed.JointDistributionEmpirical;
+
 // Runs a SeqSSSimulation Simulation to test if FullMDPAgent is working
 public class TestFullMDP {
 	

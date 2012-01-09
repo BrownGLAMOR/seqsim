@@ -1,5 +1,7 @@
 package speed;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
 
 public class SeqAuction {
@@ -12,14 +14,13 @@ public class SeqAuction {
 	// auction information; this is available to agents.
 	double[] fp;				// [good_id] ==> first price in the auction
 	double[] sp;				// [good_id] ==> second price in the auction
-	// note that an agent with id "agent_id" can determine its HOB for good "good_id" using
-	// the expression: (winner[good_id] == agent_id ? sp[good_id] : fp[good_id])
-	// that is, if you are the winner the highest other bid is the second price of the auction. 
-	// otherwise, the highest other bid is the first price of the auction.
-	double[][] bids;			// [good_id][agent_id] ==> bid amount by agent_id on good_id
 	double[] price;				// [good_id] ==> clearing_price (amount paid by winner)
 	int[] winner;				// [good_id] ==> agent_id (winner of auction good_id)
-	
+
+	double[][] bids;			// [good_id][agent_id] ==> bid amount by agent_id on good_id
+
+	double[][] hob;				// [agent_id][good_id] ==> agent_id's HOB for good_id
+
 	int[] no_goods_won;			// [agent_id] ==> total cumulative number of goods this agent has won
 	double[] payment;			// [agent_id] ==> total cumulative payment for this agent
 	double[] valuation;			// [agent_id] ==> current valuation for the agent
@@ -49,10 +50,13 @@ public class SeqAuction {
 		// do all of our memory allocations upfront.
 		fp = new double[no_goods];
 		sp = new double[no_goods];
-		bids = new double[no_goods][no_agents];
 		price = new double[no_goods];
 		winner = new int[no_goods];
-		
+
+		bids = new double[no_goods][no_agents];
+
+		hob = new double[no_agents][no_goods];
+
 		no_goods_won = new int[no_agents];
 		payment = new double[no_agents];
 		valuation = new double[no_agents];
@@ -65,7 +69,10 @@ public class SeqAuction {
 	
 	// play the auction. it is safe to re-play the auction as many times as one wishes.
 	// the results are available in the public memory variables: bids, prices, hob, winner, etc.
-	public void play(boolean quiet) {
+	
+	// if quiet == true, then no diagnostic output is sent to the screen
+	// if fw is non-null, then the FileWriter is appended with the data from this round
+	public void play(boolean quiet, FileWriter fw) throws IOException {
 		// reset our internal variables
 		
 		// commented out those which really DON'T need to be cleared so long as the
@@ -115,13 +122,13 @@ public class SeqAuction {
 					_sp = _fp;
 					_fp = bid;
 					
-					tmp[0] = i;
+					tmp[0] = j;
 					cnt = 1; // new highest bidder, force cnt to 1
 				} else if (bid == _fp) {
 					// additional winner. note that if agent 0 bids 0, this clause will activate. this is OK.
 					// note that this causes sp to equal fp due to the tie.
 					_sp = _fp;
-					tmp[cnt++] = i;
+					tmp[cnt++] = j;
 				} else if (bid > _sp) {
 					_sp = bid;
 				}
@@ -136,12 +143,19 @@ public class SeqAuction {
 			price[i] = nth_price == 1 ? _fp : _sp;
 
 			// record that winner has a payment obligation & an additional item won
-			// note that these are CUMULATIVE in the sense that they increase as the auction progresses.
+			// note that these are CUMULATIVE in the sense that they change as the auction progresses.
 			// an agent may therefore query these during the course of the auction.
 			payment[winning_agent] += price[i];
 			no_goods_won[winning_agent] += 1; 
-			valuation[winning_agent] = agents[i].v.getValue(no_goods_won[winning_agent]);
+			valuation[winning_agent] = agents[winning_agent].v.getValue(no_goods_won[winning_agent]);
 			profit[winning_agent] = valuation[winning_agent] - payment[winning_agent];
+			
+			// determine each agent's HOB for this good.
+			// that is, if you are the winner the highest other bid is the second price of the auction. 
+			// otherwise, the highest other bid is the first price of the auction.
+			for (int j = 0; j<agents.length; j++) {
+				hob[j][i] = winner[i] == j ? sp[i] : fp[i];
+			}
 			
 			// note that we do not explicitly post results back to the agent.
 			// if the agent desires to use auction information in its bidding
@@ -149,27 +163,43 @@ public class SeqAuction {
 			// variables of this auction (prices, bids, etc) during its getBid().			
 		}
 				
-		// output debugging info
+		// output debugging info?
 		if (!quiet) {
 			System.out.println("GAME " + game_no);
 
 			for (int i = 0; i<no_goods; i++) {					
 				System.out.println("\tGood " + i + " [fp=" + fp[i] + ", sp=" + sp[i] + ", winner=" + winner[i] + ", price=" + price[i] + "]");
 
-				/*System.out.print("\t\tBids=[");
-				
 				for (int j = 0; j<no_agents; j++)
-					System.out.print(bids[i][j] + (j != no_agents-1 ? ", " : ""));
-				
-				System.out.println("");
-				*/
-				for (int j = 0; j<no_agents; j++)
-					System.out.println("\t\tAgent " + j + " [bid=" + bids[i][j] + ", no_goods=" + no_goods_won[j] + ", payment=" + payment[j] + ", value=" + valuation[j] + ", profit=" + profit[j] + "]");
+					System.out.println("\t\tAgent " + j + " [bid=" + bids[i][j] + ", hob=" + hob[i][j] + "");
 			}
+			
+			for (int j = 0; j<no_agents; j++)
+				System.out.println("\tFinal Outcome - Agent " + j + ", no_goods_won=" + no_goods_won[j] + ", payment=" + payment[j] + ", value=" + valuation[j] + ", profit=" + profit[j] + "]");
 			
 			System.out.println("");
 		}
 
+		// write output to disk?
+		if (fw != null) {
+			// print out auction results, one good per line.
+			for (int i = 0; i<no_goods; i++) {
+				fw.write(game_no + ",Good," + i + "," + fp[i] + "," + sp[i] + "," + winner[i] + "," + price[i]);
+
+				// Note that we do not write hob[][] to disk to safe disk space. It can be recomputed
+				// recomputed from winner[i], fp[i] and sp[i]. If that is too cumbersome to do in
+				// post-processing, simply uncomment the output statement below.
+				for (int j = 0; j<no_agents; j++)
+					fw.write("," + bids[i][j] /* + "," + hob[i][j]*/ );
+				
+				fw.write("\n");
+			}
+
+			// print out final agent results, one agent per line
+			for (int j = 0; j<no_agents; j++)
+				fw.write(game_no + ",FinalAgent," + j + "," + no_goods_won[j] + "," + payment[j] + "," + valuation[j] + "," + profit[j] + "\n");
+		}
+		
 		game_no++;
 	}
 }

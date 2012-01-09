@@ -1,8 +1,11 @@
 package speed;
 
 public class RandomSeqAgent extends SeqAgent {
-	public RandomSeqAgent(int agent_idx, Value v) {
+	double max_bid;
+	
+	public RandomSeqAgent(int agent_idx, double max_bid, Value v) {
 		super(agent_idx, v);
+		this.max_bid = max_bid;
 	}
 
 	@Override
@@ -16,7 +19,7 @@ public class RandomSeqAgent extends SeqAgent {
 
 	@Override
 	public double getBid(int good_id) {
-		return Math.random();
+		return Math.random() * max_bid;
 	}
 
 }

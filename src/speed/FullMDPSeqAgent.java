@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import legacy.CartesianProduct;
-import legacy.JointDistribution;
-import legacy.JointDistributionEmpirical;
 import legacy.P_X_t;
 import legacy.PowerSet;
 
