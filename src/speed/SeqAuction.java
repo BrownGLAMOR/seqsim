@@ -171,7 +171,7 @@ public class SeqAuction {
 				System.out.println("\tGood " + i + " [fp=" + fp[i] + ", sp=" + sp[i] + ", winner=" + winner[i] + ", price=" + price[i] + "]");
 
 				for (int j = 0; j<no_agents; j++)
-					System.out.println("\t\tAgent " + j + " [bid=" + bids[i][j] + ", hob=" + hob[i][j] + "");
+					System.out.println("\t\tAgent " + j + " [bid=" + bids[i][j] + ", hob=" + hob[j][i] + "");
 			}
 			
 			for (int j = 0; j<no_agents; j++)

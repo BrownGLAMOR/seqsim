@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+// TODO: This class still needs to be optimized for speed in populate() and getPMF().
+//       In particular, get rid of the need to make a new Integer[] for each call.
+//       Maybe use thread local storage?
 
 public class JointDistributionEmpirical extends JointDistribution {
 	boolean ready;
@@ -13,6 +16,9 @@ public class JointDistributionEmpirical extends JointDistribution {
 	public double precision;
 	public double max_price;
 
+	double[] empty_array;
+	double[] all_zeros;
+	
 	int no_bins;
 
 	HashMap<List<Integer>, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
@@ -20,6 +26,9 @@ public class JointDistributionEmpirical extends JointDistribution {
 	
 	// no_goods is the number of goods/auctions
 	public JointDistributionEmpirical(int no_goods, double precision, double max_price) {
+		empty_array = new double[0];
+		all_zeros = new double[no_goods];
+
 		reset(no_goods, precision, max_price);
 	}
 		
@@ -130,30 +139,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 	
 	@Override
 	public double getProb(double price, double[] realized) {
-		if (!ready)
-			throw new RuntimeException("must normalize first");
-		
-		if (realized == null)
-			realized = new double[0];
-		
-		if (realized.length == no_goods)
-			throw new IllegalArgumentException("no more goods");
-		
-		// bin the realized prices
-		Integer[] r_tmp = new Integer[realized.length];
-
-		for (int i = 0; i<realized.length; i++)
-			r_tmp[i] = bin(realized[i], precision);
-		
-		List<Integer> r = Arrays.asList(r_tmp);
-		
-		// get the price distribution conditional on realized prices
-		double[] p = prob[realized.length].get(r);
-		
-		if (p == null)
-			return 0.0; // TODO: should we return something else here?
-		
-		return p[ bin(price, precision) ];
+		return getPMF(realized)[ bin(price, precision) ];
 	}
 
 	@Override
@@ -162,7 +148,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 			throw new RuntimeException("must normalize first");
 		
 		if (realized == null)
-			realized = new double[0];
+			realized = empty_array;
 		
 		if (realized.length == no_goods)
 			throw new IllegalArgumentException("no more goods");
@@ -179,7 +165,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 		double[] p = prob[realized.length].get(r);
 		
 		if (p == null)
-			return new double[no_goods]; // TODO: should we return something else here?
+			return all_zeros; // TODO: should we return something else here?
 		
 		return p;
 	}
@@ -219,6 +205,37 @@ public class JointDistributionEmpirical extends JointDistribution {
 		return efp;
 	}
 
+	@Override
+	public void output() {
+		int total_act = 0;
+		int total_exp = 0;
+		
+		for (int i = 0; i<no_goods; i++) {
+			int max_realizations = MathOps.ipow(this.no_bins, i);
+			
+			total_exp += max_realizations;
+			total_act += prob[i].size();
+			
+			System.out.println("prob[" + i + "].size() == " + prob[i].size() + ", max_realizations=" + max_realizations);
+			
+			for (Entry<List<Integer>, double[]> e : prob[i].entrySet()) {
+				System.out.print("pr(" + i + " | {");
+				
+				for (Integer p : e.getKey())
+					System.out.print(val(p, precision) + ", ");
+				
+				System.out.print("}) [hits=" + sum[i].get(e.getKey()) + "] ==> {");
+				
+				for (double p : e.getValue())
+					System.out.print(p + ", ");
+				
+				System.out.println("}");				
+			}
+		}
+		
+		System.out.println("Actual realizations == " + total_act + " of a maximum == " + total_exp);
+	}
+	
 	public static void main(String args[]) {
 		// TESTING / EXAMPLE
 		JointDistributionEmpirical jde = new JointDistributionEmpirical(2, 1, 5);
@@ -287,36 +304,11 @@ public class JointDistributionEmpirical extends JointDistribution {
 		System.out.println("efp(1 | {2}) = " + jde.getExpectedFinalPrice(new double[] {2}));
 		System.out.println("efp(1 | {3}) = " + jde.getExpectedFinalPrice(new double[] {3}));
 		
-	}
-
-	@Override
-	public void output() {
-		int total_act = 0;
-		int total_exp = 0;
+		/*System.out.println("");
+		System.out.println("Testing binning routine: ");
 		
-		for (int i = 0; i<no_goods; i++) {
-			int max_realizations = MathOps.ipow(this.no_bins, i);
-			
-			total_exp += max_realizations;
-			total_act += prob[i].size();
-			
-			System.out.println("prob[" + i + "].size() == " + prob[i].size() + ", max_realizations=" + max_realizations);
-			
-			for (Entry<List<Integer>, double[]> e : prob[i].entrySet()) {
-				System.out.print("pr(good " + i + " | {");
-				
-				for (Integer p : e.getKey())
-					System.out.print(val(p, precision) + ",");
-				
-				System.out.print("}) ==> {");
-				
-				for (double p : e.getValue())
-					System.out.print(p + ",");
-				
-				System.out.println("}");				
-			}
-		}
-		
-		System.out.println("Actual realizations == " + total_act + ", expected realizations == " + total_exp);
+		for (double x = 0; x<11; x += 0.1)
+			System.out.println("bin(" + x + ", 10) = " + bin(x, 1));
+			*/
 	}
 }
