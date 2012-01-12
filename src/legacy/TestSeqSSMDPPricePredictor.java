@@ -69,7 +69,7 @@ public class TestSeqSSMDPPricePredictor {
 		// Let's feed everyone the same input price prediction		
 		ArrayList<Double> weight = new ArrayList<Double>();	// dummy weights
 		ArrayList<ArrayList<DiscreteDistribution>> tmp = new ArrayList<ArrayList<DiscreteDistribution>>(no_pp_per_agent);
-		tmp.add(genPrediction(max_iterations[0], false, weight));	
+		tmp.add(genPrediction(max_iterations[0], false, weight));
 
 		for (int i = 0; i < no_agents; i++) {
 			System.out.println("GENERATING PRICE PREDICTION FOR AGENT " + i + ", max_iterations=" + max_iterations[i]);
