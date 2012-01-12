@@ -1,5 +1,6 @@
 package speed;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -121,13 +122,13 @@ public class FullMDPSeqAgent extends SeqAgent {
 		    			// if agent wins round t
 		    			for (int j = 0; j <= i; j++){
 		    				realized_plus[realized.length] = j*jde.precision;
-		    				PXT = new P_X_t(realized_plus,X_more,t+1);
+		    				PXT = new P_X_t(Arrays.copyOf(realized_plus, realized_plus.length),X_more,t+1);
 		    				temp2 += condDist[j]*V.get(PXT);
 		    			}
 		    			// if agent doesn't win round t
 		    			for (int j = i+1; j < condDist.length; j++) {
 		    				realized_plus[realized.length] = j*jde.precision;
-		    				PXT = new P_X_t(realized_plus,X,t+1);
+		    				PXT = new P_X_t(Arrays.copyOf(realized_plus, realized_plus.length),X,t+1);
 		    				temp2 += condDist[j]*V.get(PXT);
 		    			}
 		    			Q[i]=temp2;
