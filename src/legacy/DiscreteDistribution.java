@@ -7,8 +7,8 @@ public abstract class DiscreteDistribution implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -1785569628131713076L;
-	protected ArrayList<Double> f;
-	protected double precision;
+	public ArrayList<Double> f;
+	public double precision;
 	
 	// F is a vector of probabilities. The sum(F) must equal 1.
 	// precision is how prices are mapped to index of the vector.
