@@ -11,7 +11,6 @@ public class TimeFullMDP {
 		// Init cache. Must be done once at program start.
 		Cache.init();
 
-		SeqAgent agent;
 		double[] prices;
 		double precision = 1.0;
 		int no_simulations = 50, i;
@@ -37,7 +36,8 @@ public class TimeFullMDP {
 				long start = System.currentTimeMillis();
 				for (i = 0; i<no_simulations; i++) {
 					// initialize agent (MDP calculated in the mean time)
-					agent = new FullMDPSeqAgent(jde, valuation, 0);
+					FullMDPSeqAgent agent = new FullMDPSeqAgent(jde, valuation, 0);
+					// TODO when FullMDPSeqAgent is updated, we need to add setJoint() and reset() commands here
 				}
 				long finish = System.currentTimeMillis();
 				long elapsed = finish - start;
@@ -45,9 +45,12 @@ public class TimeFullMDP {
 
 				// play lots of games -- this is the time sensitive part
 				start = System.currentTimeMillis();
+				SeqAuction auction = new SeqAuction(null, 2, no_goods);
 				for (i = 0; i<no_simulations; i++) {
 					// initialize agent (MDP calculated in the mean time)
-					agent = new FullMDPNumGoodsSeqAgent(jde, valuation, 0);
+					FullMDPNumGoodsSeqAgent agent = new FullMDPNumGoodsSeqAgent(valuation, 0);
+					agent.setJointDistribution(jde);
+					agent.reset(auction);
 				}
 				finish = System.currentTimeMillis();
 				elapsed = finish - start;

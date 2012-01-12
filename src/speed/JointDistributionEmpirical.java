@@ -27,7 +27,6 @@ public class JointDistributionEmpirical extends JointDistribution {
 	// no_goods is the number of goods/auctions
 	public JointDistributionEmpirical(int no_goods, double precision, double max_price) {
 		empty_array = new double[0];
-		all_zeros = new double[no_goods];
 
 		reset(no_goods, precision, max_price);
 	}
@@ -35,14 +34,20 @@ public class JointDistributionEmpirical extends JointDistribution {
 	// Call this to reset the internal state. This is automatically
 	// called for you when you instantiate a new JointDistribution.
 	@SuppressWarnings("unchecked")
-	public void reset(int no_goods, double precision, double max_price) {
-		this.ready = false;
-	
+	public void reset(int no_goods, double precision, double max_price) {	
 		this.no_goods = no_goods;
 		this.precision = precision;
 		this.max_price = max_price;
 		
+		reset();
+	}
+	
+	public void reset() {
+		this.ready = false;
+
 		this.no_bins = bin(max_price, precision) + 1;
+
+		all_zeros = new double[this.no_bins];
 		
 		int max_realizations;
 		

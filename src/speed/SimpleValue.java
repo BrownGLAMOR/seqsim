@@ -4,7 +4,6 @@ import java.util.Random;
 
 // created for testing purposes
 public class SimpleValue extends Value{
-
 	double[] v;
 	
 	public SimpleValue(int no_goods) {
@@ -17,6 +16,11 @@ public class SimpleValue extends Value{
 	@Override
 	public double getValue(int no_goods_won) {
 		return v[no_goods_won];
+	}
+
+	@Override
+	public void reset() {
+		// nothing to do here, this valuation is static
 	}
 
 }

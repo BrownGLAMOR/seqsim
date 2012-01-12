@@ -17,12 +17,21 @@ import java.util.Random;
  */
 public class DMUValue extends Value {
 	int no_goods;
+	double max_price;
 	double[] v;
+	Random rng;
 	
 	public DMUValue(int no_goods, double max_price, Random rng) {
 		this.no_goods = no_goods;
 		this.v = new double[no_goods+1];
-		
+		this.rng = rng;
+
+		// generate a random valuation
+		reset();
+	}
+	
+	@Override
+	public void reset() {
 		// create random values & sort them
 		double[] u = new double[no_goods];
 		double max_u = max_price / no_goods; // ensures v[i] < max_price for all i
