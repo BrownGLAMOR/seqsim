@@ -21,7 +21,7 @@ public class X_t {
 		
 		X_t aThat = (X_t)that;
 		
-		return this.t == aThat.t && this.X.containsAll(aThat.X) && aThat.X.containsAll(this.X);
+		return this.t == aThat.t && X.size() == aThat.X.size() && this.X.containsAll(aThat.X);
 	}
 	
 	@Override

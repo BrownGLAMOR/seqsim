@@ -218,4 +218,19 @@ public class FullMDPAgent extends Agent {
 		return bids;
 	}
 
+	public static void main(String[] args) {
+		double[] prices = new double[2];
+		
+		prices[0] = 10;
+		prices[1] = 5;
+		
+		P_X_t one = new P_X_t(prices, null, 0);
+		
+		prices[1] = 25;
+		
+		P_X_t two = new P_X_t(prices, null, 0);
+		
+		System.out.println("one.realized.1 == " + one.realized[1]);
+		System.out.println("two.realized.1 == " + two.realized[1]);
+	}
 }

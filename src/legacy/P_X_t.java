@@ -22,21 +22,23 @@ public class P_X_t extends X_t {
 		if (! (that instanceof P_X_t))
 			return false;
 		
-		// compare elementwise
 		P_X_t aThat = (P_X_t) that;		
-		boolean ret = true;
-		if (aThat.realized.length != this.realized.length) {
-			ret = false;
-		} else {
-			for (int i = 0; i < this.realized.length; i++) {
-				if (aThat.realized[i] != this.realized[i]) {
-					ret = false;
+
+		// check to see if realized price vectors are the same?
+		if (this.realized != aThat.realized) {
+			// compare elementwise
+			if (aThat.realized.length != this.realized.length) {
+				return false;
+			} else {
+				for (int i = 0; i < this.realized.length; i++) {
+					if (aThat.realized[i] != this.realized[i]) {
+						return false;
+					}
 				}
 			}
-		}
-		ret = ret && this.t == aThat.t && this.X.containsAll(aThat.X) && aThat.X.containsAll(this.X);
-		
-		return ret;
+		} 
+	
+		return this.t == aThat.t && this.X.size() == aThat.X.size() && this.X.containsAll(aThat.X);
 	}
 
 	

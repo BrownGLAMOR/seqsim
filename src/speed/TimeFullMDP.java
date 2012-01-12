@@ -8,15 +8,17 @@ import legacy.CartesianProduct;
 
 public class TimeFullMDP {
 	public static void main(String args[]) {
+		// Init cache. Must be done once at program start.
+		Cache.init();
 
 		SeqAgent agent;
 		double[] prices;
 		double precision = 1.0;
-		int no_simulations = 20, i;
+		int no_simulations = 50, i;
 		Set<double[]> genPrices;
 		
 		for (int no_goods = 2; no_goods <= 5; no_goods++){
-			for (double max_price = 2; max_price <= 20; max_price++) {
+			for (double max_price = 2; max_price <= 10; max_price++) {
 				System.out.print("no_goods = " + no_goods + ", no_possible_prices = " + (int)(max_price+1));
 				Value valuation = new SimpleValue(no_goods);						// Create valuation				
 
@@ -39,10 +41,19 @@ public class TimeFullMDP {
 				}
 				long finish = System.currentTimeMillis();
 				long elapsed = finish - start;
-				System.out.println(", speed = " + (int) (elapsed/no_simulations) +" ms/auction");
-			}
+				System.out.print(", FullMDPSeqAgent speed = " + (elapsed/(double)no_simulations) +" ms/auction");
+
+				// play lots of games -- this is the time sensitive part
+				start = System.currentTimeMillis();
+				for (i = 0; i<no_simulations; i++) {
+					// initialize agent (MDP calculated in the mean time)
+					agent = new FullMDPNumGoodsSeqAgent(jde, valuation, 0);
+				}
+				finish = System.currentTimeMillis();
+				elapsed = finish - start;
+				System.out.println(", FullMDPNumGoodsSeqAgent speed = " + (elapsed/(double)no_simulations) +" ms/auction");
+}
 			System.out.println();
 		}
-	}
-	
-	}
+	}	
+}
