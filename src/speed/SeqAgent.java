@@ -27,4 +27,8 @@ public abstract class SeqAgent {
 	// from previous rounds, it should inspect the public member variables of the SeqAuction instance
 	// it was given in the last reset();
 	public abstract double getBid(int good_id);
+
+	public void setJointDistribution(JointDistributionEmpirical jde_old){
+	}
+
 }

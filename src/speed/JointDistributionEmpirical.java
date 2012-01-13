@@ -30,6 +30,10 @@ public class JointDistributionEmpirical extends JointDistribution {
 	
 	// no_goods is the number of goods/auctions
 	public JointDistributionEmpirical(int no_goods, double precision, double max_price) {
+		this.no_goods = no_goods;
+		this.precision = precision;
+		this.max_price = max_price;
+		
 		empty_array = new double[0];
 
 		reset(no_goods, precision, max_price);

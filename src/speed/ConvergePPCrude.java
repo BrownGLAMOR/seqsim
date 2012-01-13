@@ -8,8 +8,8 @@ import legacy.DiscreteDistribution;
 import legacy.DiscreteDistributionWellman;
 import legacy.Histogram;
 
-// Runs PP-updates, with one agent updating at a time
-public class ConvergePP {
+// Runs PP-updates, with all agents updating together
+public class ConvergePPCrude {
 
 	public static void main(String[] args) throws IOException {
 
@@ -70,47 +70,53 @@ public class ConvergePP {
 		// 2) Do price prediction (iterations)
 		for (int iteration = 0; iteration < max_iteration; iteration++) {
 
-			// update each agent at a time
-			for (int agent_idx = 0; agent_idx < no_agents; agent_idx++) {
+			pp_new = new JointDistributionEmpirical[no_agents];
+			h_new = new Histogram[no_agents][no_goods];
+			pd_new = new DiscreteDistribution[no_agents][no_goods];
 
-				pp_new[agent_idx] = new JointDistributionEmpirical(no_goods, precision, max_price);
-				h_new[agent_idx] = new Histogram[no_goods];
-				pd_new[agent_idx] = new DiscreteDistribution[no_goods];
-				for (int j =0; j < no_goods; j++) 
-					h_new[agent_idx][j] = new Histogram(precision);
+			for (int i = 0; i < no_agents; i++) {	
+				pp_new[i] = new JointDistributionEmpirical(no_goods, precision, max_price);
+				for (int j =0; j < no_goods; j++) {
+					h_new[i][j] = new Histogram(precision);
+				}
+			}
 				
-				// > Simulations
-				for (int j = 0; j<no_simulations; j++) {				
-				// Cause each agent to take on a new valuation
-					for (int k = 0; k<no_agents; k++)
-						agents[k].v.reset();
-				
+			// > Simulations
+			for (int j = 0; j<no_simulations; j++) {				
+			// Cause each agent to take on a new valuation
+				for (int k = 0; k<no_agents; k++)
+					agents[k].v.reset();
+			
 				// Play the auction. This will call the agent's reset(), which will cause MDP to be recomputed.
 				auction.play(true, null);		// true=="quiet mode", null=="don't write to disk"
-				
+						
 				// Add results
-				pp_new[agent_idx].populate(auction.hob[agent_idx]);
-				for (int l = 0; l < no_goods; l++)
-					h_new[agent_idx][l].add(auction.hob[agent_idx][l]);
+				for (int i = 0; i < no_agents; i++){
+						pp_new[i].populate(auction.hob[i]);
+						for (int l = 0; l < no_goods; l++)
+							h_new[i][l].add(auction.hob[i][l]);
 				}
-				
-				// normalize
-				pp_new[agent_idx].normalize();
-				for (int l = 0; l < no_goods; l++)
-					pd_new[agent_idx][l] = new DiscreteDistributionWellman(h_new[agent_idx][l].getDiscreteDistribution(), precision);
-
-				// print KS statistic
-				System.out.print("iteration " + iteration + ", agent " + agent_idx + "'s marginal KS's: \t");
-				System.out.print("[");
-				for (int l = 0; l < no_goods; l++)
-					System.out.print(pd_new[agent_idx][l].getKSStatistic(pd_old[agent_idx][l])+" ");
-				System.out.print("]\n");
-				
-				// assign new distributions
-				pp_old[agent_idx] = pp_new[agent_idx];
-				agents[agent_idx].setJointDistribution(pp_new[agent_idx]);
-				pd_old[agent_idx] = pd_new[agent_idx];
 			}
+					
+			// normalize, and print KS statistic 
+			System.out.print("iteration " + iteration + ", agents' marginal KS's: \t");
+			for (int i = 0; i < no_agents; i++){
+				pp_new[i].normalize();
+				System.out.print("[");
+				for (int l = 0; l < no_goods; l++) {
+					pd_new[i][l] = new DiscreteDistributionWellman(h_new[i][l].getDiscreteDistribution(), precision);
+					System.out.print(pd_new[i][l].getKSStatistic(pd_old[i][l])+" ");
+				}
+				System.out.print("]\t");
+			}
+			System.out.println();
+			
+				
+			// assign new distribution
+			pp_old = pp_new;
+			pd_old = pd_new;
+			for (int i = 0; i < no_agents; i++)
+				agents[i].setJointDistribution(pp_new[i]);				
 		}
 	}
 }

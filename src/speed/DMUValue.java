@@ -25,7 +25,8 @@ public class DMUValue extends Value {
 		this.no_goods = no_goods;
 		this.v = new double[no_goods+1];
 		this.rng = rng;
-
+		this.max_price = max_price;
+		
 		// generate a random valuation
 		reset();
 	}
@@ -46,6 +47,8 @@ public class DMUValue extends Value {
 		// note we access u[] in descending order.
 		for (int i = 1; i<v.length; i++)
 			v[i] = v[i-1] + u[u.length - i];
+		
+//		System.out.println("resetting: " + max_price + " " + no_goods + " " + u[0] + " " + u[1]);
 	}
 
 	@Override

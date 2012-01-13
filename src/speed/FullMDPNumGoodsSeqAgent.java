@@ -46,6 +46,13 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 		for (int i = 0; i < price_length; i++)
 			prices[i] = i*jde.precision;
 
+////		print prices
+//		System.out.println("t = " + t);
+//		System.out.print("prices = ");
+//		for (int i = 0; i < prices.length; i++)
+//			System.out.print(prices[i]+" ");
+//		System.out.println();
+		
 		// Assign values to states
 		// x == no_goods_won (the "X" in our state)
 		for (int x = 0; x<=jde.no_goods; x++) {
@@ -149,6 +156,7 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 		computeFullMDP();
 	}
 
+	@Override
 	public void setJointDistribution(JointDistributionEmpirical jde) {
 		this.jde = jde;
 		price_length = (int) (jde.max_price/jde.precision+1);	// (used in computeFullMDP)
