@@ -1,9 +1,11 @@
 package speed;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Random;
 
 // TODO: This class still needs to be optimized for speed in populate() and getPMF().
 //       In particular, get rid of the need to make a new Integer[] for each call.
@@ -17,7 +19,9 @@ public class JointDistributionEmpirical extends JointDistribution {
 	public double max_price;
 
 	double[] empty_array;
-	double[] all_zeros;
+	
+	int avg_sum;
+	double[][] avg_prob;		// [good_id][pmf idx]
 	
 	int no_bins;
 
@@ -46,8 +50,9 @@ public class JointDistributionEmpirical extends JointDistribution {
 		this.ready = false;
 
 		this.no_bins = bin(max_price, precision) + 1;
-
-		all_zeros = new double[this.no_bins];
+		
+		this.avg_prob = new double[this.no_goods][this.no_bins];
+		this.avg_sum = 0;
 		
 		int max_realizations;
 		
@@ -110,26 +115,31 @@ public class JointDistributionEmpirical extends JointDistribution {
 
 			// get the distribution conditioned on earlier prices
 			double[] p = prob[i].get(r);
-			
+						
 			if (p == null) {
 				// this is our first entry into the distribution; create it
 				p = new double[no_bins];
 			
-				p[ bin(realized[i], precision) ]++;
+				p[binned[i]]++;
 				
 				prob[i].put(r, p);
 				sum[i].put(r, 1);
 			} else {
-				p[ bin(realized[i], precision) ]++;
+				p[binned[i]]++;
 				
 				sum[i].put(r, sum[i].get(r) + 1);
 			}
+
+			// record unconditional probability
+			avg_prob[i][binned[i]]++;
 		}
+
+		avg_sum++;
 	}
 	
 	// Call this to normalize the collected data into a joint distribution
 	public void normalize() {
-		for (int i = 0; i<no_goods; i++) {
+		for (int i = 0; i<no_goods; i++) {			
 			for (List<Integer> r : prob[i].keySet()) {				
 				double[] p = prob[i].get(r);
 				int s = sum[i].get(r);
@@ -137,6 +147,9 @@ public class JointDistributionEmpirical extends JointDistribution {
 				for (int j = 0; j<p.length; j++)
 					p[j] /= s;
 			}
+
+			for (int j = 0; j<no_bins; j++)
+				avg_prob[i][j] /= avg_sum;
 		}
 		
 		ready = true;
@@ -148,6 +161,8 @@ public class JointDistributionEmpirical extends JointDistribution {
 	}
 
 	@Override
+	// Gets the probability mass function for good numbered "realized.length", conditional
+	// on realized prices
 	public double[] getPMF(double[] realized) {
 		if (!ready)
 			throw new RuntimeException("must normalize first");
@@ -169,38 +184,22 @@ public class JointDistributionEmpirical extends JointDistribution {
 		// get the price distribution conditional on realized prices
 		double[] p = prob[realized.length].get(r);
 		
-		if (p == null)
-			return all_zeros; // TODO: should we return something else here?
+		if (p == null) {
+			// ut-oh, return the unconditional pmf for this good since we have no data)
+			// todo: we return this when no samples == 0, but maybe we need logic to 
+			//       return this when no samples < viable threshold
+			p = avg_prob[realized.length];
+		}
 		
 		return p;
 	}
-
 	
 	@Override
-	public double getExpectedFinalPrice(double[] realized) {
-		if (!ready)
-			throw new RuntimeException("must normalize first");
-
-		if (realized == null)
-			realized = new double[0];
-
-		if (realized.length == no_goods)
-			throw new IllegalArgumentException("no more goods");
-
-		// bin the realized prices
-		Integer[] r_tmp = new Integer[realized.length];
-
-		for (int i = 0; i<realized.length; i++)
-			r_tmp[i] = bin(realized[i], precision);
-		
-		List<Integer> r = Arrays.asList(r_tmp);
-		
+	// return the expected final price for good "realized.length", conditional on realized prices
+	public double getExpectedFinalPrice(double[] realized) {	
 		// get the price distribution conditional on realized prices
-		double[] p = prob[realized.length].get(r);
+		double[] p = getPMF(realized);
 				
-		if (p == null)
-			return 0.0; // TODO: should we return something else here?
-		
 		// compute expected final price
 		double efp = 0.0;
 		
@@ -210,6 +209,42 @@ public class JointDistributionEmpirical extends JointDistribution {
 		return efp;
 	}
 
+	// sample the probability distribution, and returns an array of prices, one per good
+	@Override
+	public double[] getSample(Random rng) {
+		ArrayList<Integer> realized = new ArrayList<Integer>(no_goods);
+		double prices[] = new double[no_goods];
+		
+		for (int i = 0; i<no_goods; i++) {
+			double[] pmf = prob[realized.size()].get(realized);
+	
+			// choose a random spot on the cdf
+			double random = rng.nextDouble();
+			
+			// compute cdf. todo: maybe we should precompute inverse of cdf in normalize() so that
+			// we can avoid a loop here?
+			double cdf = 0.0;
+			for (int j = 0; j<pmf.length; j++) {
+				cdf += pmf[j];
+				
+				if (cdf >= random) {
+					prices[i] = j;
+					
+					// add index to realized so that in next round we get the pmf conditional
+					// on our result for this round
+					realized.add(bin(prices[i], precision));
+					
+					// go onto next good
+					break;
+				}
+			}
+			
+			// sanity check: make sure we picked something. 
+		}
+		
+		return prices;
+	}
+	
 	@Override
 	public void output() {
 		int total_act = 0;
@@ -243,6 +278,8 @@ public class JointDistributionEmpirical extends JointDistribution {
 	
 	public static void main(String args[]) {
 		// TESTING / EXAMPLE
+		Random rng = new Random();
+		
 		JointDistributionEmpirical jde = new JointDistributionEmpirical(2, 1, 5);
 		
 		jde.populate(new double[] {1, 1});
@@ -298,6 +335,17 @@ public class JointDistributionEmpirical extends JointDistribution {
 			System.out.print(p + " ");
 		
 		System.out.println("");
+		
+		// get the PMF of good 1, conf on price of good 0 being $0
+		System.out.print("pmf(1 | {0}): ");
+		pmf = jde.getPMF(new double[] {0});
+		
+		for (double p : pmf)
+			System.out.print(p + " ");
+		
+		System.out.println("");
+		
+		//
 		System.out.println("");
 		
 		// get the expected final price of good 0; the list of conditional prices necessarily empty
@@ -308,6 +356,19 @@ public class JointDistributionEmpirical extends JointDistribution {
 		System.out.println("efp(1 | {1}) = " + jde.getExpectedFinalPrice(new double[] {1}));
 		System.out.println("efp(1 | {2}) = " + jde.getExpectedFinalPrice(new double[] {2}));
 		System.out.println("efp(1 | {3}) = " + jde.getExpectedFinalPrice(new double[] {3}));
+		
+		System.out.println("");
+		System.out.println("sampled prices:");
+		for (int i = 0; i<20; i++) {
+			double[] sample = jde.getSample(rng);
+
+			System.out.print(i + ": {");
+			
+			for (double d : sample) 
+				System.out.print(d + ", ");
+			
+			System.out.println("}");			
+		}
 		
 		/*System.out.println("");
 		System.out.println("Testing binning routine: ");

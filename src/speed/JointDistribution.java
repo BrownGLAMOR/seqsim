@@ -1,5 +1,7 @@
 package speed;
 
+import java.util.Random;
+
 public abstract class JointDistribution {
 	// get the probability of the good numbered "realized.length" taking on price "price",
 	// given the list of realized prices.
@@ -12,6 +14,9 @@ public abstract class JointDistribution {
 	// get the expected price of the good numbered "realized.length", given list of
 	// realized prices.
 	public abstract double getExpectedFinalPrice(double[] realized);
+	
+	// samples the joint distribution and returns an array of prices, one per good.
+	public abstract double[] getSample(Random rng);
 	
 	// debug: get a print out of the JointDistribution
 	public abstract void output();
