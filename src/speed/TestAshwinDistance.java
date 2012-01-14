@@ -7,6 +7,7 @@ import java.util.Random;
 public class TestAshwinDistance {
 
 	public static void main(String[] args) throws IOException {
+		Cache.init();
 		
 		Random rng = new Random();
 		double precision = 1.0;
