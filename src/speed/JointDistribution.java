@@ -23,6 +23,29 @@ public abstract class JointDistribution {
 	
 	//----- STATIC UTILITY FUNCTIONS BELOW THIS POINT -------
 	
+	// get the KS statistic between two distributions
+	public static double getKSStatistic(double[] a, double[] b) {
+		assert (a.length == b.length);
+		
+		double a_cdf = 0.0;
+		double b_cdf = 0.0;
+		double max_diff = 0.0;
+		
+		for (int i = 0; i<a.length; i++) {
+			// compute cdf
+			a_cdf += a[i];
+			b_cdf += b[i];
+			
+			double diff = a_cdf - b_cdf;		// find difference
+			diff = diff < 0 ? -diff : diff; 	// take abs value
+			
+			if (diff > max_diff)
+				max_diff = diff;
+		}
+		
+		return max_diff;
+	}
+	
 	// given a price and precision, return the bin in the histogram
 	public static int bin(double p, double precision) {
 		return (int)(.5 + p / precision);		

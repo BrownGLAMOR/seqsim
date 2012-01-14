@@ -39,6 +39,8 @@ public class FullMDPSeqAgent extends SeqAgent {
 
 		// Compute MDP
 		computeFullMDP(jde);
+		
+		throw new RuntimeException("ERROR: DO NOT USE THIS AGENT UNTIL IT IS BROUGHT INTO SPEC. WITH AUCTION API");
 	}
 	
 	

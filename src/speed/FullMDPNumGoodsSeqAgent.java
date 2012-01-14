@@ -42,21 +42,11 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 		int t = jde.no_goods;
 		
 		// Start from the whole set, and assign V values to all its power sets		
-		final double[] prices = new double[price_length];	// enumerate over all realized prices
-		for (int i = 0; i < price_length; i++)
-			prices[i] = i*jde.precision;
-
-////		print prices
-//		System.out.println("t = " + t);
-//		System.out.print("prices = ");
-//		for (int i = 0; i < prices.length; i++)
-//			System.out.print(prices[i]+" ");
-//		System.out.println();
 		
 		// Assign values to states
 		// x == no_goods_won (the "X" in our state)
 		for (int x = 0; x<=jde.no_goods; x++) {
-			for (double[] realized : Cache.getCartesianProduct(prices, t))
+			for (double[] realized : Cache.getCartesianProduct(jde.prices, t))
 			{
 				//System.out.println("V[x=" + x + "][t=" + t + "][prices=" + realized + "] => " + valuation.getValue(x));
 				V[x][t].put(new DoubleArray(realized), v.getValue(x)); 
@@ -72,13 +62,13 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 		// > Loop over auction t
 		for (t = jde.no_goods-1; t>-1; t--) {
 			// ----- loops start here
-			for (int i = 0; i < prices.length; i++)
+			for (int i = 0; i < jde.prices.length; i++)
 				b[i]=jde.precision*((double) (i+(i+1))/2-0.1);		// bid = (p_{i}+p_{i+1})/2 - 0.1*precision	
 
 			//System.out.println("START t = " + t + " (genPrices=" + genPrices.size() + ")");
 
     		// > Loop over possible realized historical prices
-			for (double[] realized : Cache.getCartesianProduct(prices, t)) {
+			for (double[] realized : Cache.getCartesianProduct(jde.prices, t)) {
 				/*System.out.print("p{");
 				for (double d : realized)
 					System.out.print(d + ",");

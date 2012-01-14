@@ -20,8 +20,12 @@ public class JointDistributionEmpirical extends JointDistribution {
 
 	double[] empty_array;
 	
-	int avg_sum;
-	double[][] avg_prob;		// [good_id][pmf idx]
+	int marg_sum;
+	double[][] marg_prob;		// [good_id][pmf idx]
+	
+	double prices[];			// the value of each bin in the pmf
+	
+	double witnessed_max_price;
 	
 	int no_bins;
 
@@ -52,11 +56,16 @@ public class JointDistributionEmpirical extends JointDistribution {
 	
 	public void reset() {
 		this.ready = false;
-
+		this.witnessed_max_price = 0.0;
+		
 		this.no_bins = bin(max_price, precision) + 1;
 		
-		this.avg_prob = new double[this.no_goods][this.no_bins];
-		this.avg_sum = 0;
+		this.marg_prob = new double[this.no_goods][this.no_bins];
+		this.marg_sum = 0;
+		
+		this.prices = new double[this.no_bins];
+		for (int i = 0; i<this.no_bins; i++)
+			this.prices[i] = bin(i, precision);
 		
 		int max_realizations;
 		
@@ -93,7 +102,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 	
 	// Call this once per realized price vector to populate the joint distribution
 	// realized.length must == no_goods from last reset()
-	public void populate(double[] realized) {
+	public synchronized void populate(double[] realized) {
 		if (realized.length != no_goods)
 			throw new RuntimeException("length of realized price vector must == no_goods");
 
@@ -101,6 +110,10 @@ public class JointDistributionEmpirical extends JointDistribution {
 		int binned[] = new int[no_goods];
 		
 		for (int i = 0; i<no_goods; i++) {
+			// record max price witnessed
+			if (realized[i] > witnessed_max_price)
+				witnessed_max_price = realized[i];
+			
 			// ensure we do not exceed the maximum price, or we will exceed array bounds later.
 			// note that this bins all prices above max as the max, which could produce a skewed
 			// distribution.
@@ -135,10 +148,10 @@ public class JointDistributionEmpirical extends JointDistribution {
 			}
 
 			// record unconditional probability
-			avg_prob[i][binned[i]]++;
+			marg_prob[i][binned[i]]++;
 		}
 
-		avg_sum++;
+		marg_sum++;
 	}
 	
 	// Call this to normalize the collected data into a joint distribution
@@ -153,7 +166,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 			}
 
 			for (int j = 0; j<no_bins; j++)
-				avg_prob[i][j] /= avg_sum;
+				marg_prob[i][j] /= marg_sum;
 		}
 		
 		ready = true;
@@ -192,7 +205,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 			// ut-oh, return the unconditional pmf for this good since we have no data)
 			// todo: we return this when no samples == 0, but maybe we need logic to 
 			//       return this when no samples < viable threshold
-			p = avg_prob[realized.length];
+			p = marg_prob[realized.length];
 		}
 		
 		return p;
@@ -216,6 +229,9 @@ public class JointDistributionEmpirical extends JointDistribution {
 	// sample the probability distribution, and returns an array of prices, one per good
 	@Override
 	public double[] getSample(Random rng) {
+		if (!ready)
+			throw new RuntimeException("must normalize first");
+		
 		ArrayList<Integer> realized = new ArrayList<Integer>(no_goods);
 		double prices[] = new double[no_goods];
 		
@@ -247,6 +263,19 @@ public class JointDistributionEmpirical extends JointDistribution {
 		}
 		
 		return prices;
+	}
+	
+	// get the marginal distribution for good id, assuming independent prices
+	public double[] getMarginalDist(int good_id) {
+		if (!ready)
+			throw new RuntimeException("must normalize first");
+		
+		return marg_prob[good_id];
+	}
+	
+	// get the maximum price witnessed across all goods
+	public double getWitnessedMaxPrice() {	
+		return witnessed_max_price;
 	}
 	
 	@Override

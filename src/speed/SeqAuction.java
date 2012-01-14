@@ -27,7 +27,7 @@ public class SeqAuction {
 	double[] profit;			// [agent_id] ==> current profit for the agent
 	
 	// list of other agents
-	private SeqAgent[] agents;
+	SeqAgent[] agents;
 	
 	// temporary list of winners. this is a memory variable so that
 	// we need only instantiate once (performance optimization).
