@@ -12,7 +12,7 @@ import java.util.Random;
 [9:12:11 PM] Jiacui Li: v(num of goods won) = utility.
 [9:12:41 PM] Jiacui Li: We can, say, generate u_1, u_2 from uniform (0,10).
 [9:12:51 PM] Jiacui Li: Sort them, so that u_2 >= u_1.
-[9:13:04 PM] Jiacui Li: Then, assign v(1)=u_1, v(2)=u_1+u_2.
+[9:13:04 PM] Jiacui Li: Then, assign v(1)=u_2, v(2)=u_1+u_2.
 [9:13:11 PM] Jiacui Li: The case for more than 2 goods is analogous.
  */
 public class DMUValue extends Value {

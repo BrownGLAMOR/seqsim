@@ -113,7 +113,8 @@ public class SeqAuction {
 			for (int j = 0; j<agents.length; j++) {
 				// ask each agent for its bid
 				double bid = agents[j].getBid(i);
-				assert(bid > 0);
+				if (bid < 0)
+					System.out.println("ERROR: bid of " + bid + " by agent " + j + " on good " + i + " is < 0");
 				
 				bids[i][j] = bid;
 				

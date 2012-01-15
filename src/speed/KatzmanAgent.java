@@ -3,7 +3,7 @@ package speed;
 import legacy.DiscreteDistribution;
 // bids according to the Equilibrium Agent documented in Katzman's paper
 
-public class KatzmanAgent extends SeqAgent{
+public class KatzmanAgent extends SeqAgent {
 
 	boolean ready = false;
 
@@ -28,6 +28,9 @@ public class KatzmanAgent extends SeqAgent{
 
 		H = valuation.getValue(1);
 		L = valuation.getValue(2) - H;
+		
+		if (H <= L)
+			System.out.println("ERROR: H=" + H + ", L=" + L);
 		
 		int H_bin = DiscreteDistribution.bin(H, F.precision);
 		
@@ -62,6 +65,7 @@ public class KatzmanAgent extends SeqAgent{
 		if (good_id == 1) {
 			if (auction.winner[0] == agent_idx)
 				no_goods_won++;
+			
 			return (valuation.getValue(no_goods_won+1) - valuation.getValue(no_goods_won));
 		}
 		else

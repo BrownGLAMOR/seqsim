@@ -140,7 +140,7 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 		    				temp2 += condDist[j] * V[x][t+1].get(realized_plus);
 		    			}
 		    					    			
-			    		if (temp2 > max_value) {	// Compare
+			    		if (temp2 > max_value || i == 0) {	// Compare
 			    			max_value = temp2;
 			    			max_idx = i;
 			    		}
