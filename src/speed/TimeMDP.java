@@ -5,21 +5,24 @@ import legacy.DiscreteDistribution;
 import legacy.DiscreteDistributionWellman;
 import legacy.Histogram;
 
-// Let's make sure that MDPNmuGoodsSeqAgent is working well, and figure out how fast it works 
+// Let's make sure that MDPSeqAgent is working well, and figure out how fast it works 
 
 public class TimeMDP {
 	public static void main(String args[]) throws IOException {
 
-		double precision = 1.0;
-		int no_simulations = 10000, i, no_goods = 2, max_price;
+		double precision = 0.1;
+		int no_simulations = 10000, i, no_goods = 2, max_price, no_agents = 2;
 
 // Test to see that MDPNumGoodsAgent.java works as expected. Affirmative.
-		/* 
+
 		// Initialize agents
 		MDPSeqAgent[] agents = new MDPSeqAgent[no_agents];
 		
-		agents[0] = new MDPSeqAgent(new SimpleValue(no_goods), 0);
-		agents[1] = new MDPSeqAgent(new SimpleValue(no_goods), 1);
+		// Valuation
+		Value v = new SimpleValue(no_goods);
+		System.out.println("marginal values = [" + v.getValue(1) + ", " + (v.getValue(2) - v.getValue(1)) + "]");
+		agents[0] = new MDPSeqAgent(v, 0);
+		agents[1] = new MDPSeqAgent(v, 1);
 
 //		for (i = 0; i<no_agents; i++)
 //			agents[i] = new MDPSeqAgent(new SimpleValue(no_goods), i);
@@ -46,7 +49,7 @@ public class TimeMDP {
 			
 		// play auction
 		auction.play(false, null);
-		*/
+		/*
 
 		for (no_goods = 2; no_goods <= 5; no_goods++){
 			for (max_price = 2; max_price <= 10; max_price++) {
@@ -78,6 +81,8 @@ public class TimeMDP {
 			}
 			System.out.println();
 		}
+		
+		*/
 		
 	}	
 }

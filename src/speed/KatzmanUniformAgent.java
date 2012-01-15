@@ -1,21 +1,22 @@
 package speed;
 
-import legacy.DiscreteDistribution;
-// bids according to the Equilibrium Agent documented in Katzman's paper
+import java.util.Arrays;
+import java.util.Random;
 
-public class KatzmanAgent extends SeqAgent {
+import legacy.DiscreteDistribution;
+// The same as KatzmanAgent.java, only it directly draws valuation from Uniform[0, max_price] (to avoid discretization issues)
+public class KatzmanUniformAgent extends SeqAgent {
 
 	boolean ready = false;
 
-	DiscreteDistribution F;
 	int agent_idx;
 	int no_goods_won;
 	int N;
 	int i;
 	Value valuation;
-	double H, L;
+	double H, L, max_price, precision;
 	
-	public KatzmanAgent(Value valuation, int agent_idx) {
+	public KatzmanUniformAgent(Value valuation, int agent_idx) {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
 		this.valuation = valuation;
@@ -26,25 +27,19 @@ public class KatzmanAgent extends SeqAgent {
 		if (!ready)
 			throw new RuntimeException("must input Distribution F first");
 
-		H = valuation.getValue(1);
-		L = valuation.getValue(2) - H;
-		
 		if (H < L)
 			System.out.println("ERROR: H=" + H + ", L=" + L);
 		
-		int H_bin = DiscreteDistribution.bin(H, F.precision);
-		
-		double denominator = java.lang.Math.pow(F.getCDF(H, 0.0), 2*N-1);
-		double numerator = 0;
+		double denominator = java.lang.Math.pow(H/max_price, 2*N-1);
+		double numerator = 0;		
 		// We assume that lower bound of F is 0
-		for (i = 0; i <= H_bin; i++)
-			numerator += java.lang.Math.pow(F.getCDF(F.precision*i, 0.0), 2*N-1)*F.precision;
-		
-		
+		for (i = 1; i*precision <= H; i++)
+			numerator += java.lang.Math.pow(i*precision/max_price, 2*N-1)*precision;
+
 		double bid = (H - numerator/denominator);
 		// bid has to be non-negative
 		if (bid < 0) {
-			if (bid < -F.precision)
+			if (bid < -precision)
 				System.out.println("Warning: agent "+agent_idx+", bids "+bid+", too negative");	// print warning
 			bid = 0;
 		}
@@ -57,11 +52,24 @@ public class KatzmanAgent extends SeqAgent {
 		no_goods_won = 0;
 	}
 
-	// Input F, the common prior distribution from which valuations (H, L) are initially drawn from
-	public void setParameters(DiscreteDistribution F, int N) {
-		this.F = F;
-		this.N = N; 
+	// Draw valuations (H, L) from Uniform(0, max_price)
+	public void setParameters(int N, double max_price, double precision) {
 		ready = true;
+		this.N = N;
+		this.max_price = max_price;
+		this.precision = precision;
+		
+		Random rng = new Random();
+
+		double[] u = new double[2];		
+		for (int i = 0; i < 2; i++)
+			u[i] = rng.nextDouble() * max_price;
+		
+		// sort the array in ascending order. 
+		Arrays.sort(u);
+		L = u[0];
+		H = u[1];
+		
 	}
 	
 	@Override

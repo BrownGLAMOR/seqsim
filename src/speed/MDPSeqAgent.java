@@ -93,8 +93,8 @@ public class MDPSeqAgent extends SeqAgent {
 			    	V[x][t] = Q[max_idx];
 		    		pi[x][t] = b[max_idx];
 		    		
-////	Print pi	    		
-//		    		System.out.println("agent "+agent_idx+": pi[x="+x+"][t="+t+"]="+pi[x][t]);
+//	Print pi	    		
+		    		System.out.println("agent "+agent_idx+": pi[x="+x+"][t="+t+"]="+pi[x][t]);
 	    		}
     		}		    	
 		}

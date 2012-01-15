@@ -198,6 +198,13 @@ public class JointDistributionEmpirical extends JointDistribution {
 			// todo: we return this when no samples == 0, but maybe we need logic to 
 			//       return this when no samples < viable threshold
 			p = marg_prob[realized.d.length];
+
+//// print. TODO: conditional distribution is an issue for MDP Agent			
+//			System.out.print("previous price not observed, outputting PMF = \t [");
+//			for (int i = 0 ; i < p.length; i++)
+//				System.out.print(p[i] + ", ");
+//			System.out.println("]");
+			
 		}
 		
 		return p;

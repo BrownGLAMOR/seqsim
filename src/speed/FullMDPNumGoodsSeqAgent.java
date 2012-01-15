@@ -159,11 +159,18 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 			    	V[x][t].put(realized, Q[max_idx]);
 		    		pi[x][t].put(realized, b[max_idx]);
 		    		
+		    		System.out.println("second round: MDP agent " + agent_idx + " bids pi["+x+"]["+t+"] = "+ pi[x][t].put(realized, b[max_idx]) + "");
+		    		System.out.println("margin value = " + (v.getValue(x+1) - v.getValue(x)));
+		    		
 		    		//System.out.println("assign pi[" + x + "][" + t + "].put(" + realized + ") ==> " + b[max_idx]);
 	    		}
     		}		    	
 		}
 		
+		for (IntegerArray realized : Cache.getCartesianProduct(jde.bins, 0))
+			System.out.println("MDP agent bids " + pi[0][0].get(realized));
+
+	
 		//System.out.println("---");
 	}
 

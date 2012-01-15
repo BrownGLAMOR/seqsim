@@ -12,17 +12,17 @@ public class TestKatzMDP {
 		Cache.init();
 		Random rng = new Random();
 		
-		double precision = 0.5;
+		double precision = 1.0;
 		double max_price = 10.0;
 		int no_goods = 2;
 		int no_agents = 2;
 		int nth_price = 2;
-		int no_simulations = 5000;
-		int max_iterations = 10;
+		int no_simulations = 100;
+		int max_iterations = 3;
 		
 		JointFactory jf = new JointFactory(no_goods, precision, max_price);
 
-		// Create a uniform distribution F
+		// Create a uniform distribution F (to draw valuation from)
 		Histogram h = new Histogram(precision);
 		for (int i = 1; i*precision <= max_price; i++)
 			h.add(i*precision);
@@ -33,7 +33,7 @@ public class TestKatzMDP {
 		
 		for (int i = 0; i<no_agents; i++) {
 			katz_agents[i] = new KatzmanAgent(new DMUValue(no_goods, max_price, rng), i);
-			katz_agents[i].setParameters(F, no_agents);
+			katz_agents[i].setParameters(F, no_agents-1);
 		}
 		
 		// Create auction
