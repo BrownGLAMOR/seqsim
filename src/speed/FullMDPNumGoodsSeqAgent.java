@@ -1,8 +1,6 @@
 package speed;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Set;
 
 public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 
@@ -11,10 +9,19 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 	JointDistributionEmpirical jde;
 	int agent_idx;
 	int no_goods_won;
+	int no_goods;
 	
 	// computational variables
 	int price_length;
-	HashMap<DoubleArray, Double>[][] V, pi; // [no_goods_won][t].get(realized prices) ==> V, pi
+	
+	HashMap<IntegerArray, Double>[][] pi; // [no_goods_won][t].get(realized prices) ==> pi
+	HashMap<IntegerArray, Double>[][] V; // [no_goods_won][t].get(realized prices) ==> V
+
+	double[] Q;
+	double[] Reward;
+	double[] b;
+	
+	IntegerArray[] tmp_r;
 
 	public FullMDPNumGoodsSeqAgent(Value valuation, int agent_idx) {
 		super(agent_idx, valuation);
@@ -23,20 +30,46 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 		no_goods_won = 0;
 	}
 	
-	// Ask the agent to computes optimal bidding policy \pi((X,t)) using MDP. The two steps correspond to the two steps in write-up	
-	public void computeFullMDP(){	
-		double[] Q = new double[price_length];
-		double[] Reward = new double[price_length];
+	@SuppressWarnings("unchecked")
+	private void allocate() {
+		// list of possible bids (to maximize over)
+		b = new double[price_length];
+
+		for (int i = 0; i < b.length; i++)
+			b[i] = jde.precision*((i+(i+1))/2.0 - 0.1);		// bid = (p_{i}+p_{i+1})/2 - 0.1*precision	
+
+		Q = new double[price_length];
 		
-		HashMap<DoubleArray, Double>[][] V = new HashMap[jde.no_goods+1][jde.no_goods+1]; // Value function V((P,X,t))
+		Reward = new double[price_length];
+		
+		V = new HashMap[jde.no_goods+1][jde.no_goods+1]; // Value function V((P,X,t))
+		
 		pi = new HashMap[jde.no_goods+1][jde.no_goods+1]; // optimal bidding function \pi((P,X,t))
 		
 		for (int i = 0; i<=jde.no_goods; i++) {
 			for (int j = 0; j<=jde.no_goods; j++) {
-				V[i][j] = new HashMap<DoubleArray, Double>();
-				pi[i][j] = new HashMap<DoubleArray, Double>();
+				V[i][j] = new HashMap<IntegerArray, Double>();
+				pi[i][j] = new HashMap<IntegerArray, Double>();
 			}
-		}		
+		}
+		
+		// Create a temporary area for getBids() to retrieve results
+		// with having to perform a "new" operation (speed improvement)
+		tmp_r = new IntegerArray[no_goods+1];
+		
+		for (int i = 0; i<no_goods+1; i++)
+			tmp_r[i] = new IntegerArray(i);
+	}
+	
+	// Ask the agent to computes optimal bidding policy \pi((X,t)) using MDP. The two steps correspond to the two steps in write-up	
+	public void computeFullMDP() {	
+		// Reset MDP state vars
+		for (int i = 0; i<=jde.no_goods; i++) {
+			for (int j = 0; j<=jde.no_goods; j++) {
+				V[i][j].clear();
+				pi[i][j].clear();
+			}
+		}
 		
 		// 1) ******************************** Initialize V values for t = no_slots; corresponding to after all rounds are closed. 
 		int t = jde.no_goods;
@@ -46,96 +79,92 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 		// Assign values to states
 		// x == no_goods_won (the "X" in our state)
 		for (int x = 0; x<=jde.no_goods; x++) {
-			for (double[] realized : Cache.getCartesianProduct(jde.prices, t))
-			{
-				//System.out.println("V[x=" + x + "][t=" + t + "][prices=" + realized + "] => " + valuation.getValue(x));
-				V[x][t].put(new DoubleArray(realized), v.getValue(x)); 
+			for (IntegerArray realized : Cache.getCartesianProduct(jde.bins, t)) {
+				//System.out.println("V[x=" + x + "][t=" + t + "][prices=" + realized + "] => " + v.getValue(x));
+				V[x][t].put(realized, v.getValue(x)); 
 			}
 		}
-
-		// list of possible bids (to maximize over)
-		double[] b = new double[price_length];	// enumerate over all realized prices
-
 		
 		// 2) ******************************** Recursively assign values for t = no_slots-1,...,1
 		
 		// > Loop over auction t
 		for (t = jde.no_goods-1; t>-1; t--) {
 			// ----- loops start here
-			for (int i = 0; i < jde.prices.length; i++)
-				b[i]=jde.precision*((double) (i+(i+1))/2-0.1);		// bid = (p_{i}+p_{i+1})/2 - 0.1*precision	
 
 			//System.out.println("START t = " + t + " (genPrices=" + genPrices.size() + ")");
 
     		// > Loop over possible realized historical prices
-			for (double[] realized : Cache.getCartesianProduct(jde.prices, t)) {
+			for (IntegerArray realized : Cache.getCartesianProduct(jde.bins, t)) {
 				/*System.out.print("p{");
-				for (double d : realized)
+				for (int d : realized.d)
 					System.out.print(d + ",");
 				System.out.println("}");
 				*/
 				
 				// get conditional Distribution
 				double[] condDist = jde.getPMF(realized);
-				double[] realized_plus = new double[realized.length+1];
+				IntegerArray realized_plus = tmp_r[realized.d.length + 1];
 				
 				// Precompute Reward = R(b,(realized,X,t)) for each potential bid in b
 				double temp = 0;
 	    		for (int j = 0; j < b.length; j++){
-	    			temp += -(j*jde.precision)*condDist[j];	// add -condDist*f(p)
-	    			Reward[j]=temp;
+	    			temp += -(j*jde.precision) * condDist[j];	// add -condDist*f(p)
+	    			Reward[j] = temp;
 	    		}
-	    		
+
+	    		// copy realized prices (to append later)
+	    		for (int k = 0; k < realized.d.length; k++)
+					realized_plus.d[k] = realized.d[k];
+
 	    		// > Loop over no_of_goods 0 ... t 
 	    		for (int x = 0; x<=t; x++) {
-		    		// copy realized prices (to append later)
-		    		for (int k = 0; k < realized.length; k++)
-    					realized_plus[k] = realized[k];
 		    		    				
 	    			// Compute Q(b,(realized,X,t)) for each bid b
+
+		    		// At same time, Find \pi_((realized,X,t)) = argmax_b Q(b,(realized,X,t))
+		    		double max_value = Double.MIN_VALUE;		// Value of largest Q((X,t),b)
+			    	int max_idx = -1;							// Index of largest Q((X,t),b)
+			    	
 	    			for (int i = 0; i < b.length; i++) {
 		    			double temp2 = Reward[i];
 
 		    			// if agent wins round t
-		    			for (int j = 0; j <= i; j++){
-		    				realized_plus[realized.length] = j*jde.precision;
-		    				temp2 += condDist[j] * V[x+1][t+1].get(new DoubleArray(Arrays.copyOf(realized_plus, realized_plus.length)));
+		    			for (int j = 0; j <= i; j++) {
+		    				realized_plus.d[realized.d.length] = j;
+		    				temp2 += condDist[j] * V[x+1][t+1].get(realized_plus);
 		    			}
 		    			
 		    			// if agent doesn't win round t
 		    			for (int j = i+1; j < condDist.length; j++) {
-		    				realized_plus[realized.length] = j*jde.precision;
-		    				temp2 += condDist[j] * V[x][t+1].get(new DoubleArray(Arrays.copyOf(realized_plus, realized_plus.length)));
+		    				realized_plus.d[realized.d.length] = j;
+		    				temp2 += condDist[j] * V[x][t+1].get(realized_plus);
 		    			}
-		    			
-		    			Q[i]=temp2;
+		    					    			
+			    		if (temp2 > max_value) {	// Compare
+			    			max_value = temp2;
+			    			max_idx = i;
+			    		}
+			    		
+		    			Q[i] = temp2;
 		    		}
-
+	    			
 //// print Q function (to comment out) 
 /*			    		System.out.print("Q(b,(" + x + "," + t +"))=");
 			    		for (int i = 0; i < Q.length; i++)
 			    			System.out.print(Q[i]+",");
 			    		System.out.println();
 	*/	    		
-		    		// Find \pi_((realized,X,t)) = argmax_b Q(b,(realized,X,t))
-		    		double max_value = Q[0];		// Value of largest Q((X,t),b)
-			    	int max_idx = 0;			// Index of largest Q((X,t),b)
-			    	for (int i = 1; i < Q.length; i++) {
-			    		if (Q[i] > max_value) {	// Compare
-			    			max_value = Q[i];
-			    			max_idx = i;
-			    		}
-			    	}
 			    	
 		    		// Now we found the optimal bid for state (X,t). Assign values to \pi((X,t)) and V((X,t))
-			    	DoubleArray r = new DoubleArray(realized);
-			    	V[x][t].put(r, Q[max_idx]);
-		    		pi[x][t].put(r, b[max_idx]);
+			    	V[x][t].put(realized, Q[max_idx]);
+		    		pi[x][t].put(realized, b[max_idx]);
 		    		
-		    		//System.out.println("assign pi[" + x + "][" + t + "].put(" + r + ") ==> " + b[max_idx]);
+		    		//System.out.println("assign pi[" + x + "][" + t + "].put(" + realized + ") ==> " + b[max_idx]);
 	    		}
     		}		    	
 		}
+		
+		//System.out.println("---");
 	}
 
 	
@@ -143,13 +172,21 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 	public void reset(SeqAuction auction) {
 		this.auction = auction;
 		no_goods_won = 0;
+		
 		computeFullMDP();
 	}
 
 	@Override
 	public void setJointDistribution(JointDistributionEmpirical jde) {
 		this.jde = jde;
-		price_length = (int) (jde.max_price/jde.precision+1);	// (used in computeFullMDP)
+		
+		// If this JDE does not have the same parameters as our last jde, then (re)allocate memory
+		if (pi == null || jde.no_bins != price_length || jde.no_goods != no_goods) {
+			price_length = jde.no_bins;
+			no_goods = jde.no_goods;
+			
+			allocate();
+		}
 	}
 	
 	@Override
@@ -161,16 +198,16 @@ public class FullMDPNumGoodsSeqAgent extends SeqAgent {
 		}
 
 		// figure out realized HOBs
-		double[] realized = new double[good_id];
-		for (int i = 0; i < good_id;i ++)
-			realized[i] = (int)(auction.hob[agent_idx][i]); // TODO: currently, forced prices to be integers in an ad hoc way. To be fixed.
+		IntegerArray realized = tmp_r[good_id];
+		for (int i = 0; i < realized.d.length; i++)
+			realized.d[i] = JointDistributionEmpirical.bin(auction.hob[agent_idx][i], jde.precision);
 		
 		//System.out.println("good id = "+good_id+",current state = ");
 
 		//System.out.println("pi: " + pi[no_goods_won][good_id]);
 		//System.out.println("pi.get: " + pi[no_goods_won][good_id].get(realized));
 				
-		return pi[no_goods_won][good_id].get(new DoubleArray(realized));
+		return pi[no_goods_won][good_id].get(realized);
 	}
 	
 }

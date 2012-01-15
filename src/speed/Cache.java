@@ -12,15 +12,57 @@ public class Cache {
 	static final int max_goods = 11;
 
 	// CACHE: Cartesian product over prices
-	static HashMap<DoubleArray, Set<double[]>>[] cartesian;
+	static HashMap<DoubleArray, Set<double[]>>[] cartesian_prices;
 	static Set<double[]> getCartesianProduct(double[] prices, int times) {
 		DoubleArray tmp = new DoubleArray(prices);
 		
-		Set<double[]> ret = cartesian[times].get(tmp);
+		Set<double[]> ret = cartesian_prices[times].get(tmp);
 		
 		if (ret == null) {
 			ret = CartesianProduct.generate(prices, times);
-			cartesian[times].put(tmp, ret);
+			cartesian_prices[times].put(tmp, ret);
+		}
+		
+		return ret;
+	}
+
+	// CACHE: Cartesian product over prices
+	static HashMap<DoubleArray, Set<DoubleArray>>[] cartesian_prices2;
+	static Set<DoubleArray> getCartesianProduct(DoubleArray prices, int times) {	
+		Set<DoubleArray> ret = cartesian_prices2[times].get(prices);
+		
+		if (ret == null) {
+			ret = CartesianProduct.generate(prices, times);
+			cartesian_prices2[times].put(prices, ret);
+		}
+		
+		return ret;
+	}
+
+	
+	// CACHE: Cartesian product over bins
+	static HashMap<IntegerArray, Set<int[]>>[] cartesian_bins;
+	static Set<int[]> getCartesianProduct(int[] bins, int times) {
+		IntegerArray tmp = new IntegerArray(bins);
+		
+		Set<int[]> ret = cartesian_bins[times].get(tmp);
+		
+		if (ret == null) {
+			ret = CartesianProduct.generate(bins, times);
+			cartesian_bins[times].put(tmp, ret);
+		}
+		
+		return ret;
+	}
+	
+	// CACHE: Cartesian product over bins
+	static HashMap<IntegerArray, Set<IntegerArray>>[] cartesian_bins2;
+	static Set<IntegerArray> getCartesianProduct(IntegerArray bins, int times) {
+		Set<IntegerArray> ret = cartesian_bins2[times].get(bins);
+		
+		if (ret == null) {
+			ret = CartesianProduct.generate(bins, times);
+			cartesian_bins2[times].put(bins, ret);
 		}
 		
 		return ret;
@@ -37,9 +79,24 @@ public class Cache {
 	@SuppressWarnings("unchecked")
 	public static void init() {
 		// Cartesian product over prices
-		cartesian = new HashMap[max_goods];
+		cartesian_prices = new HashMap[max_goods];
 		for (int i = 0; i<max_goods; i++)
-			cartesian[i] = new HashMap<DoubleArray, Set<double[]>>();
+			cartesian_prices[i] = new HashMap<DoubleArray, Set<double[]>>();
+
+		// Cartesian product over prices
+		cartesian_prices2 = new HashMap[max_goods];
+		for (int i = 0; i<max_goods; i++)
+			cartesian_prices2[i] = new HashMap<DoubleArray, Set<DoubleArray>>();
+		
+		// Cartesian product over bins
+		cartesian_bins = new HashMap[max_goods];
+		for (int i = 0; i<max_goods; i++)
+			cartesian_bins[i] = new HashMap<IntegerArray, Set<int[]>>();
+		
+		// Cartesian product over bins
+		cartesian_bins2 = new HashMap[max_goods];
+		for (int i = 0; i<max_goods; i++)
+			cartesian_bins2[i] = new HashMap<IntegerArray, Set<IntegerArray>>();
 		
 		// Set Of All Goods
 		set_of_all_goods = new Set[max_goods];

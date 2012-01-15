@@ -7,6 +7,10 @@ public abstract class JointDistribution {
 	// given the list of realized prices.
 	public abstract double getProb(double price, double[] realized);
 
+	// get the probability mass function of the good numbered "realized.d.length",
+	// given the list of binned realized prices.
+	public abstract double[] getPMF(IntegerArray realized);
+
 	// get the probability mass function of the good numbered "realized.length",
 	// given the list of realized prices.
 	public abstract double[] getPMF(double[] realized);
@@ -15,8 +19,8 @@ public abstract class JointDistribution {
 	// realized prices.
 	public abstract double getExpectedFinalPrice(double[] realized);
 	
-	// samples the joint distribution and returns an array of prices, one per good.
-	public abstract double[] getSample(Random rng);
+	// samples the joint distribution and returns an array of price bins, one per good.
+	public abstract int[] getSample(Random rng);
 	
 	// debug: get a print out of the JointDistribution
 	public abstract void output();

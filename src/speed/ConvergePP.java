@@ -13,9 +13,10 @@ public class ConvergePP {
 		// parameters
 		double precision = 1.0;
 		int max_iteration = 50;			// no. of PP-updates
-		int no_simulations = 10000;		// no. of simulations per PP-update
+		int no_simulations = 50000;		// no. of simulations per PP-update
 		int nth_price = 2;
-		int no_goods = 2, no_agents = 2, max_price = 10;
+		int no_goods = 2, no_agents = 2;
+		double max_price = 10;
 		
 		JointFactory jf = new JointFactory(no_goods, precision, max_price);
 		
@@ -37,7 +38,7 @@ public class ConvergePP {
 		// Set up agents & auction
 		FullMDPNumGoodsSeqAgent[] agents = new FullMDPNumGoodsSeqAgent[no_agents];
 		for (int i = 0; i<no_agents; i++) {
-			agents[i] = new FullMDPNumGoodsSeqAgent(new DMUValue(no_goods, (double) max_price, rng), i);
+			agents[i] = new FullMDPNumGoodsSeqAgent(new DMUValue(no_goods, max_price, rng), i);
 			agents[i].setJointDistribution(pp_new[i]);
 		}
 		
@@ -47,14 +48,15 @@ public class ConvergePP {
 		for (int iteration_idx = 0; iteration_idx < max_iteration; iteration_idx++) {
 			for (int agent_idx = 0; agent_idx < no_agents; agent_idx++) {
 				// Create a new price prediction for agent_idx.
-				
 				pp_old[agent_idx] = pp_new[agent_idx];
-			
+				
 				// Setup a new distribution for the new round of simulations
+				long start = System.currentTimeMillis();
 				pp_new[agent_idx] = jf.simulOneAgent(auction, agent_idx, no_simulations);
-
+				long elapsed = System.currentTimeMillis() - start;
+				
 				// Print KS statistic for this iteration
-				System.out.print("iteration " + iteration_idx + ", agent " + agent_idx + "'s marginal KS's: \t");
+				System.out.print("[" + elapsed + " ms] iteration " + iteration_idx + ", agent " + agent_idx + "'s marginal KS's: \t");
 				System.out.print("[");
 				
 				for (int l = 0; l < no_goods; l++) {

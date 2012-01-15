@@ -1,9 +1,7 @@
 package speed;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 
@@ -23,92 +21,123 @@ public class JointDistributionEmpirical extends JointDistribution {
 	int marg_sum;
 	double[][] marg_prob;		// [good_id][pmf idx]
 	
-	double prices[];			// the value of each bin in the pmf
+	IntegerArray bins;					// the bins in the pmf
+	DoubleArray prices;			// the value of each bin in the pmf
 	
 	double witnessed_max_price;
 	
 	int no_bins;
+	
+	IntegerArray r_tmp[];
 
-	HashMap<List<Integer>, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
-	HashMap<List<Integer>, Integer>[] sum; // hash map from realized prices (as bins) to freq dist. sums, one per good
+	HashMap<IntegerArray, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
+	HashMap<IntegerArray, Integer>[] sum; // hash map from realized prices (as bins) to freq dist. sums, one per good
 	
 	// no_goods is the number of goods/auctions
+	@SuppressWarnings("unchecked")
 	public JointDistributionEmpirical(int no_goods, double precision, double max_price) {
 		this.no_goods = no_goods;
 		this.precision = precision;
 		this.max_price = max_price;
+				
+		this.no_bins = bin(max_price, precision) + 1;
 		
-		empty_array = new double[0];
+		this.empty_array = new double[0];
 
-		reset(no_goods, precision, max_price);
+		this.prices = new DoubleArray(this.no_bins);
+		this.bins = new IntegerArray(this.no_bins);
+		for (int i = 0; i<this.no_bins; i++) {
+			this.bins.d[i] = i;
+			this.prices.d[i] = bin(i, precision);
+		}
+
+		// init this.prob and this.sum
+		this.prob = new HashMap[no_goods];
+		this.sum = new HashMap[no_goods];
+		
+		int max_realizations = 1; 
+		for (int i = 0; i<no_goods; i++) {
+			max_realizations *= no_bins;
+			
+			this.prob[i] = new HashMap<IntegerArray, double[]>(max_realizations);			
+			this.sum[i] = new HashMap<IntegerArray, Integer>(max_realizations);
+		}
+				
+		this.marg_prob = new double[no_goods][no_bins];
+		
+		this.r_tmp = new IntegerArray[no_goods+1];
+		
+		for (int i = 0; i<no_goods+1; i++)
+			this.r_tmp[i] = new IntegerArray(i);
 	}
 		
 	// Call this to reset the internal state. This is automatically
 	// called for you when you instantiate a new JointDistribution.
-	@SuppressWarnings("unchecked")
-	public void reset(int no_goods, double precision, double max_price) {	
-		this.no_goods = no_goods;
-		this.precision = precision;
-		this.max_price = max_price;
-		
-		reset();
-	}
-	
 	public void reset() {
-		this.ready = false;
-		this.witnessed_max_price = 0.0;
+		ready = false;
+		witnessed_max_price = 0.0;
 		
-		this.no_bins = bin(max_price, precision) + 1;
+		for (int i = 0; i<no_goods; i++)
+			for (int j = 0; j<no_bins; j++)
+				marg_prob[i][j] = 0.0;
 		
-		this.marg_prob = new double[this.no_goods][this.no_bins];
-		this.marg_sum = 0;
+		marg_sum = 0;
 		
-		this.prices = new double[this.no_bins];
-		for (int i = 0; i<this.no_bins; i++)
-			this.prices[i] = bin(i, precision);
-		
-		int max_realizations;
-		
-		// allocate a new probability hash map if we do not already have one
-		// -or- if the current one is not the right length
-		if (this.prob == null || this.prob.length != no_goods) {
-			this.prob = new HashMap[no_goods];
-			
-			max_realizations = 1; 
-			for (int i = 0; i<no_goods; i++) {
-				max_realizations *= no_bins;
-				this.prob[i] = new HashMap<List<Integer>, double[]>(max_realizations);
-			}
-		} else {
-			// note that our capacity estimates may be off; not sure of the potential performance impact. 
-			for (HashMap<List<Integer>, double[]> p : this.prob)
-				p.clear();
-		}
+		for (HashMap<IntegerArray, double[]> p : this.prob)
+			p.clear();
 
-		// allocate a new sum hash map if we do not already have one
-		// -or- if the current one is not the right length
-		if (this.sum == null || this.sum.length != no_goods)
-			this.sum = new HashMap[no_goods];
-		else
-			for (HashMap<List<Integer>, Integer> s : this.sum)
-				s.clear();
-		
-		max_realizations = 1; 
-		for (int i = 0; i<no_goods; i++) {
-			max_realizations *= no_bins;
-			this.sum[i] = new HashMap<List<Integer>, Integer>(max_realizations);
-		}
+		for (HashMap<IntegerArray, Integer> s : this.sum)
+			s.clear();		
 	}
 	
 	// Call this once per realized price vector to populate the joint distribution
 	// realized.length must == no_goods from last reset()
-	public synchronized void populate(double[] realized) {
-		if (realized.length != no_goods)
+	public void populate(IntegerArray realized) {
+		if (realized.d.length != no_goods)
 			throw new RuntimeException("length of realized price vector must == no_goods");
 
-		// for each good
-		int binned[] = new int[no_goods];
-		
+		// for each good		
+		for (int i = 0; i<no_goods; i++) {			
+			// create array with binned conditional prices only
+			IntegerArray r = r_tmp[i];
+			for (int j = 0; j<i; j++) 
+				r.d[j] = realized.d[j];
+
+			// get the distribution conditioned on earlier prices
+			double[] p = prob[i].get(r);
+						
+			if (p == null) {
+				// this is our first entry into the distribution; create it
+				p = new double[no_bins];
+			
+				p[realized.d[i]]++;
+				
+				// Make a copy of IntegerArray since we are PUTing a new copy to the HashMap.
+				r = new IntegerArray(Arrays.copyOf(r.d, r.d.length));
+				
+				prob[i].put(r, p);
+				sum[i].put(r, 1);
+			} else {
+				p[realized.d[i]]++;
+				
+				// We don't need to make a copy of IntegerArray here because when put() overwrites an existing entry
+				// in the HashMap, it keeps the existing key.
+				sum[i].put(r, sum[i].get(r) + 1);
+			}
+
+			// record unconditional probability
+			marg_prob[i][realized.d[i]]++;
+		}
+
+		marg_sum++;
+	
+	}
+	
+	// Call this once per realized price vector to populate the joint distribution
+	// realized.length must == no_goods from last reset()
+	public void populate(double[] realized) {
+		IntegerArray binned = new IntegerArray(realized.length);
+
 		for (int i = 0; i<no_goods; i++) {
 			// record max price witnessed
 			if (realized[i] > witnessed_max_price)
@@ -119,45 +148,18 @@ public class JointDistributionEmpirical extends JointDistribution {
 			// distribution.
 			if (realized[i] > max_price)
 				realized[i] = max_price;
-
+			
 			// bin the realized price for this good
-			binned[i] = bin(realized[i], precision);
-			
-			// create array with binned conditional prices only
-			Integer[] r_tmp = new Integer[i];
-			for (int j = 0; j<i; j++) 
-				r_tmp[j] = binned[j];
-			
-			List<Integer> r = Arrays.asList(r_tmp);
-
-			// get the distribution conditioned on earlier prices
-			double[] p = prob[i].get(r);
-						
-			if (p == null) {
-				// this is our first entry into the distribution; create it
-				p = new double[no_bins];
-			
-				p[binned[i]]++;
-				
-				prob[i].put(r, p);
-				sum[i].put(r, 1);
-			} else {
-				p[binned[i]]++;
-				
-				sum[i].put(r, sum[i].get(r) + 1);
-			}
-
-			// record unconditional probability
-			marg_prob[i][binned[i]]++;
+			binned.d[i] = bin(realized[i], precision);
 		}
-
-		marg_sum++;
+		
+		populate(binned);
 	}
 	
 	// Call this to normalize the collected data into a joint distribution
 	public void normalize() {
 		for (int i = 0; i<no_goods; i++) {			
-			for (List<Integer> r : prob[i].keySet()) {				
+			for (IntegerArray r : prob[i].keySet()) {				
 				double[] p = prob[i].get(r);
 				int s = sum[i].get(r);
 				
@@ -165,6 +167,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 					p[j] /= s;
 			}
 
+			// compute the marginal distribution for this good
 			for (int j = 0; j<no_bins; j++)
 				marg_prob[i][j] /= marg_sum;
 		}
@@ -172,43 +175,49 @@ public class JointDistributionEmpirical extends JointDistribution {
 		ready = true;
 	}
 	
+	// gets the probability of price of good "realized.length" being "price" given realized prices "realized"
 	@Override
 	public double getProb(double price, double[] realized) {
 		return getPMF(realized)[ bin(price, precision) ];
 	}
 
+	// get the probability mass function of the good numbered "realized.d.length",
+	// given the list of binned realized prices.
 	@Override
-	// Gets the probability mass function for good numbered "realized.length", conditional
-	// on realized prices
-	public double[] getPMF(double[] realized) {
+	public double[] getPMF(IntegerArray realized) {
 		if (!ready)
 			throw new RuntimeException("must normalize first");
 		
-		if (realized == null)
-			realized = empty_array;
-		
-		if (realized.length == no_goods)
+		if (realized.d.length >= no_goods)
 			throw new IllegalArgumentException("no more goods");
 		
-		// bin the realized prices
-		Integer[] r_tmp = new Integer[realized.length];
-
-		for (int i = 0; i<realized.length; i++)
-			r_tmp[i] = bin(realized[i], precision);
-		
-		List<Integer> r = Arrays.asList(r_tmp);
-		
-		// get the price distribution conditional on realized prices
-		double[] p = prob[realized.length].get(r);
+		double[] p = prob[realized.d.length].get(realized);
 		
 		if (p == null) {
-			// ut-oh, return the unconditional pmf for this good since we have no data)
+			// ut-oh, return the unconditional (marginal) pmf for this good since we have no data
 			// todo: we return this when no samples == 0, but maybe we need logic to 
 			//       return this when no samples < viable threshold
-			p = marg_prob[realized.length];
+			p = marg_prob[realized.d.length];
 		}
 		
 		return p;
+	}
+	
+	// Gets the probability mass function for good numbered "realized.length", conditional
+	// on realized prices
+	@Override
+	public double[] getPMF(double[] realized) {
+		if (realized == null)
+			realized = empty_array;
+		
+		// bin the realized prices
+		IntegerArray r = r_tmp[realized.length];
+
+		for (int i = 0; i<realized.length; i++)
+			r.d[i] = bin(realized[i], precision);
+				
+		// get the price distribution conditional on realized prices
+		return getPMF(r);
 	}
 	
 	@Override
@@ -228,15 +237,14 @@ public class JointDistributionEmpirical extends JointDistribution {
 
 	// sample the probability distribution, and returns an array of prices, one per good
 	@Override
-	public double[] getSample(Random rng) {
+	public int[] getSample(Random rng) {
 		if (!ready)
 			throw new RuntimeException("must normalize first");
 		
-		ArrayList<Integer> realized = new ArrayList<Integer>(no_goods);
-		double prices[] = new double[no_goods];
+		int bins[] = new int[no_goods];
 		
 		for (int i = 0; i<no_goods; i++) {
-			double[] pmf = prob[realized.size()].get(realized);
+			double[] pmf = prob[i].get(r_tmp[i]);
 	
 			// choose a random spot on the cdf
 			double random = rng.nextDouble();
@@ -248,11 +256,12 @@ public class JointDistributionEmpirical extends JointDistribution {
 				cdf += pmf[j];
 				
 				if (cdf >= random) {
-					prices[i] = j;
+					bins[i] = j;
 					
 					// add index to realized so that in next round we get the pmf conditional
 					// on our result for this round
-					realized.add(bin(prices[i], precision));
+					for (int k = 0; k<=i; k++)
+						r_tmp[i+1].d[k] = bins[k];
 					
 					// go onto next good
 					break;
@@ -262,7 +271,7 @@ public class JointDistributionEmpirical extends JointDistribution {
 			// sanity check: make sure we picked something. 
 		}
 		
-		return prices;
+		return bins;
 	}
 	
 	// get the marginal distribution for good id, assuming independent prices
@@ -291,10 +300,10 @@ public class JointDistributionEmpirical extends JointDistribution {
 			
 			System.out.println("prob[" + i + "].size() == " + prob[i].size() + ", max_realizations=" + max_realizations);
 			
-			for (Entry<List<Integer>, double[]> e : prob[i].entrySet()) {
+			for (Entry<IntegerArray, double[]> e : prob[i].entrySet()) {
 				System.out.print("pr(" + i + " | {");
 				
-				for (Integer p : e.getKey())
+				for (int p : e.getKey().d)
 					System.out.print(val(p, precision) + ", ");
 				
 				System.out.print("}) [hits=" + sum[i].get(e.getKey()) + "] ==> {");
@@ -391,13 +400,13 @@ public class JointDistributionEmpirical extends JointDistribution {
 		System.out.println("efp(1 | {3}) = " + jde.getExpectedFinalPrice(new double[] {3}));
 		
 		System.out.println("");
-		System.out.println("sampled prices:");
+		System.out.println("sampled price **BINS INDEXES**:");
 		for (int i = 0; i<20; i++) {
-			double[] sample = jde.getSample(rng);
+			int[] sample = jde.getSample(rng);
 
 			System.out.print(i + ": {");
 			
-			for (double d : sample) 
+			for (int d : sample) 
 				System.out.print(d + ", ");
 			
 			System.out.println("}");			

@@ -2,14 +2,14 @@ package speed;
 
 import java.util.Arrays;
 
-public class DoubleArray {
-	public double[] d;
+public class IntegerArray {
+	public int[] d;
 	
-	public DoubleArray(int n) {
-		d = new double[n];
+	public IntegerArray(int n) {
+		d = new int[n];
 	}
 
-	public DoubleArray(double[] d) {
+	public IntegerArray(int[] d) {
 		this.d = d;
 	}
 	
@@ -20,10 +20,10 @@ public class DoubleArray {
 			return true;
 
 		// not same class
-		if (! (that instanceof DoubleArray))
+		if (! (that instanceof IntegerArray))
 			return false;
 		
-		DoubleArray aThat = (DoubleArray) that;
+		IntegerArray aThat = (IntegerArray) that;
 		
 		// underlying data points to same array?
 		if (this.d == aThat.d)

@@ -3,8 +3,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import speed.DoubleArray;
+import speed.IntegerArray;
+
 // Create a cartesian product of array of prices
-public class CartesianProduct{	
+public class CartesianProduct {
+	// FOR DOUBLE ARRAYS
 	
 	public static Set<double[]> generate(double[] prices, int times) {
 		// iteratively generate the cartesian product
@@ -18,8 +22,7 @@ public class CartesianProduct{
 		}
 	}
 	
-	private static Set<double[]> _cartesianProduct(int index, int times, double[] prices) {
-	    
+	private static Set<double[]> _cartesianProduct(int index, int times, double[] prices) {	    
 		Set<double[]> ret = new HashSet<double[]>();
 	    
 	    if (index == times) {
@@ -37,6 +40,105 @@ public class CartesianProduct{
 	    return ret;
 	}
 
+	// FOR DOUBLE ARRAYS
+	
+	public static Set<DoubleArray> generate(DoubleArray prices, int times) {
+		// iteratively generate the cartesian product
+		Set<DoubleArray> ret;
+		if (times == 0) {
+			 ret = new HashSet<DoubleArray>();
+			 ret.add(new DoubleArray(0));
+			return ret;
+		} else {
+			return _cartesianProduct(0, times, prices);
+		}
+	}
+	
+	private static Set<DoubleArray> _cartesianProduct(int index, int times, DoubleArray prices) {	    
+		Set<DoubleArray> ret = new HashSet<DoubleArray>();
+	    
+	    if (index == times) {
+	    	// initialize the iteration
+	        ret.add(new DoubleArray(times));
+	    } else {
+	    	// iteratively add new elements
+	        for (double p : prices.d) {
+	            for (DoubleArray array : _cartesianProduct(index+1, times, prices)) {
+	                array.d[index] = p;
+	                ret.add(array);
+	            }
+	        }
+	    }
+	    return ret;
+	}
+
+	// FOR INTEGER ARRAYS
+	
+	public static Set<int[]> generate(int[] bins, int times) {
+		// iteratively generate the cartesian product
+		Set<int[]> ret;
+		if (times == 0) {
+			 ret = new HashSet<int[]>();
+			 ret.add(new int[0]);
+			return ret;
+		} else {
+			return _cartesianProduct(0, times, bins);
+		}
+	}
+	
+	private static Set<int[]> _cartesianProduct(int index, int times, int[] bins) {	    
+		Set<int[]> ret = new HashSet<int[]>();
+	    
+	    if (index == times) {
+	    	// initialize the iteration
+	        ret.add(new int[times]);
+	    } else {
+	    	// iteratively add new elements
+	        for (int p : bins) {
+	            for (int[] array : _cartesianProduct(index+1, times, bins)) {
+	                array[index]=p;
+	                ret.add(array);
+	            }
+	        }
+	    }
+	    return ret;
+	}
+	
+	
+	// FOR DOUBLE ARRAYS
+	
+	public static Set<IntegerArray> generate(IntegerArray prices, int times) {
+		// iteratively generate the cartesian product
+		Set<IntegerArray> ret;
+		if (times == 0) {
+			 ret = new HashSet<IntegerArray>();
+			 ret.add(new IntegerArray(0));
+			return ret;
+		} else {
+			return _cartesianProduct(0, times, prices);
+		}
+	}
+	
+	private static Set<IntegerArray> _cartesianProduct(int index, int times, IntegerArray prices) {	    
+		Set<IntegerArray> ret = new HashSet<IntegerArray>();
+	    
+	    if (index == times) {
+	    	// initialize the iteration
+	        ret.add(new IntegerArray(times));
+	    } else {
+	    	// iteratively add new elements
+	        for (int p : prices.d) {
+	            for (IntegerArray array : _cartesianProduct(index+1, times, prices)) {
+	                array.d[index] = p;
+	                ret.add(array);
+	            }
+	        }
+	    }
+	    return ret;
+	}
+
+
+	
 	public static void main(String args[]) {
 		// TESTING / EXAMPLE
 
