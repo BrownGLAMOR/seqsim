@@ -15,7 +15,7 @@ public class TestKatzStrategy {
 		Cache.init();
 		Random rng = new Random();
 		
-		double precision = 0.5;
+		double precision = 0.1;
 		double max_price = 5.0;
 		int no_goods = 2;
 		int no_agents = 2;

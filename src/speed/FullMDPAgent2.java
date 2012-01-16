@@ -129,6 +129,7 @@ public class FullMDPAgent2 extends SeqAgent {
 				
 				// get conditional Distribution
 				double[] condDist = jde.getPMF(realized);
+//				double[] condDist = jde.getMarginalDist(0);
 				
 				IntegerArray realized_plus = tmp_r[realized.d.length + 1];
 				
@@ -179,14 +180,14 @@ public class FullMDPAgent2 extends SeqAgent {
 			    	V[x][t].put(realized, Q[max_idx]);
 		    		pi[x][t].put(realized, b[max_idx]);
 		    		
-//// Print condDist		    		
-//					System.out.println("realized.length = " + realized.d.length);
-//					// Print conditional Prices
-//					System.out.print("condDist(no realized) = [");
-//					for (int i = 0; i < condDist.length; i++)
-//						System.out.print(condDist[i] + " ");
-//					System.out.println("]");
-//
+// Print condDist		    		
+					System.out.println("realized.length = " + realized.d.length);
+					// Print conditional Prices
+					System.out.print("condDist(no realized) = [");
+					for (int i = 0; i < condDist.length; i++)
+						System.out.print(condDist[i] + " ");
+					System.out.println("]");
+
 // print Q function 
 			    		System.out.print("Q(b,(" + x + "," + t +"))=");
 			    		for (int i = 0; i < Q.length; i++)
