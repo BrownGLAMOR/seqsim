@@ -53,6 +53,19 @@ public class TestKatzStrategy {
 		System.out.print("Generating initial PP from katzman agents...");
 		pp = jf.simulAllAgents(katz_auction, no_simulations);
 		
+		System.out.println("sampled price **BINS INDEXES**:");
+		for (int i = 0; i<20; i++) {
+			int[] sample = pp[0].getSample(rng);
+
+			System.out.print(i + ": {");
+			
+			for (int d : sample) 
+				System.out.print(d + ", ");
+			
+			System.out.println("}");			
+		}
+
+		
 //		pp = new JointDistributionEmpirical[no_agents];
 //		pp[0] = new JointDistributionEmpirical(no_goods, precision, max_price);
 //		pp[0] = jf.makeUniform();

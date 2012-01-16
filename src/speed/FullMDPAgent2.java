@@ -129,6 +129,7 @@ public class FullMDPAgent2 extends SeqAgent {
 				
 				// get conditional Distribution
 				double[] condDist = jde.getPMF(realized);
+//				double[] condDist = jde.getPMF(new double[] {});
 //				double[] condDist = jde.getMarginalDist(0);
 				
 				IntegerArray realized_plus = tmp_r[realized.d.length + 1];
