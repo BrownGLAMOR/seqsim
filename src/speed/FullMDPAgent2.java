@@ -106,7 +106,7 @@ public class FullMDPAgent2 extends SeqAgent {
 				// Compute Reward and F(p)
 				double temp = 0;
 	    		double winning_prob = 0;
-	    		for (int j = 0; j*jde.precision < optimal_bid ; j++) {
+	    		for (int j = 0; j*jde.precision < optimal_bid && j < condDist.length; j++) {
 	    			temp += -(j*jde.precision) * condDist[j];	// add -condDist*f(p)
 	    			winning_prob += condDist[j];
 	    		}
@@ -182,20 +182,21 @@ public class FullMDPAgent2 extends SeqAgent {
 		    		pi[x][t].put(realized, b[max_idx]);
 		    		
 // Print condDist		    		
-					System.out.println("realized.length = " + realized.d.length);
+					//System.out.println("realized.length = " + realized.d.length);
 					// Print conditional Prices
-					System.out.print("condDist(no realized) = [");
+					/*System.out.print("condDist(no realized) = [");
 					for (int i = 0; i < condDist.length; i++)
 						System.out.print(condDist[i] + " ");
 					System.out.println("]");
+					*/
 
 // print Q function 
-			    		System.out.print("Q(b,(" + x + "," + t +"))=");
-			    		for (int i = 0; i < Q.length; i++)
-			    			System.out.print(Q[i]+",");
-			    		System.out.println();
+//			    		System.out.print("Q(b,(" + x + "," + t +"))=");
+//			    		for (int i = 0; i < Q.length; i++)
+//			    			System.out.print(Q[i]+",");
+//			    		System.out.println();
 //			    	
-					System.out.println("first round: \t MDP agent bids " + pi[0][0].get(realized));
+//					System.out.println("first round: \t MDP agent bids " + pi[0][0].get(realized));
 	    		}
     		}		    	
 		}
@@ -237,4 +238,14 @@ public class FullMDPAgent2 extends SeqAgent {
 		return pi[no_goods_won][good_id].get(realized);
 	}
 	
+	// helpers. these may cheat.
+	public double getFirstRoundBid() {
+		// no goods won. good_id == 0. tmp_r[0] is a special global for good 0. 
+		return pi[0][0].get(tmp_r[0]);
+	}
+	
+	public double getSecondRoundBid(int no_goods_won) {
+		// truthful bidding. realized prices don't matter.
+		return v.getValue(no_goods_won+1) - v.getValue(no_goods_won);
+	}
 }
