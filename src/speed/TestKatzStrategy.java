@@ -22,7 +22,7 @@ public class TestKatzStrategy {
 
 		int no_simulations = 1000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
 		
-		int max_iterations = 100000;
+		int max_iterations = 1000;
 
 		FileWriter fw = new FileWriter("katz" + no_agents + ".csv");
 
@@ -41,14 +41,19 @@ public class TestKatzStrategy {
 		System.out.print("Generating initial PP from katzman agents...");
 		pp = jf.simulAllAgentsOnePP(katz_auction, no_simulations);
 		
-		pp.output();
+		pp.outputNormalized();
+		
+		fw.write("all realized price vectors in pp:\n");
+		fw.write("---------------------------------\n");
+		pp.outputRaw(fw);
 
 		System.out.println("done");
+		
+		System.out.println("Generating " + max_iterations + " first-round bids...");
 		
 		KatzHLValue value = new KatzHLValue(no_agents - 1, max_value, katz_precision, rng);
 		
 		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
-		
 
 		FullMDPAgent2 mdp_agent = new FullMDPAgent2(value, 1);
 		mdp_agent.setJointDistribution(pp);
@@ -76,5 +81,7 @@ public class TestKatzStrategy {
 			// Draw new valuation for the next round
 			value.reset();
 		}
+		
+		System.out.println("done");
 	}
 }

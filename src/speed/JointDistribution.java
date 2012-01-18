@@ -1,5 +1,7 @@
 package speed;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
 
 public abstract class JointDistribution {
@@ -23,8 +25,11 @@ public abstract class JointDistribution {
 	public abstract int[] getSample(Random rng);
 	
 	// debug: get a print out of the JointDistribution
-	public abstract void output();
-	
+	public abstract void outputNormalized();
+
+	// debug: get a print out of raw information in the JD
+	public abstract void outputRaw(FileWriter fw) throws IOException;
+
 	//----- STATIC UTILITY FUNCTIONS BELOW THIS POINT -------
 	
 	// get the KS statistic between two distributions

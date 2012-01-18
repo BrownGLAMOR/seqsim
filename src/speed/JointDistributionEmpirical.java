@@ -1,5 +1,8 @@
 package speed;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -32,6 +35,8 @@ public class JointDistributionEmpirical extends JointDistribution {
 
 	HashMap<IntegerArray, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
 	HashMap<IntegerArray, Integer>[] sum; // hash map from realized prices (as bins) to freq dist. sums, one per good
+	
+	ArrayList<IntegerArray> log; 	// log of all realized prices fed into the JDE
 	
 	// no_goods is the number of goods/auctions
 	@SuppressWarnings("unchecked")
@@ -69,6 +74,8 @@ public class JointDistributionEmpirical extends JointDistribution {
 		
 		for (int i = 0; i<no_goods+1; i++)
 			this.r_tmp[i] = new IntegerArray(i);
+		
+		this.log = new ArrayList<IntegerArray>();
 	}
 		
 	// Call this to reset the internal state. This is automatically
@@ -87,7 +94,9 @@ public class JointDistributionEmpirical extends JointDistribution {
 			p.clear();
 
 		for (HashMap<IntegerArray, Integer> s : this.sum)
-			s.clear();		
+			s.clear();
+		
+		log.clear();
 	}
 	
 	// Call this once per realized price vector to populate the joint distribution
@@ -96,6 +105,8 @@ public class JointDistributionEmpirical extends JointDistribution {
 		if (realized.d.length != no_goods)
 			throw new RuntimeException("length of realized price vector must == no_goods");
 
+		log.add(realized);
+		
 		// for each good		
 		for (int i = 0; i<no_goods; i++) {			
 			// create array with binned conditional prices only
@@ -295,7 +306,22 @@ public class JointDistributionEmpirical extends JointDistribution {
 	}
 	
 	@Override
-	public void output() {
+	public void outputRaw(FileWriter fw) throws IOException {
+		for (IntegerArray a : log) {
+			int len = a.d.length - 1;
+			
+			// print out [0, a.d.length-2]
+			for (int i = 0; i<len; i++)
+				fw.write(a.d[i] + ",");
+			
+			// print out final value, [a.d.length-1]
+			if (a.d.length > 0)
+				fw.write(a.d[len] + "\n");
+		}
+	}
+	
+	@Override
+	public void outputNormalized() {
 		int total_act = 0;
 		int total_exp = 0;
 		

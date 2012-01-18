@@ -59,6 +59,6 @@ public class TestSeqAuction {
 		System.out.println("done");
 		
 		// Debug
-		jde[0].output();
+		jde[0].outputNormalized();
 	}
 }
