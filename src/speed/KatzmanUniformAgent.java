@@ -34,8 +34,9 @@ public class KatzmanUniformAgent extends SeqAgent {
 //			bid = 0;
 //		}
 //		return bid;
-	
-		return (1-1/(2*v.N))*v.H;		// I was dumb. We had a theoretical formula for calculating bids, why not use? 
+
+//		System.out.println("v.H = " + v.H + ", bid = " + (1.0- (1.0/(2.0*v.N)) )*v.H);
+		return (1.0- (1.0/(2.0*v.N)) )*v.H;		// I was dumb. We had a theoretical formula for calculating bids, why not use? 
 	}
 	
 	@Override

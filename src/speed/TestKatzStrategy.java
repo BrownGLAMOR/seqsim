@@ -16,14 +16,14 @@ public class TestKatzStrategy {
 		Random rng = new Random();
 		
 		double katz_precision = 0.01;
-		double max_value = 10.0;
+		double max_value = 1.0;
 
 		double jf_precision = 0.01;
 //		double max_price = max_value/2;
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 2;
+		int no_agents = 5;
 		int nth_price = 2;
 		int no_simulations = 1000000;		// run how many games to generate PP
 		
@@ -50,6 +50,7 @@ public class TestKatzStrategy {
 		KatzHLValue value = new KatzHLValue(no_agents - 1, max_value, katz_precision, rng);
 		
 		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
+		
 
 		FullMDPAgent2 mdp_agent = new FullMDPAgent2(value, 1);
 		mdp_agent.setJointDistribution(pp);
