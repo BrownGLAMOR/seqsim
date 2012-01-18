@@ -81,4 +81,30 @@ public class JointFactory extends Thread {
 		return jde;
 	}
 
+	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent.
+	public JointDistributionEmpirical simulAllAgentsOnePP(SeqAuction auction, int no_simulations) throws IOException {	
+		SeqAgent[] agents = auction.agents;
+
+		// create JDEs, one per agent	
+		JointDistributionEmpirical jde = new JointDistributionEmpirical(no_goods, precision, max_price);
+
+		// Play auctions
+		for (int j = 0; j<no_simulations; j++) {
+			// Cause each agent to take on a new valuation by calling reset() on their valuation function
+			for (int k = 0; k<agents.length; k++)
+				agents[k].v.reset();
+		
+			// Play the auction. This will call the agent's reset(), which will cause MDP to be recomputed.
+			// so long as the agent's reset() function calls its computeMDP().
+			auction.play(true, null);		// true=="quiet mode", null=="don't write to disk"
+			
+			// Add results from ALL agents to PP distribution
+			for (int k = 0; k<agents.length; k++)
+				jde.populate(auction.hob[k]);
+		}
+		
+		jde.normalize();
+		
+		return jde;
+	}
 }

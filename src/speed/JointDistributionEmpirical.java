@@ -299,6 +299,8 @@ public class JointDistributionEmpirical extends JointDistribution {
 		int total_act = 0;
 		int total_exp = 0;
 		
+		System.out.println("max_price witnessed = " + witnessed_max_price);
+		
 		for (int i = 0; i<no_goods; i++) {
 			int max_realizations = MathOps.ipow(this.no_bins, i);
 			
