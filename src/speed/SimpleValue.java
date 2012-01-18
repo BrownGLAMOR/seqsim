@@ -8,8 +8,8 @@ public class SimpleValue extends Value{
 	public SimpleValue(int no_goods) {
 		v = new double[no_goods+1];
 		v[0] = 0;
-		v[1] = 1.5;
-		v[2] = 3.0;
+		v[1] = 2;
+		v[2] = 5;
 //		for (int i = 1; i <= no_goods; i++)
 //			v[i] = 5;
 //		for (int i = 0; i <= no_goods; i++)

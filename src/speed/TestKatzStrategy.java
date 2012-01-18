@@ -2,13 +2,7 @@ package speed;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Random;
-
-import legacy.DiscreteDistribution;
-import legacy.DiscreteDistributionWellman;
-import legacy.Histogram;
 
 // Test if strategy computed from MDP would deviate if initiated from a Katzman-generated price distribution
 public class TestKatzStrategy {
@@ -17,15 +11,16 @@ public class TestKatzStrategy {
 		Random rng = new Random();
 				
 		double katz_precision = 0.01;
-		double max_value = 10.0;
+		double max_value = 1.0;
 
-		double jf_precision = 0.1;
+		double jf_precision = 0.01;
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 3;
+		int no_agents = 5;
 		int nth_price = 2;
-		int no_simulations = 1333333;		// run how many games to generate PP. this gets multiplied by no_agents.
+
+		int no_simulations = 1000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
 		
 		int max_iterations = 100000;
 
@@ -53,6 +48,7 @@ public class TestKatzStrategy {
 		KatzHLValue value = new KatzHLValue(no_agents - 1, max_value, katz_precision, rng);
 		
 		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
+		
 
 		FullMDPAgent2 mdp_agent = new FullMDPAgent2(value, 1);
 		mdp_agent.setJointDistribution(pp);
@@ -79,6 +75,6 @@ public class TestKatzStrategy {
 			
 			// Draw new valuation for the next round
 			value.reset();
-		}		
+		}
 	}
 }

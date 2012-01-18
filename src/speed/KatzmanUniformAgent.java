@@ -19,21 +19,24 @@ public class KatzmanUniformAgent extends SeqAgent {
 
 	// Calculate the first Bid
 	public double calculateFirstBid() {		
-		double denominator = Math.pow(v.H/v.max_value, 2*v.N-1);
-		double numerator = 0;	
-		
-		// We assume that lower bound of F is 0
-		for (int i = 1; i*v.precision <= v.H; i++)
-			numerator += Math.pow(i*v.precision/v.max_value, 2*v.N-1)*v.precision;
+//		double denominator = Math.pow(v.H/v.max_value, 2*v.N-1);
+//		double numerator = 0;	
+//		
+//		// We assume that lower bound of F is 0
+//		for (int i = 1; i*v.precision <= v.H; i++)
+//			numerator += Math.pow(i*v.precision/v.max_value, 2*v.N-1)*v.precision;
+//
+//		double bid = (v.H - numerator/denominator);
+//		// bid has to be non-negative
+//		if (bid < 0) {
+//			if (bid < -v.precision)
+//				System.out.println("Warning: agent " + agent_idx + ", bids " + bid + ", too negative");	// print warning
+//			bid = 0;
+//		}
+//		return bid;
 
-		double bid = (v.H - numerator/denominator);
-		// bid has to be non-negative
-		if (bid < 0) {
-			if (bid < -v.precision)
-				System.out.println("Warning: agent " + agent_idx + ", bids " + bid + ", too negative");	// print warning
-			bid = 0;
-		}
-		return bid;
+//		System.out.println("v.H = " + v.H + ", bid = " + (1.0- (1.0/(2.0*v.N)) )*v.H);
+		return (1.0- (1.0/(2.0*v.N)) )*v.H;		// I was dumb. We had a theoretical formula for calculating bids, why not use? 
 	}
 	
 	@Override
