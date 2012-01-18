@@ -10,22 +10,20 @@ import legacy.Histogram;
 public class TimeMDP {
 	public static void main(String args[]) throws IOException {
 
-		double precision = 0.1;
+		double precision = 0.5;
 		int no_simulations = 10000, i, no_goods = 2, max_price, no_agents = 2;
 
-// Test to see that MDPNumGoodsAgent.java works as expected. Affirmative.
+// Test to see that MDPSeqAgent.java works as expected. Affirmative.
 
+		/*
 		// Initialize agents
 		MDPSeqAgent[] agents = new MDPSeqAgent[no_agents];
 		
 		// Valuation
-		Value v = new SimpleValue(no_goods);
+		SimpleValue v = new SimpleValue(no_goods);
 		System.out.println("marginal values = [" + v.getValue(1) + ", " + (v.getValue(2) - v.getValue(1)) + "]");
 		agents[0] = new MDPSeqAgent(v, 0);
 		agents[1] = new MDPSeqAgent(v, 1);
-
-//		for (i = 0; i<no_agents; i++)
-//			agents[i] = new MDPSeqAgent(new SimpleValue(no_goods), i);
 				
 		// Initialize auction
 		SeqAuction auction = new SeqAuction(agents, 2, no_goods);
@@ -33,8 +31,8 @@ public class TimeMDP {
 		// Create price distribution
 		DiscreteDistribution[] pd = new DiscreteDistribution[no_goods];			
 		
-		Histogram h1 = new Histogram(1);
-		Histogram h2 = new Histogram(1);
+		Histogram h1 = new Histogram(precision);
+		Histogram h2 = new Histogram(precision);
 		h1.add(1);
 		h1.add(2);
 		h2.add(1);
@@ -42,6 +40,14 @@ public class TimeMDP {
 
 		pd[0] = new DiscreteDistributionWellman(h1.getDiscreteDistribution(), precision);
 		pd[1] = new DiscreteDistributionWellman(h2.getDiscreteDistribution(), precision);
+
+// inspect prices
+		for (int j = 0; j < 2; j ++) {
+			System.out.print("pd["+j+"].f = [");
+			for (i = 0; i < pd[j].f.size(); i++)
+				System.out.print(pd[j].f.get(i) + " ");
+			System.out.println("]");
+		}
 		
 		// Calculate MDP
 		for (i = 0; i<no_agents; i++)
@@ -49,12 +55,12 @@ public class TimeMDP {
 			
 		// play auction
 		auction.play(false, null);
-		/*
+		
+		*/
 
-		for (no_goods = 2; no_goods <= 5; no_goods++){
-			for (max_price = 2; max_price <= 10; max_price++) {
+			for (max_price = 2; max_price <= 100; max_price++) {
 
-				System.out.print("no_goods = " + no_goods + ", no_possible_prices = " + (int)(max_price+1));
+				System.out.print("no_possible_prices = " + (int)(max_price+1));
 				Value valuation = new SimpleValue(no_goods);						// Create valuation				
 
 				// Create price distribution
@@ -66,7 +72,6 @@ public class TimeMDP {
 
 				MDPSeqAgent[] agents = new MDPSeqAgent[1];
 				agents[0] = new MDPSeqAgent(valuation, 0);
-//				MDPSeqAgent agent = new MDPSeqAgent(valuation, 0);
 				SeqAuction auction = new SeqAuction(agents, 2, no_goods);
 				
 				// Calculate MDP -- this is the time sensitive part
@@ -82,7 +87,7 @@ public class TimeMDP {
 			System.out.println();
 		}
 		
-		*/
+//		*/
 		
-	}	
-}
+}	
+

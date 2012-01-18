@@ -18,13 +18,14 @@ public class TestKatzStrategy {
 		double katz_precision = 0.01;
 		double max_value = 10.0;
 
-		double jf_precision = 0.5;
-		double max_price = max_value/2;
+		double jf_precision = 0.01;
+//		double max_price = max_value/2;
+		double max_price = max_value;
 		
 		int no_goods = 2;
 		int no_agents = 2;
 		int nth_price = 2;
-		int no_simulations = 10000000;		// run how many games to generate PP
+		int no_simulations = 1000000;		// run how many games to generate PP
 		
 		int max_iterations = 10000;
 		
@@ -41,8 +42,7 @@ public class TestKatzStrategy {
 		JointDistributionEmpirical pp;
 		
 		System.out.print("Generating initial PP from katzman agents...");
-		pp = jf.simulOneAgent(katz_auction, 0, no_simulations);
-		
+		pp = jf.simulOneAgent(katz_auction, 0, no_simulations);		
 		pp.output();
 
 		System.out.println("done");
@@ -64,6 +64,6 @@ public class TestKatzStrategy {
 			
 			// Draw new valuation for the next round
 			value.reset();
-		}		
+		}
 	}
 }
