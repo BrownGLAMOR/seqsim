@@ -21,7 +21,7 @@ public class TestKatzmanAgent {
 			h.add(i*precision);
 		DiscreteDistribution F = new DiscreteDistributionWellman(h.getDiscreteDistribution(), precision);
 		
-		// Create Agent & assign valuation (H = 7, L = 5)
+		// Create Agent & assign valuation
 		KatzmanAgent[] agent = new KatzmanAgent[1];
 		agent[0] = new KatzmanAgent(new SimpleValue(2), 0);
 		agent[0].setParameters(F, N);
