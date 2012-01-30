@@ -1,6 +1,7 @@
 package speed;
 
 import java.io.IOException;
+import java.util.Set;
 
 public class JointCondFactory extends Thread {
 	int no_goods;
@@ -13,17 +14,31 @@ public class JointCondFactory extends Thread {
 		this.max_price = max_price;
 	}
 	
-	// return a uniform joint distribution TODO: to modify
-	public JointDistributionEmpirical makeUniform() {
-		JointDistributionEmpirical jde = new JointDistributionEmpirical(no_goods, precision, max_price);
-		
-		// enumerate over possible price vectors
-		for (IntegerArray realized : Cache.getCartesianProduct(jde.bins, no_goods))
-			jde.populate(realized);
+	// return a uniform joint distribution 
+	public JointCondDistributionEmpirical makeUniform() {
+		Cache.init();
 
-		jde.normalize();
+		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price);		
+
+//		Set<BooleanArray> winner = Cache.getWinningHistory(no_goods);
+		// enumerate over possible winners and price vectors    
+//		for (int[] tmp : Cache.getCartesianProduct(new int[] {0, 1}, no_goods)) {
+//			// FIXME: Didn't implement a Cache.getCartesianProduct for boolean array. Do we need one?
+//			for (int i = 0; i < no_goods; i++) {
+//				if (tmp[i] == 1)
+//					winner[i] = true;
+//				else
+//					winner[i] = false;
+//			}
+		for (BooleanArray winner : Cache.getWinningHistory(no_goods)) {
+			for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, no_goods)) {
+				jcde.populate(new WinnerAndRealized(winner, realized));			
+			}
+		}
+
+		jcde.normalize();
 		
-		return jde;
+		return jcde;
 	}
 	
 	// return a joint by playing simulations. the distribution is produced by taking the HOB of agent_idx. TODO: to modify
@@ -117,4 +132,38 @@ public class JointCondFactory extends Thread {
 		
 		return jcde;
 	}
+
+	// Testing
+	public static void main(String args[]) {
+		int no_goods = 2;
+		double precision = 1;
+		double max_price = 3;
+		
+		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
+		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price);
+		jcde = jcf.makeUniform();
+		
+		double[] pmf; 
+
+		// print first round unconditional price
+		pmf = jcde.getPMF(new boolean[0], new double[0]);
+		System.out.print("pmf(1 | { }, { }) = {");
+		for (int i = 0; i < pmf.length; i++)
+			System.out.print(pmf[i] + " ");
+		System.out.println("}");
+
+		// print some second round conditional prices
+		pmf = jcde.getPMF(new boolean[] {false}, new double[] {2});
+		System.out.print("pmf(1 | {0}, {2}) = {");
+		for (int i = 0; i < pmf.length; i++)
+			System.out.print(pmf[i] + " ");
+		System.out.println("}");
+		
+		pmf = jcde.getPMF(new boolean[] {true}, new double[] {3});
+		System.out.print("pmf(1 | {1}, {3}) = {");
+		for (int i = 0; i < pmf.length; i++)
+			System.out.print(pmf[i] + " ");
+		System.out.println("}");
+	}
+
 }

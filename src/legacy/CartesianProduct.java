@@ -3,6 +3,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import speed.BooleanArray;
 import speed.DoubleArray;
 import speed.IntegerArray;
 
@@ -105,7 +106,7 @@ public class CartesianProduct {
 	}
 	
 	
-	// FOR DOUBLE ARRAYS
+	// FOR INTEGER ARRAYS
 	
 	public static Set<IntegerArray> generate(IntegerArray prices, int times) {
 		// iteratively generate the cartesian product
@@ -138,6 +139,76 @@ public class CartesianProduct {
 	}
 
 
+
+	// FOR BOOLEAN ARRAYS
+//	
+//	public static Set<boolean[]> generate(int times) {
+//		// iteratively generate the cartesian product
+//		Set<boolean[]> ret;
+//		if (times == 0) {
+//			 ret = new HashSet<boolean[]>();
+//			 ret.add(new boolean[] {}); 
+//			return ret;
+//		} else {
+//			return _cartesianProduct(0, times);
+//		}
+//	}
+//	
+//	private static Set<boolean[]> _cartesianProduct(int index, int times) {	    
+//		Set<boolean[]> ret = new HashSet<boolean[]>();
+//	    
+//	    if (index == times) {
+//	    	// initialize the iteration
+//	        ret.add(new boolean[times]);
+//	    } else {
+//	    	// iteratively add new elements (true, false)
+//            for (boolean[] array : _cartesianProduct(index+1, times)) {
+//                array[index] = true;
+//                ret.add(array);
+//            }
+//            for (boolean[] array : _cartesianProduct(index+1, times)) {
+//                array[index] = false;
+//                ret.add(array);
+//            }
+//	    }
+//	    return ret;
+//	}
+
+	// FOR BOOLEAN ARRAYS
+	
+	public static Set<BooleanArray> generate(int times) {
+		// iteratively generate the cartesian product
+		Set<BooleanArray> ret;
+		if (times == 0) {
+			 ret = new HashSet<BooleanArray>();
+			 ret.add(new BooleanArray(0)); 
+			return ret;
+		} else {
+			return _cartesianProduct(0, times);
+		}
+	}
+	
+	private static Set<BooleanArray> _cartesianProduct(int index, int times) {	    
+		Set<BooleanArray> ret = new HashSet<BooleanArray>();
+	    
+	    if (index == times) {
+	    	// initialize the iteration
+	        ret.add(new BooleanArray(times));
+	    } else {
+	    	// iteratively add new elements (true, false)
+            for (BooleanArray array : _cartesianProduct(index+1, times)) {
+                array.d[index] = true;
+                ret.add(array);
+            }
+            for (BooleanArray array : _cartesianProduct(index+1, times)) {
+                array.d[index] = false;
+                ret.add(array);
+            }
+	    }
+	    return ret;
+	}
+
+	
 	
 	public static void main(String args[]) {
 		// TESTING / EXAMPLE
@@ -164,6 +235,28 @@ public class CartesianProduct {
 			System.out.println();
 
 		}
+
+		// -------------- testing boolean "generate"
+		
+		// enumerate possible winning history
+		Set<BooleanArray> w = CartesianProduct.generate(3);
+		
+		// print out enumerate prices
+		System.out.println("enumerated winning history include: ");
+		System.out.println("size of winning history = " + enumeration.size());
+		
+		Iterator<BooleanArray> it2 = w.iterator();
+		while (it2.hasNext()) {
+			BooleanArray p = it2.next();
+			
+			for (int i = 0; i < p.d.length; i++){
+				System.out.print(p.d[i] + " ");
+			}
+			System.out.println();
+
+		}
+
+	
 	}
 }
 	 

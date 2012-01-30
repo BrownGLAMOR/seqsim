@@ -31,4 +31,5 @@ public abstract class SeqAgent {
 	public void setJointDistribution(JointDistributionEmpirical jde_old){
 	}
 
+	
 }

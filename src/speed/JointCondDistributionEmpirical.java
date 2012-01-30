@@ -107,43 +107,44 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	// Call this once per realized price vector to populate the joint distribution
 	// war.d.length must == no_goods from last reset()
 	public void populate(WinnerAndRealized past) {
-		if (past.d.length != no_goods)
-			throw new RuntimeException("length of realized price vector must == no_goods");
+		if (past.r.d.length != no_goods || past.w.d.length != no_goods)
+			throw new RuntimeException("length of realized price/winner vector must == no_goods");
 
 		log.add(past);
 		
 		// for each good		
 		for (int i = 0; i<no_goods; i++) {			
 			// create array with binned conditional prices only
-			WinnerAndRealized r = r_tmp[i];
+			WinnerAndRealized wr = r_tmp[i];
+//			r.w.d = Arrays.copyOf(past.w.d, past.w.d.length);
 			for (int j = 0; j<i; j++) { 
-				r.w[j] = past.w[j];
-				r.d[j] = past.d[j];
+				wr.w.d[j] = past.w.d[j];
+				wr.r.d[j] = past.r.d[j];
 			}
 			// get the distribution conditioned on earlier prices
-			double[] p = prob[i].get(r);
+			double[] p = prob[i].get(wr);
 						
 			if (p == null) {
 				// this is our first entry into the distribution; create it
 				p = new double[no_bins];
 			
-				p[past.d[i]]++;
+				p[past.r.d[i]]++;
 				
 				// Make a copy of IntegerArray since we are PUTing a new copy to the HashMap.
-				r = new WinnerAndRealized(Arrays.copyOf(r.w, r.w.length), Arrays.copyOf(r.d, r.d.length));
+				wr = new WinnerAndRealized(new BooleanArray(Arrays.copyOf(wr.w.d, wr.w.d.length)), new IntegerArray(Arrays.copyOf(wr.r.d, wr.r.d.length)));
 				
-				prob[i].put(r, p);
-				sum[i].put(r, 1);
+				prob[i].put(wr, p);
+				sum[i].put(wr, 1);
 			} else {
-				p[past.d[i]]++;
+				p[past.r.d[i]]++;
 				
 				// We don't need to make a copy of IntegerArray here because when put() overwrites an existing entry
 				// in the HashMap, it keeps the existing key.
-				sum[i].put(r, sum[i].get(r) + 1);
+				sum[i].put(wr, sum[i].get(wr) + 1);
 			}
 
 			// record unconditional probability
-			marg_prob[i][past.d[i]]++;
+			marg_prob[i][past.r.d[i]]++;
 		}
 
 		marg_sum++;
@@ -168,8 +169,8 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				realized[i] = max_price;
 			
 			// bin the realized price for this good
-			past.d[i] = bin(realized[i], precision);
-			past.w = winner;
+			past.r.d[i] = bin(realized[i], precision);
+			past.w.d = winner;
 		}
 		
 		populate(past);
@@ -207,16 +208,16 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		if (!ready)
 			throw new RuntimeException("must normalize first");
 		
-		if (past.d.length >= no_goods)
+		if (past.r.d.length >= no_goods)
 			throw new IllegalArgumentException("no more goods");
 		
-		double[] p = prob[past.d.length].get(past);
+		double[] p = prob[past.r.d.length].get(past);
 		
 		if (p == null) {
 			// ut-oh, return the unconditional (marginal) pmf for this good since we have no data
 			// todo: we return this when no samples == 0, but maybe we need logic to 
 			//       return this when no samples < viable threshold
-			p = marg_prob[past.d.length];
+			p = marg_prob[past.r.d.length];
 
 //// print. TODO: conditional distribution is an issue for MDP Agent			
 //			System.out.print("previous price not observed, outputting PMF = \t [");
@@ -239,9 +240,9 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		// bin the realized prices
 		WinnerAndRealized past = r_tmp[realized.length];
 
-		past.w = winner;
+		past.w.d = winner;
 		for (int i = 0; i<realized.length; i++)
-			past.d[i] = bin(realized[i], precision);
+			past.r.d[i] = bin(realized[i], precision);
 		
 				
 		// get the price distribution conditional on realized prices
@@ -289,7 +290,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 					// add index to realized so that in next round we get the pmf conditional
 					// on our result for this round
 					for (int k = 0; k<=i; k++)
-						r_tmp[i+1].d[k] = bins[k];
+						r_tmp[i+1].r.d[k] = bins[k];
 					
 					// go onto next good
 					break;
@@ -318,15 +319,15 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	@Override
 	public void outputRaw(FileWriter fw) throws IOException {
 		for (WinnerAndRealized past : log) {
-			int len = past.d.length - 1;
+			int len = past.r.d.length - 1;
 			
 			// print out [0, a.d.length-2]
 			for (int i = 0; i<len; i++)
-				fw.write(past.d[i] + ",");
+				fw.write(past.r.d[i] + ",");
 			
 			// print out final value, [a.d.length-1]
-			if (past.d.length > 0)
-				fw.write(past.d[len] + "\n");
+			if (past.r.d.length > 0)
+				fw.write(past.r.d[len] + "\n");
 		}
 	}
 	
@@ -347,8 +348,8 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			
 			for (Entry<WinnerAndRealized, double[]> e : prob[i].entrySet()) {
 				System.out.print("pr(" + i + " | w = {");
-				
-				for (boolean p : e.getKey().w) {
+
+				for (boolean p : e.getKey().w.d) {
 					if (p == true)
 						System.out.print("1 ,");
 					else
@@ -356,7 +357,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				}
 				System.out.print("}, p = {");
 
-				for (int p : e.getKey().d)
+				for (int p : e.getKey().r.d)
 					System.out.print(val(p, precision) + ", ");
 				
 				System.out.print("}) [hits=" + sum[i].get(e.getKey()) + "] ==> {");

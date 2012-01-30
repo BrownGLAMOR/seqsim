@@ -13,6 +13,7 @@ public class Cache {
 
 	// CACHE: Cartesian product over prices
 	static HashMap<DoubleArray, Set<double[]>>[] cartesian_prices;
+		
 	static Set<double[]> getCartesianProduct(double[] prices, int times) {
 		DoubleArray tmp = new DoubleArray(prices);
 		
@@ -68,6 +69,20 @@ public class Cache {
 		return ret;
 	}
 	
+	static Set<BooleanArray>[] possible_winning_history;
+
+	// Generate the set of possible win/not_win histories
+	static Set<BooleanArray> getWinningHistory(int times) {
+		Set<BooleanArray> ret = possible_winning_history[times];
+		
+		if (ret == null) {
+			ret = CartesianProduct.generate(times);
+			possible_winning_history[times] = ret;
+		}
+		
+		return ret;
+	}
+
 	// CACHE: SET OF ALL GOODS 
 	// i.e., no_goods == 4, return value == {0, 1, 2, 3, 4}
 	static Set<Integer>[] set_of_all_goods;

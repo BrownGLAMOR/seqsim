@@ -3,19 +3,19 @@ package speed;
 import java.util.Arrays;
 
 public class WinnerAndRealized {
-	public boolean[] w;
-	public int[] d;
+	public BooleanArray w;
+	public IntegerArray r;
 	
 	public WinnerAndRealized(int n) {
-		w = new boolean[n];			// Winner
-		d = new int[n];				// realized prices (binned)
+		w = new BooleanArray(n);			// Winner
+		r = new IntegerArray(n);				// realized prices (binned)
 	}
 
-	public WinnerAndRealized(boolean[] w, int[] d) {
-		if (w.length != d.length)
-			System.out.println("Error: w.length has to equal d.length!");
+	public WinnerAndRealized(BooleanArray w, IntegerArray r) {
+		if (w.d.length != r.d.length)
+			System.out.println("Error: w.d.length has to equal r.d.length!");
 		this.w = w;
-		this.d = d;
+		this.r = r;
 	}
 	
 	@Override
@@ -31,16 +31,16 @@ public class WinnerAndRealized {
 		WinnerAndRealized aThat = (WinnerAndRealized) that;
 		
 		// underlying data points to same array?
-		if (this.d == aThat.d && this.w == aThat.w)
+		if (this.r == aThat.r && this.w == aThat.w)
 			return true;
 		
 		// else, do pairwise compare
-		return (Arrays.equals(this.w, aThat.w) && Arrays.equals(this.d, aThat.d));
+		return (Arrays.equals(this.w.d, aThat.w.d) && Arrays.equals(this.r.d, aThat.r.d));
 	}
 	
 	@Override
 	public int hashCode() {
-		return Arrays.hashCode(d)*Arrays.hashCode(w);
+		return Arrays.hashCode(r.d)*Arrays.hashCode(w.d);
 	}
 
 }

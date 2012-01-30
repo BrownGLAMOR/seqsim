@@ -15,6 +15,8 @@ public class JointFactory extends Thread {
 	
 	// return a uniform joint distribution
 	public JointDistributionEmpirical makeUniform() {
+		Cache.init();
+		
 		JointDistributionEmpirical jde = new JointDistributionEmpirical(no_goods, precision, max_price);
 		
 		// enumerate over possible price vectors
@@ -107,4 +109,16 @@ public class JointFactory extends Thread {
 		
 		return jde;
 	}
+
+	// Testing
+	public static void main(String args[]) {
+		int no_goods = 2;
+		double precision = 1;
+		double max_price = 3;
+		
+		JointFactory jf = new JointFactory(no_goods, precision, max_price);
+		jf.makeUniform();
+	}
+
+
 }
