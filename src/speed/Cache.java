@@ -12,8 +12,7 @@ public class Cache {
 	static final int max_goods = 11;
 
 	// CACHE: Cartesian product over prices
-	static HashMap<DoubleArray, Set<double[]>>[] cartesian_prices;
-		
+	static HashMap<DoubleArray, Set<double[]>>[] cartesian_prices;	
 	static Set<double[]> getCartesianProduct(double[] prices, int times) {
 		DoubleArray tmp = new DoubleArray(prices);
 		
@@ -39,7 +38,6 @@ public class Cache {
 		
 		return ret;
 	}
-
 	
 	// CACHE: Cartesian product over bins
 	static HashMap<IntegerArray, Set<int[]>>[] cartesian_bins;
@@ -68,14 +66,13 @@ public class Cache {
 		
 		return ret;
 	}
-	
-	static Set<BooleanArray>[] possible_winning_history;
 
-	// Generate the set of possible win/not_win histories
+	// Cache: Cartesian product over {true, false}
+	static Set<BooleanArray>[] possible_winning_history;
 	static Set<BooleanArray> getWinningHistory(int times) {
 		Set<BooleanArray> ret = possible_winning_history[times];
 		
-		if (ret == null) {
+		if (ret.size() == 0) {
 			ret = CartesianProduct.generate(times);
 			possible_winning_history[times] = ret;
 		}
@@ -112,6 +109,12 @@ public class Cache {
 		cartesian_bins2 = new HashMap[max_goods];
 		for (int i = 0; i<max_goods; i++)
 			cartesian_bins2[i] = new HashMap<IntegerArray, Set<IntegerArray>>();
+
+		// Cartesian product over {true, false} histories
+		possible_winning_history = new Set[max_goods];
+		for (int i = 0; i<max_goods; i++)
+			possible_winning_history[i] = new HashSet<BooleanArray>();
+
 		
 		// Set Of All Goods
 		set_of_all_goods = new Set[max_goods];
@@ -132,6 +135,13 @@ public class Cache {
 		long start = System.currentTimeMillis();
 		Cache.init();
 		long finish = System.currentTimeMillis();
+		
+		for (BooleanArray ba : Cache.getWinningHistory(3)){
+			System.out.print("element = {");
+			for (int i = 0; i < ba.d.length; i++)
+				System.out.print(ba.d[i] + ",");
+			System.out.println("}");
+		}
 		
 		System.out.println("Initialized in " + (finish-start) + " milliseconds.");
 	}
