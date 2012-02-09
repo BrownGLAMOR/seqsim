@@ -13,7 +13,6 @@ public class FullCondMDPAgent extends SeqAgent {
 	
 	// computational variables
 	int price_length;
-	int x;
 	double optimal_bid, temp, winning_prob;
 	IntegerArray realized, realized_plus;
 	BooleanArray winner, winner_plus;
@@ -35,7 +34,7 @@ public class FullCondMDPAgent extends SeqAgent {
 		super(agent_idx, valuation);
 				
 		// initiate (to be used when calling "getBid()"; to be cleared when "reset()")
-		no_goods_won = 0;
+//		no_goods_won = 0;
 	}
 	
 	// What does this do? 
@@ -84,7 +83,7 @@ public class FullCondMDPAgent extends SeqAgent {
 
 		for (BooleanArray winner : Cache.getWinningHistory(t)) {
 				for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
-					V[t].put(new WinnerAndRealized(winner, realized), v.getValue(x)); 
+					V[t].put(new WinnerAndRealized(winner, realized), v.getValue(winner.getSum())); 
 				}
 		}
 
@@ -98,7 +97,7 @@ public class FullCondMDPAgent extends SeqAgent {
 				
 				wr = new WinnerAndRealized(winner, realized);
 	    		
-				optimal_bid = v.getValue(x+1) - v.getValue(x);
+				optimal_bid = v.getValue(winner.getSum()+1) - v.getValue(winner.getSum());
 	    		pi[t].put(wr, optimal_bid);
 				double[] condDist = jcde.getPMF(wr);
 				
@@ -116,7 +115,7 @@ public class FullCondMDPAgent extends SeqAgent {
 	    			winning_prob += condDist[j];
 	    		}
 
-	    		temp += winning_prob*v.getValue(x+1) + (1-winning_prob)*v.getValue(x);	    		
+	    		temp += winning_prob*v.getValue(winner.getSum()+1) + (1-winning_prob)*v.getValue(winner.getSum());	    		
 	    		V[t].put(wr, temp);
 			}
 		}
@@ -170,13 +169,11 @@ public class FullCondMDPAgent extends SeqAgent {
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			}
 		    			
-		    			// XXX: stopped here. 
-		    			
 		    			// if agent doesn't win round t
 		    			for (int j = i+1; j < condDist.length; j++) {
 		    				realized_plus.d[realized.d.length] = j;
 		    				winner_plus.d[winner.d.length] = false;
-		    				temp2 += condDist[j] * V[x][t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
+		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			}
 		    					    			
 			    		if (temp2 > max_value || i == 0) {	// Compare
@@ -189,10 +186,8 @@ public class FullCondMDPAgent extends SeqAgent {
 	    			
 	    			
 		    		// Now we found the optimal bid for state (X,t). Assign values to \pi((X,t)) and V((X,t))
-		    		V[x][t].put(wr, Q[max_idx]);
-		    		pi[x][t].put(wr, b[max_idx]);
-		    		
-		    		
+		    		V[t].put(wr, Q[max_idx]);
+		    		pi[t].put(wr, b[max_idx]);
 		    		
 		    		// XXX: Do I need two unique instances of "wr" for V and pi as well? 
 		    		
@@ -223,8 +218,7 @@ public class FullCondMDPAgent extends SeqAgent {
 			for (BooleanArray winner : Cache.getWinningHistory(t)) {
 				for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
 					wr = new WinnerAndRealized(winner,realized);
-					x = winner.getSum();
-					System.out.println("V[" + x + "][" + t + "](" + wr.print() + ") = " + V[x][t].get(wr));
+					System.out.println("V[" + t + "](" + wr.print() + ") = " + V[t].get(wr));
 				}
 			}
 		}
@@ -236,8 +230,7 @@ public class FullCondMDPAgent extends SeqAgent {
 			for (BooleanArray winner : Cache.getWinningHistory(t)) {
 				for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
 					wr = new WinnerAndRealized(winner,realized);
-					x = winner.getSum();
-					System.out.println("pi[" + x + "][" + t + "](" + wr.print() + ") = " + pi[x][t].get(wr));
+					System.out.println("pi[" + t + "](" + wr.print() + ") = " + pi[t].get(wr));
 				}
 			}
 		}
@@ -265,14 +258,11 @@ public class FullCondMDPAgent extends SeqAgent {
 	@Override
 	public double getBid(int good_id) {	
 		// Figure out which ones we have won;
-		no_goods_won = 0;
 		winner = tmp_w[good_id];
 		if (good_id > 0) {
 			for (int i = 0; i < good_id; i++){
-				if (auction.winner[good_id-1] == agent_idx) {
+				if (auction.winner[good_id-1] == agent_idx)
 					winner.d[i] = true;
-					no_goods_won++;
-				}
 				else
 					winner.d[i] = false;
 			}
@@ -284,13 +274,13 @@ public class FullCondMDPAgent extends SeqAgent {
 			realized.d[i] = JointDistributionEmpirical.bin(auction.hob[agent_idx][i], jcde.precision);
 		
 		// Get optimal bid
-		return pi[no_goods_won][good_id].get(new WinnerAndRealized(winner, realized));
+		return pi[good_id].get(new WinnerAndRealized(winner, realized));
 	}
 	
 	// helpers. these may cheat.
 	public double getFirstRoundBid() {
 		// no goods won. good_id == 0. tmp_r[0] is a special global for good 0. 
-		return pi[0][0].get(new WinnerAndRealized(tmp_w[0],tmp_r[0]));
+		return pi[0].get(new WinnerAndRealized(tmp_w[0],tmp_r[0]));
 	}
 	
 	public double getSecondRoundBid(int no_goods_won) {
