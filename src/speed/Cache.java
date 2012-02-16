@@ -12,26 +12,36 @@ public class Cache {
 	static final int max_goods = 11;
 
 	
-	// CACHE: store all possible WinnerAndRealized
+	// CACHE: store all possible WinnerAndRealized, and map them back and forth into indices
 	static Set<WinnerAndRealized> allWR;
 	static HashMap<WinnerAndRealized,Integer> WR2idx;
 	static HashMap<Integer,WinnerAndRealized> idx2WR;
 	
-	static Set<WinnerAndRealized> GenarateAllWR(int no_goods, JointCondDistributionEmpirical jcde) {
+	static Set<WinnerAndRealized> GenarateAllWR(int no_goods, double max_price, double precision) {
 		Set<WinnerAndRealized> ret = allWR;
-		if (ret.size() == 0) {
+//		System.out.println("ret.size() = " + ret.size());
+//		if (ret.size() == 0) {
+			// Generate all bins
+			int no_bins = JointCondDistributionEmpirical.bin(max_price, precision) + 1;
+			IntegerArray bins = new IntegerArray(no_bins);
+			for (int j = 0; j < no_bins; j++)
+				bins.d[j] = j;
+			
+			// Iterate over all possible Winner and Realized
 			int i = 0;
 			for(BooleanArray winner : getWinningHistory(no_goods)){
-				for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, no_goods)) {
+				for (IntegerArray realized : Cache.getCartesianProduct(bins, no_goods)) {
 					WinnerAndRealized wr = new WinnerAndRealized(winner,realized);
+					System.out.println(wr.print());
+					// store them, and map them back and forth into indices
 					ret.add(wr);
 					WR2idx.put(wr, i);
 					idx2WR.put(i, wr);
 					i++;
 				}
 			}			
-		}
-			allWR = ret;
+//		}
+		allWR = ret;
 		return ret;
 	}
 
@@ -124,6 +134,12 @@ public class Cache {
 	
 	@SuppressWarnings("unchecked")
 	public static void init() {
+		
+//		allWR = new HashSet<WinnerAndRealized>;
+//		static HashMap<WinnerAndRealized,Integer> WR2idx;
+//		static HashMap<Integer,WinnerAndRealized> idx2WR;
+
+		
 		// Cartesian product over prices
 		cartesian_prices = new HashMap[max_goods];
 		for (int i = 0; i<max_goods; i++)
@@ -170,7 +186,20 @@ public class Cache {
 		Cache.init();
 		long finish = System.currentTimeMillis();
 		
-		// Let's test WinnerAnd
+		// Let's test WinnerAndRealized utilities
+		int no_goods = 2;
+		double max_price = 1.0;
+		double precision = 0.25;
+		int idx;
+		
+		Set<WinnerAndRealized> all = Cache.GenarateAllWR(no_goods, max_price, precision);
+		System.out.println("all.size() = " + all.size() + ". Include: ");
+		for (WinnerAndRealized wr : all){
+			idx = Cache.getWRidx(wr);
+			System.out.print(wr.print() + "    , index = " + idx + ", which maps back to " + Cache.getWRfromidx(idx).print());
+		}
+		
+		System.out.println();
 		
 		for (BooleanArray ba : Cache.getWinningHistory(3)){
 			System.out.print("element = {");
