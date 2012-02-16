@@ -155,7 +155,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	public void populate(boolean[] winner, double[] realized) {
 		
 //		WinnerAndRealized past = new WinnerAndRealized(realized.length);
-//		int[] temp = new int[realized.length];
+		int[] temp = new int[realized.length];
 		for (int i = 0; i<no_goods; i++) {
 			// record max price witnessed
 			if (realized[i] > witnessed_max_price)
@@ -168,11 +168,12 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				realized[i] = max_price;
 			
 			// bin the realized price for this good
-			r_tmp[i] = bin(realized[i], precision);
-		}		
+//			r_tmp[i] = bin(realized[i], precision);
+			temp[i] = bin(realized[i], precision);
+		}
 		
 		// XXX: has to NEW a WinnerAndRealized every time. Put it in Cache? 
-		populate(new WinnerAndRealized(new BooleanArray(winner),new IntegerArray(r_tmp)));
+		populate(new WinnerAndRealized(new BooleanArray(winner),new IntegerArray(temp)));
 	}
 	
 	// Call this to normalize the collected data into a joint distribution

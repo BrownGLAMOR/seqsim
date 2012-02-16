@@ -18,10 +18,10 @@ public class TestMenezesAgent {
 		Random rng = new Random();
 
 		// Test MenezesValue.java ... affirmative
-		MenezesValue v = new MenezesValue(max_value, precision, rng);
+		MenezesValue v = new MenezesValue(max_value, rng);
 		System.out.println("MenezesValue, x = " + v.getValue(1) + ", delta(x) = " + v.getValue(2) + ", delta(x) - x = " + (v.getValue(2) - v.getValue(1)));
 		
-		// create distribution F		
+		// create distribution F
 		Histogram h = new Histogram(precision);
 		for (int i = 1; i*precision <= max_value; i++)
 			h.add(i*precision);
