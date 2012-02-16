@@ -104,7 +104,6 @@ public class JointCondFactory extends Thread {
 		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price);
 
 		// Array to store winners
-		boolean[] w = new boolean[no_goods];
 		
 		// Play auctions
 		for (int j = 0; j<no_simulations; j++) {
@@ -118,12 +117,14 @@ public class JointCondFactory extends Thread {
 			
 			// Add results from ALL agents to PP distribution
 			for (int k = 0; k<agents.length; k++) {
+				boolean[] w = new boolean[no_goods];
 				for (int l = 0; l < no_goods; l++) {
 					if (auction.winner[l] == k)
 						w[l] = true;
 					else
 						w[l] = false;
 				}
+//				System.out.println("input winner = [" + w[0] + ", " + w[1] + "]");
 				jcde.populate(w,auction.hob[k]);
 			}
 		}
@@ -134,36 +135,82 @@ public class JointCondFactory extends Thread {
 	}
 
 	// Testing
-	public static void main(String args[]) {
+	public static void main(String args[]) throws IOException {
 		int no_goods = 2;
 		double precision = 1;
 		double max_price = 3;
-		
+		int no_agents = 2;
+		int nth_price = 2;
+
+		// Test make uniform
+//		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
+//		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price);
+//		jcde = jcf.makeUniform();
+//		
+//		double[] pmf; 
+//
+//		// print first round unconditional price
+//		pmf = jcde.getPMF(new boolean[0], new double[0]);
+//		System.out.print("pmf(1 | { }, { }) = {");
+//		for (int i = 0; i < pmf.length; i++)
+//			System.out.print(pmf[i] + " ");
+//		System.out.println("}");
+//
+//		// print some second round conditional prices
+//		pmf = jcde.getPMF(new boolean[] {false}, new double[] {2});
+//		System.out.print("pmf(1 | {0}, {2}) = {");
+//		for (int i = 0; i < pmf.length; i++)
+//			System.out.print(pmf[i] + " ");
+//		System.out.println("}");
+//		
+//		pmf = jcde.getPMF(new boolean[] {true}, new double[] {3});
+//		System.out.print("pmf(1 | {1}, {3}) = {");
+//		for (int i = 0; i < pmf.length; i++)
+//			System.out.print(pmf[i] + " ");
+//		System.out.println("}");
+
+	
+	
+	
+		// Test simulAllAgentsOnePP
 		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
-		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price);
-		jcde = jcf.makeUniform();
 		
+		// Create agents
+		SimpleAgent[] agents = new SimpleAgent[no_agents];
+		for (int i = 0; i<no_agents; i++)
+			agents[i] = new SimpleAgent(new SimpleValue(no_goods), i);
+				
+		// Create auction
+		SeqAuction auction = new SeqAuction(agents, nth_price, no_goods);
+
+		int no_simulations = 1000;
+		
+		// Simluate
+		System.out.print("Start simulating... ");
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(auction, no_simulations);
+
 		double[] pmf; 
 
 		// print first round unconditional price
-		pmf = jcde.getPMF(new boolean[0], new double[0]);
+		pmf = pp.getPMF(new boolean[0], new double[0]);
 		System.out.print("pmf(1 | { }, { }) = {");
 		for (int i = 0; i < pmf.length; i++)
 			System.out.print(pmf[i] + " ");
 		System.out.println("}");
 
 		// print some second round conditional prices
-		pmf = jcde.getPMF(new boolean[] {false}, new double[] {2});
-		System.out.print("pmf(1 | {0}, {2}) = {");
+		pmf = pp.getPMF(new boolean[] {false}, new double[] {3});
+		System.out.print("pmf(1 | {0}, {3}) = {");
 		for (int i = 0; i < pmf.length; i++)
 			System.out.print(pmf[i] + " ");
 		System.out.println("}");
 		
-		pmf = jcde.getPMF(new boolean[] {true}, new double[] {3});
+		pmf = pp.getPMF(new boolean[] {true}, new double[] {3});
 		System.out.print("pmf(1 | {1}, {3}) = {");
 		for (int i = 0; i < pmf.length; i++)
 			System.out.print(pmf[i] + " ");
 		System.out.println("}");
+	
 	}
 
 }

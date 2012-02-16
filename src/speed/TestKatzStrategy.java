@@ -17,21 +17,22 @@ public class TestKatzStrategy {
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 5;
+		int no_agents = 2;
 		int nth_price = 2;
 
-		int no_simulations = 1000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
+		int no_simulations = 1000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
 		
-		int max_iterations = 1000;
+		int max_iterations = 100;
 
+//		FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/katz_vs_fullCondMDP/oldkatz_" + no_agents + ".csv");
 		FileWriter fw = new FileWriter("katz" + no_agents + ".csv");
 
 		JointFactory jf = new JointFactory(no_goods, jf_precision, max_price);
 
 		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
 		for (int i = 0; i<no_agents; i++)
-			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents - 1, max_value, katz_precision, rng), i);
-				
+			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents - 1, max_value, rng), i);
+
 		// Create auction
 		SeqAuction katz_auction = new SeqAuction(katz_agents, nth_price, no_goods);
 
@@ -51,7 +52,7 @@ public class TestKatzStrategy {
 		
 		System.out.println("Generating " + max_iterations + " first-round bids...");
 		
-		KatzHLValue value = new KatzHLValue(no_agents - 1, max_value, katz_precision, rng);
+		KatzHLValue value = new KatzHLValue(no_agents - 1, max_value, rng);
 		
 		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
 

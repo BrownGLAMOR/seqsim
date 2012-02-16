@@ -280,7 +280,7 @@ public class FullCondMDPAgent extends SeqAgent {
 	// helpers. these may cheat.
 	public double getFirstRoundBid() {
 		// no goods won. good_id == 0. tmp_r[0] is a special global for good 0. 
-		return pi[0].get(new WinnerAndRealized(tmp_w[0],tmp_r[0]));
+		return pi[0].get(new WinnerAndRealized(new BooleanArray(new boolean[] {}) {},new IntegerArray(new int[] {}) ));
 	}
 	
 	public double getSecondRoundBid(int no_goods_won) {

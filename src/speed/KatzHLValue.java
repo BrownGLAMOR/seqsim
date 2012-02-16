@@ -7,10 +7,10 @@ public class KatzHLValue extends Value {
 	double H, L, max_value, precision;
 	Random rng;
 
-	public KatzHLValue(int N, double max_value, double precision, Random rng) {
+	public KatzHLValue(int N, double max_value, Random rng) {
 		this.N = N;
 		this.max_value = max_value;
-		this.precision = precision;
+//		this.precision = precision;
 		this.rng = rng;
 		
 		reset();

@@ -109,8 +109,10 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	public void populate(WinnerAndRealized past) {
 		if (past.r.d.length != no_goods || past.w.d.length != no_goods)
 			throw new RuntimeException("length of realized price/winner vector must == no_goods");
-
+		
+//		System.out.println("input winner to log = [" + past.w.d[0] + ", " + past.w.d[1] + "]");
 		log.add(past);
+//		System.out.println("log.size = " + log.size());
 		
 		// for each good		
 		for (int i = 0; i<no_goods; i++) {			
@@ -155,8 +157,8 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	// realized.length must == no_goods from last reset()
 	public void populate(boolean[] winner, double[] realized) {
 		
-		WinnerAndRealized past = new WinnerAndRealized(realized.length);
-
+//		WinnerAndRealized past = new WinnerAndRealized(realized.length);
+		int[] temp = new int[realized.length]; 
 		for (int i = 0; i<no_goods; i++) {
 			// record max price witnessed
 			if (realized[i] > witnessed_max_price)
@@ -169,9 +171,15 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				realized[i] = max_price;
 			
 			// bin the realized price for this good
-			past.r.d[i] = bin(realized[i], precision);
-			past.w.d = winner;
+//			past.r.d[i] = bin(realized[i], precision);
+//			past.w.d = winner;
+			temp[i] = bin(realized[i], precision);
 		}
+		
+		WinnerAndRealized past = new WinnerAndRealized(new BooleanArray(winner),new IntegerArray(temp));
+
+		
+//		System.out.println("got winner = [" + past.w.d[0] + ", " + past.w.d[1] + "]");
 		
 		populate(past);
 	}
@@ -321,13 +329,22 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		for (WinnerAndRealized past : log) {
 			int len = past.r.d.length - 1;
 			
+			// print out winning history [0, a.d.length-1]
+//			System.out.println("past in log = [" + past.w.d[0] + ", " + past.w.d[1] +  ", " + past.r.d[0] + ", " + past.r.d[1] + " ]");
+			for (int i = 0; i < len+1; i++) {
+				if (past.w.d[i])
+					fw.write("1,");
+				else
+					fw.write("0,");
+			}
+			
 			// print out [0, a.d.length-2]
 			for (int i = 0; i<len; i++)
-				fw.write(past.r.d[i] + ",");
+				fw.write(past.r.d[i]*precision + ",");
 			
 			// print out final value, [a.d.length-1]
 			if (past.r.d.length > 0)
-				fw.write(past.r.d[len] + "\n");
+				fw.write(past.r.d[len]*precision + "\n");
 		}
 	}
 	
