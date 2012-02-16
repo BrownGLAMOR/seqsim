@@ -18,7 +18,6 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	public int no_goods;
 	public double precision;
 	public double max_price;
-
 	double[] empty_array;
 	
 	int marg_sum;
@@ -31,8 +30,10 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	
 	int no_bins;
 	
-//	IntegerArray r_tmp[];
-	WinnerAndRealized r_tmp[];
+	// holder of things
+	WinnerAndRealized wr_tmp[];
+	int r_tmp[];
+	WinnerAndRealized past;
 	
 	HashMap<WinnerAndRealized, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
 	HashMap<WinnerAndRealized, Integer>[] sum; // hash map from realized prices (as bins) to freq dist. sums, one per good
@@ -47,7 +48,6 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		this.max_price = max_price;
 				
 		this.no_bins = bin(max_price, precision) + 1;
-		
 		this.empty_array = new double[0];
 
 		this.prices = new DoubleArray(this.no_bins);
@@ -56,7 +56,8 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			this.bins.d[i] = i;
 			this.prices.d[i] = bin(i, precision);
 		}
-
+		
+		
 		// init this.prob and this.sum
 		this.prob = new HashMap[no_goods];
 		this.sum = new HashMap[no_goods];
@@ -71,15 +72,14 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				
 		this.marg_prob = new double[no_goods][no_bins];
 		
-//		this.r_tmp = new IntegerArray[no_goods+1];		
-//		for (int i = 0; i<no_goods+1; i++)
-//			this.r_tmp[i] = new IntegerArray(i);
-//		this.log = new ArrayList<IntegerArray>();
-
-		this.r_tmp = new WinnerAndRealized[no_goods+1];
+		// For temporarily holding WR 
+		this.wr_tmp = new WinnerAndRealized[no_goods+1];
 		for (int i = 0; i<no_goods+1; i++)
-			this.r_tmp[i] = new WinnerAndRealized(i);
+			this.wr_tmp[i] = new WinnerAndRealized(i);
 		this.log = new ArrayList<WinnerAndRealized>();
+
+		// For temporarily holding price binds 
+		this.r_tmp = new int [no_goods];
 
 	}
 		
@@ -110,15 +110,12 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		if (past.r.d.length != no_goods || past.w.d.length != no_goods)
 			throw new RuntimeException("length of realized price/winner vector must == no_goods");
 		
-//		System.out.println("input winner to log = [" + past.w.d[0] + ", " + past.w.d[1] + "]");
 		log.add(past);
-//		System.out.println("log.size = " + log.size());
 		
 		// for each good		
 		for (int i = 0; i<no_goods; i++) {			
 			// create array with binned conditional prices only
-			WinnerAndRealized wr = r_tmp[i];
-//			r.w.d = Arrays.copyOf(past.w.d, past.w.d.length);
+			WinnerAndRealized wr = wr_tmp[i];
 			for (int j = 0; j<i; j++) { 
 				wr.w.d[j] = past.w.d[j];
 				wr.r.d[j] = past.r.d[j];
@@ -158,7 +155,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	public void populate(boolean[] winner, double[] realized) {
 		
 //		WinnerAndRealized past = new WinnerAndRealized(realized.length);
-		int[] temp = new int[realized.length]; 
+//		int[] temp = new int[realized.length];
 		for (int i = 0; i<no_goods; i++) {
 			// record max price witnessed
 			if (realized[i] > witnessed_max_price)
@@ -171,17 +168,11 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				realized[i] = max_price;
 			
 			// bin the realized price for this good
-//			past.r.d[i] = bin(realized[i], precision);
-//			past.w.d = winner;
-			temp[i] = bin(realized[i], precision);
-		}
+			r_tmp[i] = bin(realized[i], precision);
+		}		
 		
-		WinnerAndRealized past = new WinnerAndRealized(new BooleanArray(winner),new IntegerArray(temp));
-
-		
-//		System.out.println("got winner = [" + past.w.d[0] + ", " + past.w.d[1] + "]");
-		
-		populate(past);
+		// XXX: has to NEW a WinnerAndRealized every time. Put it in Cache? 
+		populate(new WinnerAndRealized(new BooleanArray(winner),new IntegerArray(r_tmp)));
 	}
 	
 	// Call this to normalize the collected data into a joint distribution
@@ -203,7 +194,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		ready = true;
 	}
 	
-	// gets the probability of price of good "realized.length" being "price" given realized prices "realized" TODO: to modify
+	// gets the probability of price of good "realized.length" being "price" given realized prices "realized" TODO: not worked on yet
 	@Override
 	public double getProb(boolean[] winner, double price, double[] realized) {
 		return getPMF(winner, realized)[ bin(price, precision) ];
@@ -227,12 +218,6 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			//       return this when no samples < viable threshold
 			p = marg_prob[past.r.d.length];
 
-//// print. TODO: conditional distribution is an issue for MDP Agent			
-//			System.out.print("previous price not observed, outputting PMF = \t [");
-//			for (int i = 0 ; i < p.length; i++)
-//				System.out.print(p[i] + ", ");
-//			System.out.println("]");
-			
 		}
 		
 		return p;
@@ -246,7 +231,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			realized = empty_array;
 		
 		// bin the realized prices
-		WinnerAndRealized past = r_tmp[realized.length];
+		past = wr_tmp[realized.length];
 
 		past.w.d = winner;
 		for (int i = 0; i<realized.length; i++)
@@ -298,7 +283,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 					// add index to realized so that in next round we get the pmf conditional
 					// on our result for this round
 					for (int k = 0; k<=i; k++)
-						r_tmp[i+1].r.d[k] = bins[k];
+						wr_tmp[i+1].r.d[k] = bins[k];
 					
 					// go onto next good
 					break;

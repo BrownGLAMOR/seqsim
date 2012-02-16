@@ -19,9 +19,9 @@ public class TestCondKatzStrategy {
 		int no_agents = 3;
 		int nth_price = 2;
 
-		int no_simulations = 5000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
+		int no_simulations = 500000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
 		
-		int max_iterations = 1000;
+		int max_iterations = 100;
 
 		FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/katz_vs_fullCondMDP/rawer" + no_agents + ".csv");
 		

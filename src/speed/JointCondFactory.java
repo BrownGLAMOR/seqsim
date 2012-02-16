@@ -41,7 +41,7 @@ public class JointCondFactory extends Thread {
 		return jcde;
 	}
 	
-	// return a joint by playing simulations. the distribution is produced by taking the HOB of agent_idx. TODO: to modify
+	// return a joint by playing simulations. the distribution is produced by taking the HOB of agent_idx. TODO: haven't worked on yet
 	public JointDistributionEmpirical simulOneAgent(SeqAuction auction, int agent_idx, int no_simulations) throws IOException {	
 		SeqAgent[] agents = auction.agents;
 
@@ -65,7 +65,7 @@ public class JointCondFactory extends Thread {
 		return jde;
 	}
 	
-	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent. TODO: to modify
+	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent. TODO: haven't worked on yet
 	public JointDistributionEmpirical[] simulAllAgents(SeqAuction auction, int no_simulations) throws IOException {	
 		SeqAgent[] agents = auction.agents;
 
@@ -103,8 +103,6 @@ public class JointCondFactory extends Thread {
 		// create JDEs, one per agent	
 		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price);
 
-		// Array to store winners
-		
 		// Play auctions
 		for (int j = 0; j<no_simulations; j++) {
 			// Cause each agent to take on a new valuation by calling reset() on their valuation function
@@ -124,7 +122,6 @@ public class JointCondFactory extends Thread {
 					else
 						w[l] = false;
 				}
-//				System.out.println("input winner = [" + w[0] + ", " + w[1] + "]");
 				jcde.populate(w,auction.hob[k]);
 			}
 		}
