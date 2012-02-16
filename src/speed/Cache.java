@@ -11,6 +11,40 @@ public class Cache {
 	// Configuration
 	static final int max_goods = 11;
 
+	
+	// CACHE: store all possible WinnerAndRealized
+	static Set<WinnerAndRealized> allWR;
+	static HashMap<WinnerAndRealized,Integer> WR2idx;
+	static HashMap<Integer,WinnerAndRealized> idx2WR;
+	
+	static Set<WinnerAndRealized> GenarateAllWR(int no_goods, JointCondDistributionEmpirical jcde) {
+		Set<WinnerAndRealized> ret = allWR;
+		if (ret.size() == 0) {
+			int i = 0;
+			for(BooleanArray winner : getWinningHistory(no_goods)){
+				for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, no_goods)) {
+					WinnerAndRealized wr = new WinnerAndRealized(winner,realized);
+					ret.add(wr);
+					WR2idx.put(wr, i);
+					idx2WR.put(i, wr);
+					i++;
+				}
+			}			
+		}
+			allWR = ret;
+		return ret;
+	}
+
+	// Map from WinnerAndRealized to index
+	static Integer getWRidx(WinnerAndRealized past) {
+		return WR2idx.get(past);
+	}
+
+	// Map from index to WinnerAndRealized
+	static WinnerAndRealized getWRfromidx(Integer i){
+		return idx2WR.get(i);
+	}
+	
 	// CACHE: Cartesian product over prices
 	static HashMap<DoubleArray, Set<double[]>>[] cartesian_prices;	
 	static Set<double[]> getCartesianProduct(double[] prices, int times) {
@@ -135,6 +169,8 @@ public class Cache {
 		long start = System.currentTimeMillis();
 		Cache.init();
 		long finish = System.currentTimeMillis();
+		
+		// Let's test WinnerAnd
 		
 		for (BooleanArray ba : Cache.getWinningHistory(3)){
 			System.out.print("element = {");
