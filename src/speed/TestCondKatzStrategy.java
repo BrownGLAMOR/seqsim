@@ -11,19 +11,17 @@ public class TestCondKatzStrategy {
 		Random rng = new Random();
 				
 		double max_value = 1.0;
-
-		double jf_precision = 0.05;
+		double jf_precision = 0.02;
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 10;
+		int no_agents = 5;
 		int nth_price = 2;
 
-		int no_simulations = 1000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
-		
+		int no_simulations = 100000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.		
 		int max_iterations = 1000;
 
-		FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/katz_vs_fullCondMDP/raw" + no_agents + ".csv");
+		boolean take_log = false;
 		
 		JointCondFactory jcf = new JointCondFactory(no_goods, jf_precision, max_price);
 
@@ -37,18 +35,18 @@ public class TestCondKatzStrategy {
 
 		// Generate initial condition
 		System.out.print("Generating initial PP from katzman agents...");
-		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(katz_auction, no_simulations);
-		
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(katz_auction, no_simulations,take_log);
 		pp.outputNormalized();
 		
 		// Output raw realized vectors
-		pp.outputRaw(fw);
-		fw.close();
+		if (take_log == true){
+			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/katz_vs_fullCondMDP/raw" + no_agents + ".csv");
+			pp.outputRaw(fw);
+			fw.close();
+		}
 		
-		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/katz_vs_fullCondMDP/play" + no_agents + ".csv");
 
-		System.out.println("done");
-		
+		System.out.println("done");		
 		System.out.println("Generating " + max_iterations + " first-round bids...");
 		
 		KatzHLValue value = new KatzHLValue(no_agents-1, max_value, rng);
@@ -57,6 +55,8 @@ public class TestCondKatzStrategy {
 		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
 		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
 		mdp_agent.setCondJointDistribution(pp);
+		
+		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/katz_vs_fullCondMDP/play" + no_agents + ".csv");
 		
 		fw_play.write("max_value (to katz valuation): " + max_value + "\n");
 		fw_play.write("jf_precision: " + jf_precision + "\n");

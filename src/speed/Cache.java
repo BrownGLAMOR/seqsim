@@ -19,8 +19,7 @@ public class Cache {
 	
 	static Set<WinnerAndRealized> GenarateAllWR(int no_goods, double max_price, double precision) {
 		Set<WinnerAndRealized> ret = allWR;
-//		System.out.println("ret.size() = " + ret.size());
-//		if (ret.size() == 0) {
+		if (ret.size() == 0) {
 			// Generate all bins
 			int no_bins = JointCondDistributionEmpirical.bin(max_price, precision) + 1;
 			IntegerArray bins = new IntegerArray(no_bins);
@@ -32,17 +31,17 @@ public class Cache {
 			for(BooleanArray winner : getWinningHistory(no_goods)){
 				for (IntegerArray realized : Cache.getCartesianProduct(bins, no_goods)) {
 					WinnerAndRealized wr = new WinnerAndRealized(winner,realized);
-					System.out.println(wr.print());
+//					System.out.println(wr.print());
 					// store them, and map them back and forth into indices
 					ret.add(wr);
 					WR2idx.put(wr, i);
 					idx2WR.put(i, wr);
 					i++;
 				}
-			}			
-//		}
-		allWR = ret;
-		return ret;
+			}
+			allWR = ret;
+		}
+		return allWR;
 	}
 
 	// Map from WinnerAndRealized to index
@@ -135,10 +134,10 @@ public class Cache {
 	@SuppressWarnings("unchecked")
 	public static void init() {
 		
-//		allWR = new HashSet<WinnerAndRealized>;
-//		static HashMap<WinnerAndRealized,Integer> WR2idx;
-//		static HashMap<Integer,WinnerAndRealized> idx2WR;
-
+		// Mapping between WinnerAndRealized and indices
+		allWR = new HashSet<WinnerAndRealized>();
+		WR2idx = new HashMap<WinnerAndRealized,Integer>();
+		idx2WR = new HashMap<Integer,WinnerAndRealized>();
 		
 		// Cartesian product over prices
 		cartesian_prices = new HashMap[max_goods];
@@ -189,14 +188,14 @@ public class Cache {
 		// Let's test WinnerAndRealized utilities
 		int no_goods = 2;
 		double max_price = 1.0;
-		double precision = 0.25;
+		double precision = 0.5;
 		int idx;
 		
 		Set<WinnerAndRealized> all = Cache.GenarateAllWR(no_goods, max_price, precision);
 		System.out.println("all.size() = " + all.size() + ". Include: ");
 		for (WinnerAndRealized wr : all){
 			idx = Cache.getWRidx(wr);
-			System.out.print(wr.print() + "    , index = " + idx + ", which maps back to " + Cache.getWRfromidx(idx).print());
+			System.out.println(wr.print() + "    , index = " + idx + ", which maps back to " + Cache.getWRfromidx(idx).print());
 		}
 		
 		System.out.println();

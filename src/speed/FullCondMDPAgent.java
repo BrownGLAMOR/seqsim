@@ -7,6 +7,7 @@ public class FullCondMDPAgent extends SeqAgent {
 	// auction variables
 	SeqAuction auction;
 	JointCondDistributionEmpirical jcde;
+	
 	int agent_idx;
 	int no_goods_won;
 	int no_goods;
@@ -254,7 +255,7 @@ public class FullCondMDPAgent extends SeqAgent {
 			allocate();
 		}
 	}
-	
+		
 	@Override
 	public double getBid(int good_id) {	
 		// Figure out which ones we have won;

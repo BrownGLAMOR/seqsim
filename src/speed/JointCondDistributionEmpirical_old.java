@@ -8,19 +8,19 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Random;
 
+// XXX: This was the old JointCondDistributionEmpirical.java before adding the log_indices. 
+
 // TODO: This class still needs to be optimized for speed in populate() and getPMF().
 //       In particular, get rid of the need to make a new Integer[] for each call.
 //       Maybe use thread local storage?
 
-public class JointCondDistributionEmpirical extends JointCondDistribution {
+public class JointCondDistributionEmpirical_old extends JointCondDistribution {
 	boolean ready;
 	
 	public int no_goods;
 	public double precision;
 	public double max_price;
 	double[] empty_array;
-	
-	public boolean take_log;
 	
 	int marg_sum;
 	double[][] marg_prob;		// [good_id][pmf idx]
@@ -40,17 +40,11 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	HashMap<WinnerAndRealized, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
 	HashMap<WinnerAndRealized, Integer>[] sum; // hash map from realized prices (as bins) to freq dist. sums, one per good
 	
-	ArrayList<Integer> log_indices; 	// log of all past history (in index form) fed into the JDE
+	ArrayList<WinnerAndRealized> log; 	// log of all past history fed into the JDE
 	
 	// no_goods is the number of goods/auctions
 	@SuppressWarnings("unchecked")
-	public JointCondDistributionEmpirical(int no_goods, double precision, double max_price, boolean take_log) {
-		Cache.init();
-
-		// Initiate mapping b/w WR and indices in Cache
-		Cache.GenarateAllWR(no_goods, max_price, precision);
-		
-		this.take_log = take_log;
+	public JointCondDistributionEmpirical_old(int no_goods, double precision, double max_price) {
 		this.no_goods = no_goods;
 		this.precision = precision;
 		this.max_price = max_price;
@@ -84,10 +78,8 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		this.wr_tmp = new WinnerAndRealized[no_goods+1];
 		for (int i = 0; i<no_goods+1; i++)
 			this.wr_tmp[i] = new WinnerAndRealized(i);
-		
-		if (take_log == true)
-			this.log_indices = new ArrayList<Integer>();
-		
+		this.log = new ArrayList<WinnerAndRealized>();
+
 		// For temporarily holding price binds 
 		this.r_tmp = new int [no_goods];
 
@@ -111,8 +103,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		for (HashMap<WinnerAndRealized, Integer> s : this.sum)
 			s.clear();
 		
-		if (take_log == true)
-			log_indices.clear();
+		log.clear();
 	}
 	
 	// Call this once per realized price vector to populate the joint distribution
@@ -121,9 +112,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		if (past.r.d.length != no_goods || past.w.d.length != no_goods)
 			throw new RuntimeException("length of realized price/winner vector must == no_goods");
 		
-		// Store indices, not WRs
-		if (take_log == true)
-			log_indices.add(Cache.getWRidx(past));
+		log.add(past);
 		
 		// for each good		
 		for (int i = 0; i<no_goods; i++) {			
@@ -325,33 +314,27 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	
 	@Override
 	public void outputRaw(FileWriter fw) throws IOException {
-		if (take_log == false)
-				System.out.println("didn't take price records, can't output");
-		else {
-			WinnerAndRealized past;
-			for (Integer past_idx : log_indices) {
-				past = Cache.getWRfromidx(past_idx);
-				int len = past.r.d.length - 1;
-				
-				// print out winning history [0, a.d.length-1]
-				for (int i = 0; i < len+1; i++) {
-					if (past.w.d[i])
-						fw.write("1,");
-					else
-						fw.write("0,");
-				}
-				
-				// print out [0, a.d.length-2]
-				for (int i = 0; i<len; i++)
-					fw.write(past.r.d[i]*precision + ",");
-				
-				// print out final value, [a.d.length-1]
-				if (past.r.d.length > 0)
-					fw.write(past.r.d[len]*precision + "\n");
+		for (WinnerAndRealized past : log) {
+			int len = past.r.d.length - 1;
+			
+			// print out winning history [0, a.d.length-1]
+//			System.out.println("past in log = [" + past.w.d[0] + ", " + past.w.d[1] +  ", " + past.r.d[0] + ", " + past.r.d[1] + " ]");
+			for (int i = 0; i < len+1; i++) {
+				if (past.w.d[i])
+					fw.write("1,");
+				else
+					fw.write("0,");
 			}
+			
+			// print out [0, a.d.length-2]
+			for (int i = 0; i<len; i++)
+				fw.write(past.r.d[i]*precision + ",");
+			
+			// print out final value, [a.d.length-1]
+			if (past.r.d.length > 0)
+				fw.write(past.r.d[len]*precision + "\n");
 		}
 	}
-
 	
 	@Override
 	public void outputNormalized() {
@@ -398,7 +381,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		// TESTING / EXAMPLE
 		Random rng = new Random();
 		
-		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(2, 1, 5 ,false);
+		JointCondDistributionEmpirical_old jcde = new JointCondDistributionEmpirical_old(2, 1, 5);
 		
 		jcde.populate(new boolean[] {false, false}, new double[] {1, 1});
 		jcde.populate(new boolean[] {false, false}, new double[] {1, 2});
