@@ -59,7 +59,7 @@ public abstract class JointCondDistribution {
 	
 	// given a price and precision, return the bin in the histogram
 	public static int bin(double p, double precision) {
-		return (int)(.5 + p / precision);		
+		return (int)(.5 + p / precision);
 	}
 
 	// given a bin in the histogram and precision, return the price

@@ -11,7 +11,7 @@ public class TestCondKatzStrategy {
 		Random rng = new Random();
 				
 		double max_value = 1.0;
-		double jf_precision = 0.02;
+		double jf_precision = 0.05;
 		double max_price = max_value;
 		
 		int no_goods = 2;

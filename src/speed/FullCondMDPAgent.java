@@ -45,7 +45,9 @@ public class FullCondMDPAgent extends SeqAgent {
 		b = new double[price_length];
 
 		for (int i = 0; i < b.length; i++)
-			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.1);		// bid = (p_{i}+p_{i+1})/2 - 0.1*precision	
+			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.49999);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision	
+//			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.500001);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
+//		b[0] = 0.000001;
 
 		Q = new double[price_length];		
 		Reward = new double[price_length];		
