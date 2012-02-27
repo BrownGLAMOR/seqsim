@@ -9,6 +9,8 @@ public class JointCondFactory extends Thread {
 	double precision;
 	double max_price;
 	boolean take_log;
+	double[] utility; 
+	boolean ready = false;
 	
 	public JointCondFactory(int no_goods, double precision, double max_price) {
 		this.no_goods = no_goods;
@@ -129,6 +131,8 @@ public class JointCondFactory extends Thread {
 
 		// create JDEs, one per agent	
 		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price, take_log);
+		double[] utility = new double[agents.length*no_simulations];
+		this.utility = utility;
 
 		// Play auctions
 		for (int j = 0; j<no_simulations; j++) {
@@ -142,6 +146,8 @@ public class JointCondFactory extends Thread {
 			
 			// Add results from ALL agents to PP distribution
 			for (int k = 0; k<agents.length; k++) {
+				
+				// record prices
 				boolean[] w = new boolean[no_goods];
 				for (int l = 0; l < no_goods; l++) {
 					if (auction.winner[l] == k)
@@ -150,15 +156,38 @@ public class JointCondFactory extends Thread {
 						w[l] = false;
 				}
 				jcde.populate(w,auction.hob[k]);
+
+				// record utility
+				utility[j*agents.length + k] = auction.profit[k];
+
+//				if (k == 0) {
+//					System.out.println("agent0, [v(1) v(2)] = [" + agents[0].v.getValue(1) + " " + agents[0].v.getValue(2) + "]");
+//					int won = 0;
+//					for (int l = 0; l < no_goods; l++){
+//						if (w[l] == true)
+//							won ++;
+//					}
+//					System.out.println("agent0, won " + won + " goods.");
+//					System.out.println("agent0, payment = " + auction.payment[0]);
+//					System.out.println("agent0, profit = " + auction.profit[0]);
+//				}
 			}
 		}
 		
 		jcde.normalize();
+		this.ready = true;		// utilities are recorded
 		
 		return jcde;
 	}
 
-	
+	// output utiltiy log
+//	public double[] getUtility() {
+//		if (this.ready == false) {
+//			System.out.println("utility not recorded yet, outputting 0");
+//		}
+//		return this.utility;
+//	}
+//	
 	// Testing
 	public static void main(String args[]) throws IOException {
 		int no_goods = 2;
@@ -220,7 +249,13 @@ public class JointCondFactory extends Thread {
 		fw.close();
 		
 		pp.outputNormalized();
-				
+		
+		// output utility
+//		double[] u = jcf.getUtility();
+		for (int i = 0; i < jcf.utility.length; i++)
+			System.out.println("u[" + i + "] = " + jcf.utility[i]);
+		
+		System.out.println();
 		double[] pmf; 
 
 		// print first round unconditional price

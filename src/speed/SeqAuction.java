@@ -96,7 +96,7 @@ public class SeqAuction {
 			no_goods_won[j] = 0;
 			payment[j] = 0.0;
 			//valuation[j] = 0.0;
-			//profit[j] = 0.0;
+			profit[j] = 0.0;
 			//tmp[j] = 0;
 		}
 		

@@ -26,7 +26,7 @@ public class SimpleAgent extends SeqAgent {
 	public double getBid(int good_id) {
 		if (good_id == 1) {
 			if (auction.winner[0] == agent_idx)
-				return 1;
+				return 3;
 			else
 				return 2;
 		}

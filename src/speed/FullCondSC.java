@@ -19,14 +19,19 @@ public class FullCondSC {
 		int no_agents = 6;
 		int nth_price = 2;
 
-		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
+		int no_initial_simulations = 10000/no_agents;	// generating initial PP		
 		int no_iterations = 4;								// no. of Wellman updates 
-		int no_per_iteration = 100000/no_agents;			// no. of games played in each Wellman iteration
+		int no_per_iteration = 10000/no_agents;			// no. of games played in each Wellman iteration
 		int no_for_comparison = 1000;						// no. of points for bid comparison
 		
 		boolean take_log = false;
 		boolean print_intermediary = true;
 		boolean print_end = false;
+		
+		// record descriptive statistics of utility
+		double[] u;
+		double[] u_mean = new double[no_iterations+1];
+		double[] u_stdev = new double[no_iterations+1];
 		
 		JointCondDistributionEmpirical pp_new, pp_old, pp0;
 		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
@@ -34,22 +39,26 @@ public class FullCondSC {
 		// 1)  Initiate PP from Katzman
 		
 			// Create agents
-		KatzmanUniformImpreciseAgent[] katz_agents = new KatzmanUniformImpreciseAgent[no_agents];
-		for (int i = 0; i<no_agents; i++)
-			katz_agents[i] = new KatzmanUniformImpreciseAgent(new KatzHLValue(no_agents-1, max_value, rng), i, precision);
-//		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
+//		KatzmanUniformImpreciseAgent[] katz_agents = new KatzmanUniformImpreciseAgent[no_agents];
 //		for (int i = 0; i<no_agents; i++)
-//			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_value, rng), i);
+//			katz_agents[i] = new KatzmanUniformImpreciseAgent(new KatzHLValue(no_agents-1, max_value, rng), i, precision);
+		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
+		for (int i = 0; i<no_agents; i++)
+			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_value, rng), i);
 
 		// Create auction
 		SeqAuction katz_auction = new SeqAuction(katz_agents, nth_price, no_goods);
 		System.out.println("Generating initial PP");
 		pp0 = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log);
 		pp_new = pp0;
+		u = jcf.utility;
+		u_mean[0] = Statistics.mean(u);
+		u_stdev[0] = Statistics.stdev(u)/java.lang.Math.sqrt((no_initial_simulations*no_agents));
 		
 			// Output raw realized vectors
 		if (take_log == true){
-			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/FullCondUpdates/initial" + no_agents + ".csv");
+//			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/FullCondUpdates/initial" + no_agents + ".csv");
+			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/test.csv");
 			pp_new.outputRaw(fw);
 			fw.close();
 		}
@@ -57,8 +66,8 @@ public class FullCondSC {
 		
 		// initiate agents to compare bids
 		KatzHLValue value = new KatzHLValue(no_agents-1, max_value, rng);		
-//		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
-		KatzmanUniformImpreciseAgent katz_agent = new KatzmanUniformImpreciseAgent(value, 0, precision);
+		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
+//		KatzmanUniformImpreciseAgent katz_agent = new KatzmanUniformImpreciseAgent(value, 0, precision);
 		FullCondMDPAgent mdp_agent_old = new FullCondMDPAgent(value, 1);
 		FullCondMDPAgent mdp_agent_new = new FullCondMDPAgent(value, 1);
 
@@ -72,7 +81,8 @@ public class FullCondSC {
 
 			// 2.1) Compare: how different are we from original Katzman?
 			if (print_intermediary == true) {
-				FileWriter fw_comp1 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/FullCondUpdates/discretized" + no_agents + "_" + it + ".csv");
+//				FileWriter fw_comp1 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/FullCondUpdates/discretized" + no_agents + "_" + it + ".csv");
+				FileWriter fw_comp1 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/test.csv");
 				
 				fw_comp1.write("max_value (to katz valuation): " + max_value + "\n");
 				fw_comp1.write("precision: " + precision + "\n");
@@ -98,8 +108,6 @@ public class FullCondSC {
 			}
 			
 			// 2.2) Do next iteration to generate a new PP
-//			JointCondFactory jcf_updating = new JointCondFactory(no_goods, precision, max_price);
-			
 			FullCondMDPAgent[] mdp_agents = new FullCondMDPAgent[no_agents];
 			for (int i = 0; i < no_agents; i++) {
 				mdp_agents[i] = new FullCondMDPAgent(new KatzHLValue(no_agents-1, max_value, rng), i);
@@ -109,11 +117,15 @@ public class FullCondSC {
 			
 			// generate a new pp
 			pp_new = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log);
+			u = jcf.utility;
+			u_mean[it+1] = Statistics.mean(u);
+			u_stdev[it+1] = Statistics.stdev(u)/java.lang.Math.sqrt((no_per_iteration*no_agents));
 
 			// 2.3) Compare: how different are we from previous MDP?
 			if (print_intermediary == true) {
 				
-				FileWriter fw_comp2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/FullCondUpdates/discretized" + no_agents + "_itself_" + it + ".csv");
+//				FileWriter fw_comp2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/FullCondUpdates/discretized" + no_agents + "_itself_" + it + ".csv");
+				FileWriter fw_comp2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/test.csv");
 				
 				fw_comp2.write("max_value (to katz valuation): " + max_value + "\n");
 				fw_comp2.write("precision: " + precision + "\n");
@@ -172,6 +184,10 @@ public class FullCondSC {
 		
 		
 		System.out.println("done done");
+		
+		// output utility log
+		for (int i = 0; i < no_iterations+1; i++)
+			System.out.println("mean(u) = " + u_mean[i] + ", stdev(u) = " + u_stdev[i]);
 	}
 }
 
