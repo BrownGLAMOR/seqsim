@@ -23,8 +23,8 @@ public abstract class JointCondDistribution {
 	// realized prices.
 	public abstract double getExpectedFinalPrice(boolean[] winner, double[] realized);
 	
-	// samples the joint distribution and returns an array of price bins, one per good.
-	public abstract int[] getSample(Random rng);
+//	// samples the joint distribution and returns an array of price bins, one per good.
+//	public abstract int[] getSample(Random rng);
 	
 	// debug: get a print out of the JointDistribution
 	public abstract void outputNormalized();

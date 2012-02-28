@@ -24,6 +24,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	
 	int marg_sum;
 	double[][] marg_prob;		// [good_id][pmf idx]
+//	double[][] 
 	
 	IntegerArray bins;					// the bins in the pmf
 	DoubleArray prices;			// the value of each bin in the pmf
@@ -38,6 +39,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	WinnerAndRealized past;
 	
 	HashMap<WinnerAndRealized, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
+	HashMap<WinnerAndRealized, double[]>[] cdf; // cdfs
 	HashMap<WinnerAndRealized, Integer>[] sum; // hash map from realized prices (as bins) to freq dist. sums, one per good
 	
 	ArrayList<Integer> log_indices; 	// log of all past history (in index form) fed into the JDE
@@ -194,10 +196,14 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		for (int i = 0; i<no_goods; i++) {			
 			for (WinnerAndRealized r : prob[i].keySet()) {				
 				double[] p = prob[i].get(r);
+				double[] cumprob = cdf[i].get(r);
 				int s = sum[i].get(r);
-				
-				for (int j = 0; j<p.length; j++)
+
+				cumprob[0] = 0.0;
+				for (int j = 0; j<p.length; j++) {
 					p[j] /= s;
+					cumprob[j] += p[j];		// calculate cumulative probability
+				}
 			}
 			
 			// compute the marginal distribution for this good
@@ -218,6 +224,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	// given the list of binned realized prices.
 	@Override
 	public double[] getPMF(WinnerAndRealized past) {
+		// Do these if statements make it slow? 
 		if (!ready)
 			throw new RuntimeException("must normalize first");
 		
@@ -238,20 +245,18 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	}
 	
 	// Gets the probability mass function for good numbered "realized.length", conditional
-	// on realized prices
+	// on past winner and realized prices
 	@Override
 	public double[] getPMF(boolean[] winner, double[] realized) {
-		if (realized == null)
-			realized = empty_array;
+//		if (realized == null)
+//			realized = empty_array;
 		
 		// bin the realized prices
 		past = wr_tmp[realized.length];
-
 		past.w.d = winner;
 		for (int i = 0; i<realized.length; i++)
 			past.r.d[i] = bin(realized[i], precision);
 		
-				
 		// get the price distribution conditional on realized prices
 		return getPMF(past);
 	}
@@ -272,18 +277,21 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	}
 
 	// sample the probability distribution, and returns an array of prices, one per good
-	@Override
-	public int[] getSample(Random rng) {
+	public double sampleCondPrices(Random rng, boolean[] winner, double[] realized) {
 		if (!ready)
 			throw new RuntimeException("must normalize first");
 		
-		int bins[] = new int[no_goods];
+		// Put into WR form
+		int round = winner.length;		
+		WinnerAndRealized wr = wr_tmp[round]; 
+		wr.w.d = winner;
+		for (int i = 0; i < round; i++)
+			wr.r.d[i] = bin(realized[i], precision);
 		
-		for (int i = 0; i<no_goods; i++) {
-			double[] pmf = prob[i].get(r_tmp[i]);
-	
-			// choose a random spot on the cdf
-			double random = rng.nextDouble();
+		double[] pmf = prob[round].get(wr);
+
+		// choose a random spot on the cdf
+		double random = rng.nextDouble();
 			
 			// compute cdf. todo: maybe we should precompute inverse of cdf in normalize() so that
 			// we can avoid a loop here?
@@ -298,10 +306,6 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 					// on our result for this round
 					for (int k = 0; k<=i; k++)
 						wr_tmp[i+1].r.d[k] = bins[k];
-					
-					// go onto next good
-					break;
-				}
 			}
 			
 			// sanity check: make sure we picked something. 
@@ -309,6 +313,44 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		
 		return bins;
 	}
+	
+//	// sample the probability distribution, and returns an array of prices, one per good
+//	public int[] getSample(Random rng) {
+//		if (!ready)
+//			throw new RuntimeException("must normalize first");
+//		
+//		int bins[] = new int[no_goods];
+//		
+//		for (int i = 0; i<no_goods; i++) {
+//			double[] pmf = prob[i].get(r_tmp[i]);
+//	
+//			// choose a random spot on the cdf
+//			double random = rng.nextDouble();
+//			
+//			// compute cdf. todo: maybe we should precompute inverse of cdf in normalize() so that
+//			// we can avoid a loop here?
+//			double cdf = 0.0;
+//			for (int j = 0; j<pmf.length; j++) {
+//				cdf += pmf[j];
+//				
+//				if (cdf >= random) {
+//					bins[i] = j;
+//					
+//					// add index to realized so that in next round we get the pmf conditional
+//					// on our result for this round
+//					for (int k = 0; k<=i; k++)
+//						wr_tmp[i+1].r.d[k] = bins[k];
+//					
+//					// go onto next good
+//					break;
+//				}
+//			}
+//			
+//			// sanity check: make sure we picked something. 
+//		}
+//		
+//		return bins;
+//	}
 	
 	// get the marginal distribution for good id, assuming independent prices
 	public double[] getMarginalDist(int good_id) {
