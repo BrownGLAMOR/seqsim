@@ -24,7 +24,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	
 	int marg_sum;
 	double[][] marg_prob;		// [good_id][pmf idx]
-//	double[][] 
+	double[][] marg_cdf;		// cumulative 
 	
 	IntegerArray bins;					// the bins in the pmf
 	DoubleArray prices;			// the value of each bin in the pmf
@@ -39,7 +39,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	WinnerAndRealized past;
 	
 	HashMap<WinnerAndRealized, double[]>[] prob; // hash map from realized prices (as bins) to freq distribution, one per good
-	HashMap<WinnerAndRealized, double[]>[] cdf; // cdfs
+	HashMap<WinnerAndRealized, double[]>[] CDF; // cdfs
 	HashMap<WinnerAndRealized, Integer>[] sum; // hash map from realized prices (as bins) to freq dist. sums, one per good
 	
 	ArrayList<Integer> log_indices; 	// log of all past history (in index form) fed into the JDE
@@ -70,17 +70,20 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		
 		// init this.prob and this.sum
 		this.prob = new HashMap[no_goods];
+		this.CDF = new HashMap[no_goods];
 		this.sum = new HashMap[no_goods];
 		
 		int max_realizations = 1; 
 		for (int i = 0; i<no_goods; i++) {
 			max_realizations *= no_bins;
 			
-			this.prob[i] = new HashMap<WinnerAndRealized, double[]>(max_realizations);			
+			this.prob[i] = new HashMap<WinnerAndRealized, double[]>(max_realizations);
+			this.CDF[i] = new HashMap<WinnerAndRealized, double[]>(max_realizations);
 			this.sum[i] = new HashMap<WinnerAndRealized, Integer>(max_realizations);
 		}
 				
 		this.marg_prob = new double[no_goods][no_bins];
+		this.marg_cdf = new double[no_goods][no_bins];
 		
 		// For temporarily holding WR 
 		this.wr_tmp = new WinnerAndRealized[no_goods+1];
@@ -101,13 +104,19 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		ready = false;
 		witnessed_max_price = 0.0;
 		
-		for (int i = 0; i<no_goods; i++)
-			for (int j = 0; j<no_bins; j++)
+		for (int i = 0; i<no_goods; i++) {
+			for (int j = 0; j<no_bins; j++) {
 				marg_prob[i][j] = 0.0;
+				marg_cdf[i][j] = 0.0;
+			}
+		}
 		
 		marg_sum = 0;
 		
 		for (HashMap<WinnerAndRealized, double[]> p : this.prob)
+			p.clear();
+
+		for (HashMap<WinnerAndRealized, double[]> p : this.CDF)
 			p.clear();
 
 		for (HashMap<WinnerAndRealized, Integer> s : this.sum)
@@ -128,7 +137,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			log_indices.add(Cache.getWRidx(past));
 		
 		// for each good		
-		for (int i = 0; i<no_goods; i++) {			
+		for (int i = 0; i<no_goods; i++) {
 			// create array with binned conditional prices only
 			WinnerAndRealized wr = wr_tmp[i];
 			for (int j = 0; j<i; j++) { 
@@ -141,6 +150,10 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			if (p == null) {
 				// this is our first entry into the distribution; create it
 				p = new double[no_bins];
+
+				// also create the corresponding cdf
+				double[] temp = CDF[i].get(wr);
+				temp = new double[no_bins];
 			
 				p[past.r.d[i]]++;
 				
@@ -148,7 +161,9 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				wr = new WinnerAndRealized(new BooleanArray(Arrays.copyOf(wr.w.d, wr.w.d.length)), new IntegerArray(Arrays.copyOf(wr.r.d, wr.r.d.length)));
 				
 				prob[i].put(wr, p);
+				CDF[i].put(wr, temp);
 				sum[i].put(wr, 1);
+				
 			} else {
 				p[past.r.d[i]]++;
 				
@@ -193,23 +208,42 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	
 	// Call this to normalize the collected data into a joint distribution
 	public void normalize() {
+				
 		for (int i = 0; i<no_goods; i++) {			
-			for (WinnerAndRealized r : prob[i].keySet()) {				
+			
+			// normalize conditional pdfs and update cdfs
+			for (WinnerAndRealized r : prob[i].keySet()) {
 				double[] p = prob[i].get(r);
-				double[] cumprob = cdf[i].get(r);
+				double[] cdf = CDF[i].get(r);
 				int s = sum[i].get(r);
-
-				cumprob[0] = 0.0;
-				for (int j = 0; j<p.length; j++) {
+				
+				// cumulative tally
+				cdf[0] = p[0];
+				for (int j = 1; j < p.length; j++)
+					cdf[j] = cdf[j-1] + p[j];
+				
+				// normalize wrt sum
+				for (int j = 0; j < p.length; j++) {
 					p[j] /= s;
-					cumprob[j] += p[j];		// calculate cumulative probability
-				}
+					cdf[j] /= s;
+				}				
 			}
 			
-			// compute the marginal distribution for this good
-			for (int j = 0; j<no_bins; j++)
+			// compute marginal pdf and cdf
+			marg_prob[i][0] /= marg_sum;
+			marg_cdf[i][0] = marg_prob[i][0];
+			for (int j = 1; j<no_bins; j++) {
 				marg_prob[i][j] /= marg_sum;
+				marg_cdf[i][j] = marg_cdf[i][j-1] + marg_prob[i][j];
+			}
 		}
+		
+//		WinnerAndRealized wr = new WinnerAndRealized(new BooleanArray(new boolean[] {false}), new IntegerArray(new int[] {1}));
+//		double[] p2 = prob[1].get(wr);
+//		System.out.print("after prob = {");
+//		for (int i = 0; i < p2.length; i++)
+//			System.out.print(p2[i] + " ");
+//		System.out.println("}");
 		
 		ready = true;
 	}
@@ -231,25 +265,29 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		if (past.r.d.length >= no_goods)
 			throw new IllegalArgumentException("no more goods");
 		
-		double[] p = prob[past.r.d.length].get(past);
-		
-		if (p == null) {
-			// ut-oh, return the unconditional (marginal) pmf for this good since we have no data
-			// todo: we return this when no samples == 0, but maybe we need logic to 
-			//       return this when no samples < viable threshold
-			p = marg_prob[past.r.d.length];
-
+		// return marginal if first round, and conditional pmf if later rounds
+		if (past.r.d.length == 0)
+			return marg_prob[0];
+		else {
+			double[] p = prob[past.r.d.length].get(past);
+//			System.out.println("getPMF, past.r.d.length = " + past.r.d.length);
+			
+			if (p == null) {
+				// ut-oh, return the unconditional (marginal) pmf for this good since we have no data
+				// todo: we return this when no samples == 0, but maybe we need logic to 
+				//       return this when no samples < viable threshold
+				p = marg_prob[past.r.d.length];
+			}
+			return p;
 		}
-		
-		return p;
 	}
 	
 	// Gets the probability mass function for good numbered "realized.length", conditional
 	// on past winner and realized prices
 	@Override
 	public double[] getPMF(boolean[] winner, double[] realized) {
-//		if (realized == null)
-//			realized = empty_array;
+		if (realized == null)
+			realized = empty_array;
 		
 		// bin the realized prices
 		past = wr_tmp[realized.length];
@@ -260,6 +298,45 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		// get the price distribution conditional on realized prices
 		return getPMF(past);
 	}
+	
+	public double[] getCDF(WinnerAndRealized past) {
+		// Do these if statements make it slow? 
+		if (!ready)
+			throw new RuntimeException("must normalize first");
+		
+		if (past.r.d.length >= no_goods)
+			throw new IllegalArgumentException("no more goods");
+		
+		if (past.r.d.length == 0)
+			return marg_cdf[0];
+		else {
+			double[] p = CDF[past.r.d.length].get(past);
+//			System.out.println("getCDF, past.r.d.length = " + past.r.d.length);
+	
+			if (p == null) {
+	//			System.out.println("cdf detected null");
+				// ut-oh, return the unconditional (marginal) cdf for this good since we have no data
+				// todo: we return this when no samples == 0, but maybe we need logic to 
+				//       return this when no samples < viable threshold
+				p = marg_cdf[past.r.d.length];
+			}
+			return p;
+		}
+	}
+	
+	public double[] getCDF(boolean[] winner, double[] realized) {
+		if (realized == null)
+			realized = empty_array;
+		
+		// bin the realized prices
+		past = wr_tmp[realized.length];
+		past.w.d = winner;
+		for (int i = 0; i<realized.length; i++)
+			past.r.d[i] = bin(realized[i], precision);
+		
+		return getCDF(past);
+	}
+
 	
 	@Override
 	// return the expected final price for good "realized.length", conditional on realized prices
@@ -288,10 +365,34 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		for (int i = 0; i < round; i++)
 			wr.r.d[i] = bin(realized[i], precision);
 		
-		double[] pmf = prob[round].get(wr);
+		double[] cdf = getCDF(wr);
 
+		int return_idx = 0;		// the bin index for return value
+		
 		// choose a random spot on the cdf
-		double random = rng.nextDouble();
+		double random = rng.nextDouble();			
+		for (int i = 0; i < cdf.length; i++) {
+			if (cdf[i] >= random) {
+				return_idx = i;
+				break;
+			}
+		}
+		return (return_idx*precision);
+	}
+	
+	// sample the probability distribution, and returns an array of prices, one per good
+	/*
+	public int[] getSample(Random rng) {
+		if (!ready)
+			throw new RuntimeException("must normalize first");
+		
+		int bins[] = new int[no_goods];
+		
+		for (int i = 0; i<no_goods; i++) {
+			double[] pmf = prob[i].get(r_tmp[i]);
+	
+			// choose a random spot on the cdf
+			double random = rng.nextDouble();
 			
 			// compute cdf. todo: maybe we should precompute inverse of cdf in normalize() so that
 			// we can avoid a loop here?
@@ -306,6 +407,10 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 					// on our result for this round
 					for (int k = 0; k<=i; k++)
 						wr_tmp[i+1].r.d[k] = bins[k];
+					
+					// go onto next good
+					break;
+				}
 			}
 			
 			// sanity check: make sure we picked something. 
@@ -313,45 +418,8 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		
 		return bins;
 	}
-	
-//	// sample the probability distribution, and returns an array of prices, one per good
-//	public int[] getSample(Random rng) {
-//		if (!ready)
-//			throw new RuntimeException("must normalize first");
-//		
-//		int bins[] = new int[no_goods];
-//		
-//		for (int i = 0; i<no_goods; i++) {
-//			double[] pmf = prob[i].get(r_tmp[i]);
-//	
-//			// choose a random spot on the cdf
-//			double random = rng.nextDouble();
-//			
-//			// compute cdf. todo: maybe we should precompute inverse of cdf in normalize() so that
-//			// we can avoid a loop here?
-//			double cdf = 0.0;
-//			for (int j = 0; j<pmf.length; j++) {
-//				cdf += pmf[j];
-//				
-//				if (cdf >= random) {
-//					bins[i] = j;
-//					
-//					// add index to realized so that in next round we get the pmf conditional
-//					// on our result for this round
-//					for (int k = 0; k<=i; k++)
-//						wr_tmp[i+1].r.d[k] = bins[k];
-//					
-//					// go onto next good
-//					break;
-//				}
-//			}
-//			
-//			// sanity check: make sure we picked something. 
-//		}
-//		
-//		return bins;
-//	}
-	
+	*/
+
 	// get the marginal distribution for good id, assuming independent prices
 	public double[] getMarginalDist(int good_id) {
 		if (!ready)
@@ -393,7 +461,6 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			}
 		}
 	}
-
 	
 	@Override
 	public void outputNormalized() {
@@ -442,8 +509,10 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		
 		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(2, 1, 5 ,false);
 		
-		jcde.populate(new boolean[] {false, false}, new double[] {1, 1});
-		jcde.populate(new boolean[] {false, false}, new double[] {1, 2});
+		jcde.populate(new boolean[] {false, false}, new double[] {0, 5});
+		
+		jcde.populate(new boolean[] {false, false}, new double[] {1, 0});
+//		jcde.populate(new boolean[] {false, false}, new double[] {1, 2});
 		jcde.populate(new boolean[] {false, false}, new double[] {1, 2});
 		jcde.populate(new boolean[] {false, false}, new double[] {1, 5});
 		
@@ -471,65 +540,80 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		jcde.populate(new boolean[] {true, false}, new double[] {4, 5});
 		
 		jcde.normalize();
-		
+
 		System.out.println(" ----- if first round loses ----- ");
 		
-		// get the PMF of good 0
 		double[] pmf;
-		System.out.print("pmf(0 | { }, { }): ");
-		pmf = jcde.getPMF(new boolean[] {}, new double[] {});
 		
-		for (double p : pmf)
+		// get the PMF of good 0
+		System.out.print("pmf(0 | { }, { }): ");		
+		for (double p : jcde.getPMF(new boolean[] {}, new double[] {}))
 			System.out.print(p + " ");
-		
+		System.out.println("");
+
+		System.out.print("cdf(0 | { }, { }): ");
+		for (double p : jcde.getCDF(new boolean[] {}, new double[] {}))
+			System.out.print(p + " ");
 		System.out.println("");
 
 		// get PMF of good 1, cond. on price of good 0 being $1
 		System.out.print("pmf(1 | {0}, {1}): ");
-		pmf = jcde.getPMF(new boolean[] {false}, new double[] {1});
-		
-		for (double p : pmf)
-			System.out.print(p + " ");
-		
+		for (double p : jcde.getPMF(new boolean[] {false}, new double[] {1}))
+			System.out.print(p + " ");		
+		System.out.println("");
+
+		System.out.print("cdf(1 | {0}, {1}): ");
+		for (double p : jcde.getCDF(new boolean[] {false}, new double[] {1}))
+			System.out.print(p + " ");		
 		System.out.println("");
 
 		// get PMF of good 1, cond. on price of good 0 being $2
 		System.out.print("pmf(1 | {0}, {2}): ");
-		pmf = jcde.getPMF(new boolean[] {false}, new double[] {2});
-		
-		for (double p : pmf)
+		for (double p : jcde.getPMF(new boolean[] {false}, new double[] {2}))
 			System.out.print(p + " ");
-		
 		System.out.println("");
+
+		System.out.print("cdf(1 | {0}, {2}): ");
+		for (double p : jcde.getCDF(new boolean[] {false}, new double[] {2}))
+			System.out.print(p + " ");
+		System.out.println("");
+
 		
 		// get PMF of good 1, cond. on price of good 0 being $3
 		System.out.print("pmf(1 | {0}, {3}): ");
-		pmf = jcde.getPMF(new boolean[] {false}, new double[] {3});
-		
-		for (double p : pmf)
-			System.out.print(p + " ");
-		
+		for (double p : jcde.getPMF(new boolean[] {false}, new double[] {3}))
+			System.out.print(p + " ");		
 		System.out.println("");
+		
+		System.out.print("cdf(1 | {0}, {3}): ");
+		for (double p : jcde.getCDF(new boolean[] {false}, new double[] {3}))
+			System.out.print(p + " ");		
+		System.out.println("");
+
 		
 		// get the PMF of good 1, conf on price of good 0 being $0
 		System.out.print("pmf(1 | {0}, {0}): ");
-		pmf = jcde.getPMF(new boolean[] {false}, new double[] {0});		
-		for (double p : pmf)
-			System.out.print(p + " ");
-		
+		for (double p : jcde.getPMF(new boolean[] {false}, new double[] {0}))
+			System.out.print(p + " ");		
 		System.out.println("");
+
+		System.out.print("cdf(1 | {0}, {0}): ");
+		for (double p : jcde.getCDF(new boolean[] {false}, new double[] {0}))
+			System.out.print(p + " ");		
+		System.out.println("");
+
 		
 		//
 		System.out.println("");
 		
-		// get the expected final price of good 0; the list of conditional prices necessarily empty
-		System.out.println("efp(0 | { }, { }) = " + jcde.getExpectedFinalPrice(new boolean[] {}, new double[] {}));
-		
-		// get the expected final price of good 1 for various values of good 0.
-		System.out.println("efp(1 | {0}, {1}) = " + jcde.getExpectedFinalPrice(new boolean[] {false}, new double[] {1}));
-		System.out.println("efp(1 | {0}, {2}) = " + jcde.getExpectedFinalPrice(new boolean[] {false}, new double[] {2}));
-		System.out.println("efp(1 | {0}, {3}) = " + jcde.getExpectedFinalPrice(new boolean[] {false}, new double[] {3}));
-		System.out.println("efp(1 | {0}, {0}) = " + jcde.getExpectedFinalPrice(new boolean[] {false}, new double[] {0}));
+//		// get the expected final price of good 0; the list of conditional prices necessarily empty
+//		System.out.println("efp(0 | { }, { }) = " + jcde.getExpectedFinalPrice(new boolean[] {}, new double[] {}));
+//		
+//		// get the expected final price of good 1 for various values of good 0.
+//		System.out.println("efp(1 | {0}, {1}) = " + jcde.getExpectedFinalPrice(new boolean[] {false}, new double[] {1}));
+//		System.out.println("efp(1 | {0}, {2}) = " + jcde.getExpectedFinalPrice(new boolean[] {false}, new double[] {2}));
+//		System.out.println("efp(1 | {0}, {3}) = " + jcde.getExpectedFinalPrice(new boolean[] {false}, new double[] {3}));
+//		System.out.println("efp(1 | {0}, {0}) = " + jcde.getExpectedFinalPrice(new boolean[] {false}, new double[] {0}));
 		
 		
 		
@@ -537,61 +621,143 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 
 		// get PMF of good 1, cond. on price of good 0 being $1
 		System.out.print("pmf(1 | {1}, {1}): ");
-		pmf = jcde.getPMF(new boolean[] {true}, new double[] {1});
-		
-		for (double p : pmf)
-			System.out.print(p + " ");
-		
+		for (double p : jcde.getPMF(new boolean[] {true}, new double[] {1}))
+			System.out.print(p + " ");		
+		System.out.println("");
+
+		System.out.print("cdf(1 | {1}, {1}): ");
+		for (double p : jcde.getCDF(new boolean[] {true}, new double[] {1}))
+			System.out.print(p + " ");		
 		System.out.println("");
 
 		// get PMF of good 1, cond. on price of good 0 being $2
 		System.out.print("pmf(1 | {1}, {2}): ");
-		pmf = jcde.getPMF(new boolean[] {true}, new double[] {2});
+		for (double p : jcde.getPMF(new boolean[] {true}, new double[] {2}))
+			System.out.print(p + " ");		
+		System.out.println("");
 		
-		for (double p : pmf)
-			System.out.print(p + " ");
-		
+		System.out.print("cdf(1 | {1}, {2}): ");
+		for (double p : jcde.getCDF(new boolean[] {true}, new double[] {2}))
+			System.out.print(p + " ");		
 		System.out.println("");
 		
 		// get PMF of good 1, cond. on price of good 0 being $3
 		System.out.print("pmf(1 | {1}, {3}): ");
-		pmf = jcde.getPMF(new boolean[] {true}, new double[] {3});
-		
-		for (double p : pmf)
-			System.out.print(p + " ");
-		
+		for (double p : jcde.getPMF(new boolean[] {true}, new double[] {3}))
+			System.out.print(p + " ");		
 		System.out.println("");
 		
+		System.out.print("cdf(1 | {1}, {3}): ");
+		for (double p : jcde.getCDF(new boolean[] {true}, new double[] {3}))
+			System.out.print(p + " ");		
+		System.out.println("");
+
 		// get the PMF of good 1, conf on price of good 0 being $0
 		System.out.print("pmf(1 | {1}, {0}): ");
-		pmf = jcde.getPMF(new boolean[] {true}, new double[] {0});		
-		for (double p : pmf)
-			System.out.print(p + " ");
-		
+		for (double p : jcde.getPMF(new boolean[] {true}, new double[] {0}))
+			System.out.print(p + " ");		
 		System.out.println("");
-		System.out.println("");
-		
-		// get the expected final price of good 0; the list of conditional prices necessarily empty
-		System.out.println("efp(0 | { }, { }) = " + jcde.getExpectedFinalPrice(new boolean[] {}, new double[] {}));
-		
-		// get the expected final price of good 1 for various values of good 0.
-		System.out.println("efp(1 | {1}, {1}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {1}));
-		System.out.println("efp(1 | {1}, {2}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {2}));
-		System.out.println("efp(1 | {1}, {3}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {3}));
-		System.out.println("efp(1 | {1}, {4}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {4}));
-		System.out.println("efp(1 | {1}, {0}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {0}));
 
-//		System.out.println("sampled price **BINS INDEXES**:");
-//		for (int i = 0; i<20; i++) {
-//			int[] sample = jcde.getSample(rng);
-//
-//			System.out.print(i + ": {");
-//			
-//			for (int d : sample) 
-//				System.out.print(d + ", ");
-//			
-//			System.out.println("}");			
-//		}
+		System.out.print("cdf(1 | {1}, {0}): ");
+		for (double p : jcde.getCDF(new boolean[] {true}, new double[] {0}))
+			System.out.print(p + " ");		
+		System.out.println("");
+		
+		System.out.println("");
+		
+//		// get the expected final price of good 0; the list of conditional prices necessarily empty
+//		System.out.println("efp(0 | { }, { }) = " + jcde.getExpectedFinalPrice(new boolean[] {}, new double[] {}));
+//		
+//		// get the expected final price of good 1 for various values of good 0.
+//		System.out.println("efp(1 | {1}, {1}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {1}));
+//		System.out.println("efp(1 | {1}, {2}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {2}));
+//		System.out.println("efp(1 | {1}, {3}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {3}));
+//		System.out.println("efp(1 | {1}, {4}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {4}));
+//		System.out.println("efp(1 | {1}, {0}) = " + jcde.getExpectedFinalPrice(new boolean[] {true}, new double[] {0}));
+
+		System.out.println(" ---------- Sample prices ---------- ");
+		
+		int sample_size = 10000;
+		double[] sample = new double[sample_size];
+		double[] epmf = new double[jcde.no_bins];		// Empirical pmf		
+
+		// first round
+		// > Case 1
+		System.out.print("sampling first round prices. pmf(0 | {}, {}): ");
+		for (double p : jcde.getPMF(new boolean[] {}, new double[] {}))
+			System.out.print(p + " ");		
+		System.out.println("");
+
+		// sample, tally, and normalize
+		for (int i = 0; i < epmf.length; i++)
+			epmf[i] = 0;
+		for (int i = 0; i < sample_size; i++) {
+			sample[i] = jcde.sampleCondPrices(rng, new boolean[] {}, new double[] {});
+			epmf[JointCondDistribution.bin(sample[i],jcde.precision)] ++;
+		}		
+		// normalize
+		for (int j = 0; j < epmf.length; j++)
+			epmf[j] /= sample_size;
+
+		// output
+		System.out.print("sampling first round prices.epmf(0 | {}, {}): ");
+		for (int i = 0; i < epmf.length; i++)
+			System.out.print(epmf[i] + " ");
+		System.out.println();
+		
+		// second round
+		// > Case 2
+		System.out.print("sampling second round prices. pmf(0 | {false}, {1}): ");
+		for (double p : jcde.getPMF(new boolean[] {false}, new double[] {1.0}))
+			System.out.print(p + " ");		
+		System.out.println("");
+
+//		WinnerAndRealized wr = new WinnerAndRealized(new BooleanArray(new boolean[] {false}), new IntegerArray(new int[] {1}));
+//		for (double p : jcde.prob[1].get(wr))
+//			System.out.print(p + " ");		
+//		System.out.println("");
+		
+		// sample, tally, and normalize
+		for (int i = 0; i < epmf.length; i++)
+			epmf[i] = 0;
+		for (int i = 0; i < sample_size; i++) {
+			sample[i] = jcde.sampleCondPrices(rng, new boolean[] {false}, new double[] {1.0});
+			epmf[JointCondDistribution.bin(sample[i],jcde.precision)] ++;
+		}		
+		// normalize
+		for (int j = 0; j < epmf.length; j++)
+			epmf[j] /= sample_size;
+
+		// output
+		System.out.print("sampling second round prices.epmf(0 | {false}, {1}): ");
+		for (int i = 0; i < epmf.length; i++)
+			System.out.print(epmf[i] + " ");
+		System.out.println();
+
+
+		// > Case 3
+		System.out.print("sampling second round prices. pmf(0 | {true}, {1}): ");
+		for (double p : jcde.getPMF(new boolean[] {true}, new double[] {1.0}))
+			System.out.print(p + " ");		
+		System.out.println("");
+		
+		// sample, tally, and normalize
+		for (int i = 0; i < epmf.length; i++)
+			epmf[i] = 0;
+		for (int i = 0; i < sample_size; i++) {
+			sample[i] = jcde.sampleCondPrices(rng, new boolean[] {true}, new double[] {1.0});
+			epmf[JointCondDistribution.bin(sample[i],jcde.precision)] ++;
+		}		
+		// normalize
+		for (int j = 0; j < epmf.length; j++)
+			epmf[j] /= sample_size;
+
+		// output
+		System.out.print("sampling second round prices.epmf(0 | {true}, {1}): ");
+		for (int i = 0; i < epmf.length; i++)
+			System.out.print(epmf[i] + " ");
+		System.out.println();
+	}
 		
 		/*System.out.println("");
 		System.out.println("Testing binning routine: ");
@@ -599,5 +765,5 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		for (double x = 0; x<11; x += 0.1)
 			System.out.println("bin(" + x + ", 10) = " + bin(x, 1));
 			*/
-	}
 }
+
