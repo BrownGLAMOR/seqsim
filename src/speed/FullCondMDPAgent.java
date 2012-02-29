@@ -258,6 +258,26 @@ public class FullCondMDPAgent extends SeqAgent {
 		}
 	}
 		
+	// Outputting bids by inputting past winner and realized price sequence
+	public double getBid(int good_id, boolean[] input_winner, double[] input_realized) {	
+
+		// Sanity check
+		if (input_winner.length != good_id || input_realized.length != good_id)
+			System.out.println("length not matching... ");
+
+		winner = tmp_w[good_id];
+		winner.d = input_winner;
+		
+		// figure out realized prices
+		realized = tmp_r[good_id];
+		for (int i = 0; i < input_realized.length; i++)
+			realized.d[i] = JointDistributionEmpirical.bin(input_realized[i], jcde.precision);
+		
+		// Get optimal bid
+		return pi[good_id].get(new WinnerAndRealized(winner, realized));
+	}
+
+	
 	@Override
 	public double getBid(int good_id) {	
 		// Figure out which ones we have won;

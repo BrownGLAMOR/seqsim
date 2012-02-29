@@ -4,116 +4,105 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
-// Measures distance between two distributions
+// Measures distance between two distributions, in second price auctions
 public class EpsilonFactor {
 
-	double distance;
-	double[][] realized_old, realized_new;
-	JointDistributionEmpirical jde_old, jde_new;
-	// 																		realized_old/new: [no. of realized samples][no_goods]
-	public EpsilonFactor() throws IOException {		
-		
-		assert (realized_old[0].length != realized_new[0].length);
-		
-		int no_samples = 10000;
-		int nth_price = 2;
-		double max_price = 10.0;
-
-		int n_old = realized_old.length;
-		int n_new = realized_new.length;
-		int no_goods = realized_old[0].length;
-		int idx, no_goods_won0, no_goods_won1;
-		double[] sample_hob = new double[no_goods];
-		double bid0, bid1, total_cost0, total_cost1, ave_surplus0, ave_surplus1, surplus0, surplus1;
-		
-		// TODO: may not need to have any randomness at all (maybe just enumerate it)
-		Random rng = new Random();
-
-		surplus0 = 0;
-		surplus1 = 0;
-		
-		for (int i = 0; i < no_samples; i++) {
-
-			// draw new HOB
-			idx = rng.nextInt(n_new);
-			sample_hob = realized_new[idx];
-
-			// Initialize agents
-			SeqAgent[] agents_old = new SeqAgent[2];
-			SeqAgent[] agents_new = new SeqAgent[2];
-			
-			agents_old[0] = new FullMDPNumGoodsSeqAgent(new DMUValue(no_goods, max_price, rng), 0);
-			agents_new[0] = new FullMDPNumGoodsSeqAgent(new DMUValue(no_goods, max_price, rng), 0);
-			
-			
-			
-			agents_old[0].setJointDistribution(jde_old);		// agent[0] assumes old distribution
-			agents_new[0].setJointDistribution(jde_new);		// agent[1] assumes new distribution
-
-			agents_old[1] = new HOBAgent(null, 1, sample_hob);
-			agents_new[1] = new HOBAgent(null, 1, sample_hob);
-
-			// draw new valuations
-//			agents_old[0].v.reset();
-//			agents_new[0].v.reset();
-
-			// open auctions
-			SeqAuction auction0 = new SeqAuction(agents_old, (double) nth_price, no_goods);
-			SeqAuction auction1 = new SeqAuction(agents_new, (double) nth_price, no_goods);
-			
-			auction0.play(true, null);
-			auction1.play(true, null);
-			
-			surplus0 += auction0.profit[0];
-			surplus1 += auction1.profit[0];
-//			// manually run auction0 and auction1
-//			agent[0].setJointDistribution(jde_old);
-//			agent[1].setJointDistribution(jde_new);
-//			agent[0].reset(auction0);
-//			agent[1].reset(auction1);
-//			no_goods_won0 = 0;
-//			no_goods_won1 = 0;
-//			total_cost0 = 0;
-//			total_cost1 = 0;
-//
-//			for (int good_id = 0; good_id < no_goods; good_id++) {
-//				bid0 = agent[0].getBid(good_id);
-//				if (bid0 > sample_hob[good_id]){
-//					auction0.winner[good_id] = 0;
-//					auction0.hob[0][good_id] = sample_hob[good_id];
-//					no_goods_won0 ++;
-//					total_cost0 += sample_hob[good_id];
-//				}
-//				else {
-//					auction0.winner[good_id] = 1;
-//					auction0.hob[0][good_id] = sample_hob[good_id];
-//				}
-//				
-//				bid1 = agent[1].getBid(good_id);
-//				if (bid1 > sample_hob[good_id]){
-//					auction1.winner[good_id] = 1;
-//					auction1.hob[0][good_id] = sample_hob[good_id];
-//					no_goods_won1 ++;
-//					total_cost1 += sample_hob[good_id];
-//				}
-//				else {
-//					auction0.winner[good_id] = 0;
-//					auction0.hob[0][good_id] = sample_hob[good_id];
-//				}
-//			}
-//		surplus0 += agent[0].v.getValue(no_goods_won0) - total_cost0;
-//		surplus1 += agent[1].v.getValue(no_goods_won1) - total_cost1;
-
-		
-		}
-		ave_surplus0 = surplus0/no_samples;
-		ave_surplus1 = surplus1/no_samples;
-		
-		distance =  ave_surplus1 - ave_surplus0;
+	int no_goods;
+	double EU_P, EU_Q, EU_diff;
+	double stdev_P, stdev_Q, stdev_diff;
+	double[] uP, uQ, udiff;
+	
+	public EpsilonFactor(int no_goods) throws IOException {				
+		this.no_goods = no_goods;
 	}
 
+	// Calculates the epsilon factor from Q to P. 
+	public void jcdeDistance(Random rng, JointCondDistributionEmpirical P, JointCondDistributionEmpirical Q, Value v, int no_iterations) throws IOException{
+		
+		// pass the same valuation, but set different PPs
+		FullCondMDPAgent agentP = new FullCondMDPAgent(v, 0);
+		FullCondMDPAgent agentQ = new FullCondMDPAgent(v, 1);
+
+		agentP.setCondJointDistribution(P);
+		agentQ.setCondJointDistribution(Q);
+		
+		this.uP = new double[no_iterations];	// utility log of agentP when PP is P
+		this.uQ = new double[no_iterations];	// utility log of agentQ when PP is P
+		this.udiff = new double[no_iterations];	// difference b/w these two
+		
+		double hob4P, hob4Q, Pbid, Qbid;				// hobs for different agents; bids submitted by different agents
+		double paymentP, paymentQ;
+		int Pwon, Qwon;
+		boolean[] winnerP = new boolean[no_goods];		// logs to store winners and realized prices
+		boolean[] winnerQ = new boolean[no_goods];
+		double[] realizedP = new double[no_goods];
+		double[] realizedQ = new double[no_goods];
+				
+		for (int i = 0; i < no_iterations; i++) {
+
+			// reset values, compute MDP
+			agentP.v.reset();
+			agentQ.v.reset();
+			agentP.computeFullMDP();
+			agentQ.computeFullMDP();
+			
+			Pwon = 0;
+			Qwon = 0;
+			paymentP = 0.0;
+			paymentQ = 0.0;
+
+			// Sample from P
+			for (int j = 0; j < no_goods; j++) {
+				
+				hob4P = P.sampleCondPrices(rng, Arrays.copyOfRange(winnerP, 0, j), Arrays.copyOfRange(realizedP, 0, j));
+				hob4Q = P.sampleCondPrices(rng, Arrays.copyOfRange(winnerP, 0, j), Arrays.copyOfRange(realizedP, 0, j));
+
+				Pbid = agentP.getBid(j, Arrays.copyOfRange(winnerP, 0, j), Arrays.copyOfRange(realizedP, 0, j));
+				Qbid = agentQ.getBid(j, Arrays.copyOfRange(winnerP, 0, j), Arrays.copyOfRange(realizedP, 0, j));
+				
+				realizedP[j] = hob4P;
+				realizedQ[j] = hob4Q;
+				
+				// "play" the game
+				if (Pbid > hob4P) {
+					winnerP[j] = true;
+					paymentP += hob4P;
+					Pwon ++;
+				} else {
+					winnerP[j] = false;
+				}
+				
+				if (Qbid > hob4Q) {
+					winnerQ[j] = true;
+					paymentQ += hob4Q;
+					Qwon ++;
+				} else {
+					winnerQ[j] = false;
+				}
+			
+			}
+			
+			// Compute utility
+			uP[i] = agentP.v.getValue(Pwon) - paymentP;
+			uQ[i] = agentQ.v.getValue(Qwon) - paymentQ;
+			udiff[i] = uP[i] - uQ[i];
+		}
+		
+		// Summary statistics
+		EU_P = Statistics.mean(uP);
+		EU_Q = Statistics.mean(uQ);
+		EU_diff = Statistics.mean(udiff);
+		stdev_P = Statistics.stdev(uP)/java.lang.Math.sqrt(no_iterations);
+		stdev_Q = Statistics.stdev(uQ)/java.lang.Math.sqrt(no_iterations);
+		stdev_diff = Statistics.stdev(udiff)/java.lang.Math.sqrt(no_iterations);
+	}
+		
+	public void jcdfSymmetricDistance(Random rng, JointCondDistributionEmpirical P, JointCondDistributionEmpirical Q, Value v, int no_iterations) throws IOException {
+		
+	}
+	
 	// Calculates the epsilon factor given two Joint Conditional Distributions
-	public void EpsilonJCDE(JointCondDistributionEmpirical P, JointCondDistributionEmpirical Q, Value v, int no_iterations, int no_goods, int nth_price) throws IOException{
+/*	public void EpsilonJCDE(JointCondDistributionEmpirical P, JointCondDistributionEmpirical Q, Value v, int no_iterations, int no_goods, int nth_price) throws IOException{
 		FullCondMDPAgent[] agents = new FullCondMDPAgent[2];
 		
 		// pass the same valuation, but set different PPs
@@ -137,9 +126,50 @@ public class EpsilonFactor {
 		}
 		
 	}
-	
+	*/
 	// Testing
 	public static void main(String args[]) throws IOException {
+		
+		Random rng = new Random();
+		
+		int no_goods = 2;
+		int no_agents = 5, no_Q_simulations = 100000/no_agents;
+		double precision = 0.05, max_price = 1.0;
+		
+		EpsilonFactor ef = new EpsilonFactor(no_goods);
+		
+		// Create 2 distributions
+		JointCondDistributionEmpirical P, Q;
+		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
+
+		// P ~ uniform
+		P = jcf.makeUniform(false);
+		
+		// Q ~ 3 agent Katzman
+		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
+		for (int i = 0; i<no_agents; i++)
+			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_price, rng), i);
+		
+		SeqAuction katz_auction = new SeqAuction(katz_agents, 2, no_goods);
+		Q = jcf.simulAllAgentsOnePP(katz_auction, no_Q_simulations, false);
+
+		double[] u = jcf.utility;
+		System.out.println("EU(Q|Q) = " + Statistics.mean(u) + ", stdev U(Q|Q) = " + Statistics.stdev(u)/java.lang.Math.sqrt((no_Q_simulations*no_agents)));
+		
+		
+		int no_iterations = 100000;
+		
+		// compute distances
+		ef.jcdeDistance(rng, P, Q, new KatzHLValue(no_agents-1, max_price, rng), no_iterations);		
+		System.out.println("EU(P|P) = " + ef.EU_P + ", stdev U(P|P) = " + ef.stdev_P);
+		System.out.println("EU(Q|P) = " + ef.EU_Q + ", stdev U(Q|P) = " + ef.stdev_Q);
+		System.out.println("EU(P-Q|P) = " + ef.EU_diff + ", stdev U(P-Q|P) = " + ef.stdev_diff);
+
+		ef.jcdeDistance(rng, Q, P, new KatzHLValue(no_agents-1, max_price, rng), no_iterations);		
+		System.out.println("EU(Q|Q) = " + ef.EU_P + ", stdev U(Q|Q) = " + ef.stdev_P);
+		System.out.println("EU(P|Q) = " + ef.EU_Q + ", stdev U(P|Q) = " + ef.stdev_Q);
+		System.out.println("EU(Q-P|Q) = " + ef.EU_diff + ", stdev U(Q-P|Q) = " + ef.stdev_diff);
+
 		
 	}
 	
