@@ -1,11 +1,11 @@
 package speed;
 
 import legacy.DiscreteDistribution;
-// bids according to the Equilibrium Agent documented in Katzman's paper
+// bids according to the Equilibrium Agent documented in Menezes's paper
 
 public class MenezesAgent extends SeqAgent {
 
-	boolean ready = false;
+//	boolean ready = false;
 
 	DiscreteDistribution F;
 	int agent_idx;
@@ -15,17 +15,18 @@ public class MenezesAgent extends SeqAgent {
 	Value valuation;
 	double x, delta_x, max_value;
 	
-	public MenezesAgent(Value valuation, int agent_idx) {
+	public MenezesAgent(Value valuation, int no_agents, int agent_idx) {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
+		this.n = no_agents;
 		this.valuation = valuation;
 		this.x = valuation.getValue(1);
 		this.delta_x = valuation.getValue(2);
 	}
 		// Calculate the first Bid
 	public double calculateFirstBid() {
-		if (!ready)
-			throw new RuntimeException("must input Distribution F first");
+//		if (!ready)
+//			throw new RuntimeException("must input Distribution F first");
 	
 //		 Numerical calculation
 //		int bin_halfway = DiscreteDistribution.bin(delta_x - x, F.precision);
@@ -58,11 +59,15 @@ public class MenezesAgent extends SeqAgent {
 	}
 
 	// Input F, the common prior valuation distribution from which x is drawn from
-	public void setParameters(DiscreteDistribution F, double max_value, int no_agents) {
-		this.F = F;
-		this.max_value = max_value;
-		this.n = no_agents; 		// Note that this n is the (N+1) in KatzmanAgent.java
-		ready = true;
+//	public void setParameters(DiscreteDistribution F, double max_value, int no_agents) {
+//		this.F = F;
+//		this.max_value = max_value;
+//		this.n = no_agents; 		// Note that this n is the (N+1) in KatzmanAgent.java
+//		ready = true;
+//	}
+	
+	public double getFirstRoundBid() {
+		return calculateFirstBid();
 	}
 	
 	@Override
@@ -80,4 +85,5 @@ public class MenezesAgent extends SeqAgent {
 			return calculateFirstBid();	// bid a specific amount in the first round (according to Menezes paper)
 	}
 }
+
 
