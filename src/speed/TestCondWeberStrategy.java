@@ -38,7 +38,7 @@ public class TestCondWeberStrategy {
 
 		// Generate initial condition
 		System.out.print("Generating initial PP from Weber agents...");
-		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(katz_auction, no_simulations);
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(katz_auction, no_simulations, false);
 		
 		pp.outputNormalized();
 		

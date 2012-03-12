@@ -44,7 +44,7 @@ public class MenezesAgent extends SeqAgent {
 //		}
 //		
 //		return constant*sum;
-
+		
 		// theoretical calculation
 		double numerator = java.lang.Math.pow(delta_x - x, n-1) + (n-2) * java.lang.Math.pow(x, n-1);
 		double denominator = (n-1) * java.lang.Math.pow(x, n-2);
@@ -56,6 +56,8 @@ public class MenezesAgent extends SeqAgent {
 	public void reset(SeqAuction auction) {
 		this.auction = auction;
 		no_goods_won = 0;
+		this.x = valuation.getValue(1);
+		this.delta_x = valuation.getValue(2);
 	}
 
 	// Input F, the common prior valuation distribution from which x is drawn from
