@@ -19,9 +19,9 @@ public class FullCondSCWeber {
 		int no_agents = 3;
 		int nth_price = 2;
 
-		int no_initial_simulations = 50000000/no_agents;	// generating initial PP		
-		int no_iterations = 10;								// no. of Wellman updates 
-		int no_per_iteration = 500000/no_agents;			// no. of games played in each Wellman iteration
+		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
+		int no_iterations = 4;								// no. of Wellman updates 
+		int no_per_iteration = 1000000/no_agents;			// no. of games played in each Wellman iteration
 		int no_for_comparison = 1000;						// no. of points for bid comparison
 		int no_for_EUdiff = 10000;						// no. of points for EU comparison
 				

@@ -4,17 +4,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-import legacy.DiscreteDistribution;
-import legacy.DiscreteDistributionWellman;
-import legacy.Histogram;
-
 // Test if strategy computed from MDP would deviate if initiated from Weber-induced Conditional price distribution
 public class TestCondMenezesStrategy {
 	public static void main(String[] args) throws IOException {
 		Cache.init();
 		Random rng = new Random();
 		
-		double precision = 0.05;
 		double max_value = 1.0;
 		double jf_precision = 0.05;
 		double max_price = max_value;
@@ -23,24 +18,16 @@ public class TestCondMenezesStrategy {
 		int no_agents = 2;
 		int nth_price = 2;
 
-		int no_simulations = 1000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
+		boolean output_pp = false;
+		int no_simulations = 10000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
 		int max_iterations = 1000;
-
-		FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/raw" + no_agents + ".csv");
 		
 		JointCondFactory jcf = new JointCondFactory(no_goods, jf_precision, max_price);
 
-		// create distribution F
-		Histogram h = new Histogram(precision);
-		for (int i = 1; i*precision <= max_value; i++)
-			h.add(i*precision);
-		DiscreteDistribution F = new DiscreteDistributionWellman(h.getDiscreteDistribution(), precision);
-		
 		// Create agents
 		MenezesAgent[] menezes_agents = new MenezesAgent[no_agents];
 		for (int i = 0; i<no_agents; i++) {
-			menezes_agents[i] = new MenezesAgent(new MenezesValue(max_value, rng), i);
-			menezes_agents[i].setParameters(F, max_value, no_agents);
+			menezes_agents[i] = new MenezesAgent(new MenezesValue(max_value, rng), no_agents, i);
 		}
 				
 		// Create auction
@@ -48,27 +35,25 @@ public class TestCondMenezesStrategy {
 
 		// Generate initial condition
 		System.out.print("Generating initial PP from Menezes agents...");
-		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(menezes_auction, no_simulations);
-		
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(menezes_auction, no_simulations, output_pp);
 		pp.outputNormalized();
 		
 		// Output raw realized vectors
-		pp.outputRaw(fw);
-		fw.close();
+		if (output_pp == true) {
+			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/raw" + no_agents + ".csv");
+			pp.outputRaw(fw);
+			fw.close();
+		}
 		
 		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/play" + no_agents + ".csv");
 
 		System.out.println("done");
 		System.out.println("Generating " + max_iterations + " first-round bids...");
 		
-//		KatzHLValue value = new KatzHLValue(no_agents-1, max_value, rng);
-//		UnitValue value = new UnitValue(max_value, rng);
 		MenezesValue value = new MenezesValue(max_value, rng);
 
-
 		// initial agents for comparison
-		MenezesAgent menezes_agent = new MenezesAgent(value, 3);
-		menezes_agent.setParameters(F, max_value, no_agents);
+		MenezesAgent menezes_agent = new MenezesAgent(value, no_agents, 3);
 		
 		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
 		mdp_agent.setCondJointDistribution(pp);

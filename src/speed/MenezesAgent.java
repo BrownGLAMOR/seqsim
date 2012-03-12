@@ -46,10 +46,13 @@ public class MenezesAgent extends SeqAgent {
 //		return constant*sum;
 		
 		// theoretical calculation
-		double numerator = java.lang.Math.pow(delta_x - x, n-1) + (n-2) * java.lang.Math.pow(x, n-1);
-		double denominator = (n-1) * java.lang.Math.pow(x, n-2);
-
-		return (numerator/denominator);
+		if (n > 2) {
+			double numerator = java.lang.Math.pow(delta_x - x, n-1) + (n-2) * java.lang.Math.pow(x, n-1);
+			double denominator = (n-1) * java.lang.Math.pow(x, n-2);	
+			return (numerator/denominator);
+		}
+		else
+			return delta_x - x;
 	}
 	
 	@Override

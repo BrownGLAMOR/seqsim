@@ -16,18 +16,18 @@ public class FullCondSC {
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 3;
+		int no_agents = 2;
 		int nth_price = 2;
 
-		int no_initial_simulations = 1000000/no_agents;	// generating initial PP		
-		int no_iterations = 20;								// no. of Wellman updates 
-		int no_per_iteration = 500000/no_agents;			// no. of games played in each Wellman iteration
+		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
+		int no_iterations = 10;								// no. of Wellman updates 
+		int no_per_iteration = 1000000/no_agents;			// no. of games played in each Wellman iteration
 		int no_for_comparison = 1000;						// no. of points for bid comparison
 		int no_for_EUdiff = 10000;						// no. of points for EU comparison
 				
 		boolean take_log = false;						// take log of prices
-		boolean print_intermediary = false;				// compare S(t) and S(0), from Katzman
-		boolean print_intermediary_itself = false;		// compare S(t) and S(t+1)
+		boolean print_intermediary = true;				// compare S(t) and S(0), from Katzman
+		boolean print_intermediary_itself = true;		// compare S(t) and S(t+1)
 		boolean print_end = false;						// compare S(T) and S(0)
 		boolean print_diff = true;						// compare EUs and output
 		
