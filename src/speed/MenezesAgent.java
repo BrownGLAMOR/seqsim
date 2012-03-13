@@ -12,10 +12,10 @@ public class MenezesAgent extends SeqAgent {
 	int no_goods_won;
 	int n, no_agents;
 	int i;
-	Value valuation;
+	MenezesValue valuation;
 	double x, delta_x, max_value;
 	
-	public MenezesAgent(Value valuation, int no_agents, int agent_idx) {
+	public MenezesAgent(MenezesValue valuation, int no_agents, int agent_idx) {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
 		this.n = no_agents;
@@ -44,15 +44,18 @@ public class MenezesAgent extends SeqAgent {
 //		}
 //		
 //		return constant*sum;
-		
-		// theoretical calculation
-		if (n > 2) {
+
+		// different bids... according to different 
+		if (n == 2)
+			return delta_x - x;
+		else if (valuation.decreasing == true) {
 			double numerator = java.lang.Math.pow(delta_x - x, n-1) + (n-2) * java.lang.Math.pow(x, n-1);
 			double denominator = (n-1) * java.lang.Math.pow(x, n-2);	
 			return (numerator/denominator);
 		}
-		else
-			return delta_x - x;
+		else {
+			return (delta_x - x);
+		}
 	}
 	
 	@Override

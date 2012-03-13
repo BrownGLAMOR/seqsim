@@ -11,7 +11,7 @@ public class TestCondMenezesStrategy {
 		Random rng = new Random();
 		
 		double max_value = 1.0;
-		double jf_precision = 0.05;
+		double jf_precision = 0.02;
 		double max_price = max_value;
 		
 		int no_goods = 2;
@@ -19,15 +19,16 @@ public class TestCondMenezesStrategy {
 		int nth_price = 2;
 
 		boolean output_pp = false;
+		boolean decreasing = true;
 		int no_simulations = 10000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
-		int max_iterations = 1000;
+		int max_iterations = 100000;
 		
 		JointCondFactory jcf = new JointCondFactory(no_goods, jf_precision, max_price);
 
 		// Create agents
 		MenezesAgent[] menezes_agents = new MenezesAgent[no_agents];
 		for (int i = 0; i<no_agents; i++) {
-			menezes_agents[i] = new MenezesAgent(new MenezesValue(max_value, rng), no_agents, i);
+			menezes_agents[i] = new MenezesAgent(new MenezesValue(max_value, rng, decreasing), no_agents, i);
 		}
 				
 		// Create auction
@@ -41,16 +42,19 @@ public class TestCondMenezesStrategy {
 		// Output raw realized vectors
 		if (output_pp == true) {
 			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/raw" + no_agents + ".csv");
+//			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/increasing_raw" + no_agents + ".csv");
 			pp.outputRaw(fw);
 			fw.close();
 		}
 		
 		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/play" + no_agents + ".csv");
+//		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/precision_" + jf_precision + "play" + no_agents + ".csv");
+//		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/increasing_play" + no_agents + ".csv");
 
 		System.out.println("done");
 		System.out.println("Generating " + max_iterations + " first-round bids...");
 		
-		MenezesValue value = new MenezesValue(max_value, rng);
+		MenezesValue value = new MenezesValue(max_value, rng, decreasing);
 
 		// initial agents for comparison
 		MenezesAgent menezes_agent = new MenezesAgent(value, no_agents, 3);
