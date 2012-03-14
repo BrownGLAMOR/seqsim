@@ -10,6 +10,7 @@ public class JointCondFactory extends Thread {
 	double max_price;
 	boolean take_log;
 	double[] utility; 
+	double[][] price_log;
 	boolean ready = false;
 	
 	public JointCondFactory(int no_goods, double precision, double max_price) {
@@ -91,43 +92,12 @@ public class JointCondFactory extends Thread {
 	}
 
 	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent.
-//	public JointCondDistributionEmpirical simulAllAgentsOnePP(SeqAuction auction, int no_simulations, boolean take_log) throws IOException {	
-//		SeqAgent[] agents = auction.agents;
-//
-//		// create JDEs, one per agent	
-//		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price, take_log);
-//
-//		// Play auctions
-//		for (int j = 0; j<no_simulations; j++) {
-//			// Cause each agent to take on a new valuation by calling reset() on their valuation function
-//			for (int k = 0; k<agents.length; k++)
-//				agents[k].v.reset();
-//		
-//			// Play the auction. This will call the agent's reset(), which will cause MDP to be recomputed.
-//			// so long as the agent's reset() function calls its computeMDP().
-//			auction.play(true, null);		// true=="quiet mode", null=="don't write to disk"
-//			
-//			// Add results from ALL agents to PP distribution
-//			for (int k = 0; k<agents.length; k++) {
-//				boolean[] w = new boolean[no_goods];
-//				for (int l = 0; l < no_goods; l++) {
-//					if (auction.winner[l] == k)
-//						w[l] = true;
-//					else
-//						w[l] = false;
-//				}
-//				jcde.populate(w,auction.hob[k]);
-//			}
-//		}
-//		
-//		jcde.normalize();
-//		
-//		return jcde;
-//	}
-
-	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent.
-	public JointCondDistributionEmpirical simulAllAgentsOnePP(SeqAuction auction, int no_simulations, boolean take_log) throws IOException {	
+	public JointCondDistributionEmpirical simulAllAgentsOnePP(SeqAuction auction, int no_simulations, boolean take_log, boolean record_prices) throws IOException {	
+		
 		SeqAgent[] agents = auction.agents;
+		double[][] price_log = new double[no_simulations][auction.no_goods];			// record realized prices from seller's point of view
+		if (record_prices == true)
+			this.price_log = price_log;
 
 		// create JDEs, one per agent	
 		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price, take_log);
@@ -144,10 +114,15 @@ public class JointCondFactory extends Thread {
 			// so long as the agent's reset() function calls its computeMDP().
 			auction.play(true, null);		// true=="quiet mode", null=="don't write to disk"
 			
+			// record realized prices from seller's point of view
+			if (record_prices == true){
+				for (int i = 0; i < no_goods; i++)
+					price_log[j] = auction.price.clone();
+			}
 			// Add results from ALL agents to PP distribution
 			for (int k = 0; k<agents.length; k++) {
 				
-				// record prices
+				// record prices from agents' point of view
 				boolean[] w = new boolean[no_goods];
 				for (int l = 0; l < no_goods; l++) {
 					if (auction.winner[l] == k)
@@ -159,6 +134,8 @@ public class JointCondFactory extends Thread {
 
 				// record utility
 				utility[j*agents.length + k] = auction.profit[k];
+
+				
 
 //				if (k == 0) {
 //					System.out.println("agent0, [v(1) v(2)] = [" + agents[0].v.getValue(1) + " " + agents[0].v.getValue(2) + "]");
@@ -193,7 +170,7 @@ public class JointCondFactory extends Thread {
 		int no_goods = 2;
 		double precision = 1;
 		double max_price = 3;
-		int no_agents = 2;
+		int no_agents = 3;
 		int nth_price = 2;
 
 		// Test make uniform
@@ -241,8 +218,21 @@ public class JointCondFactory extends Thread {
 		
 		// Simulate
 		System.out.print("Start simulating... ");
-		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(auction, no_simulations,true);
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(auction, no_simulations,true, true);
 
+		// Write realized prices
+		System.out.println();
+		
+		double price_log[][] = jcf.price_log;
+		for (int i = 0; i < price_log.length; i++){
+			System.out.print("round " + i + " realized prices = [");
+			for (int j = 0; j < price_log[i].length; j++)
+				System.out.print(price_log[i][j] + ",");
+			System.out.println("]");
+		}
+		
+		System.out.println();
+		
 		// write result
 		FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/test.txt");
 		pp.outputRaw(fw);
