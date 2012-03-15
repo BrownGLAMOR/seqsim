@@ -8,13 +8,17 @@ public class KatzmanUniformAgent extends SeqAgent {
 
 	int agent_idx;
 	int no_goods_won;
+	int N;
 	
-	KatzHLValue v;
+//	KatzHLValue v;
+	Value v;
 	
-	public KatzmanUniformAgent(KatzHLValue v, int agent_idx) {
+//	public KatzmanUniformAgent(KatzHLValue v, int agent_idx) {
+	public KatzmanUniformAgent(Value v, int no_agents, int agent_idx) {
 		super(agent_idx, v);
 		this.agent_idx = agent_idx;
 		this.v = v;
+		this.N = no_agents - 1;
 	}
 
 	// Calculate the first Bid
@@ -36,7 +40,7 @@ public class KatzmanUniformAgent extends SeqAgent {
 //		return bid;
 
 //		System.out.println("v.H = " + v.H + ", bid = " + (1.0- (1.0/(2.0*v.N)) )*v.H);
-		return (1.0- (1.0/(2.0*v.N)) )*v.H;		// I was dumb. We had a theoretical formula for calculating bids, why not use? 
+		return (1.0- (1.0/(2.0*N)) )*v.getValue(1);		// I was dumb. We had a theoretical formula for calculating bids, why not use? 
 	}
 	
 	@Override

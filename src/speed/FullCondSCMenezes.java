@@ -16,7 +16,7 @@ public class FullCondSCMenezes {
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 2;
+		int no_agents = 3;
 		int nth_price = 2;
 
 		int no_initial_simulations = 3000000/no_agents;	// generating initial PP		
