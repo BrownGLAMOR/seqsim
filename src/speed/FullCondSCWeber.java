@@ -54,7 +54,7 @@ public class FullCondSCWeber {
 		// Create auction
 		SeqAuction weber_auction = new SeqAuction(weber_agents, nth_price, no_goods);
 		System.out.println("Generating initial PP");
-		PP[0] = jcf.simulAllAgentsOnePP(weber_auction, no_initial_simulations,take_log);
+		PP[0] = jcf.simulAllAgentsOnePP(weber_auction, no_initial_simulations,take_log,false);
 		
 //		u = jcf.utility;
 //		u_mean[0] = Statistics.mean(u);
@@ -115,7 +115,7 @@ public class FullCondSCWeber {
 			SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
 			
 			// generate a new pp
-			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log);
+			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,false);
 			u = jcf.utility;
 			u_mean[it+1] = Statistics.mean(u);
 			u_stdev[it+1] = Statistics.stdev(u)/java.lang.Math.sqrt((no_per_iteration*no_agents));

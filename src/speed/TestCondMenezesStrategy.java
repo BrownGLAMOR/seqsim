@@ -36,7 +36,7 @@ public class TestCondMenezesStrategy {
 
 		// Generate initial condition
 		System.out.print("Generating initial PP from Menezes agents...");
-		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(menezes_auction, no_simulations, output_pp);
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(menezes_auction, no_simulations, output_pp, false);
 		pp.outputNormalized();
 		
 		// Output raw realized vectors

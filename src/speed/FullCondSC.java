@@ -52,12 +52,12 @@ public class FullCondSC {
 //			katz_agents[i] = new KatzmanUniformImpreciseAgent(new KatzHLValue(no_agents-1, max_value, rng), i, precision);
 		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
 		for (int i = 0; i<no_agents; i++)
-			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_value, rng), i);
+			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_value, rng), no_agents, i);
 
 		// Create auction
 		SeqAuction katz_auction = new SeqAuction(katz_agents, nth_price, no_goods);
 		System.out.println("Generating initial PP");
-		PP[0] = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log);
+		PP[0] = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log,false);
 //		pp0 = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log);
 //		pp_new = pp0;
 		
@@ -76,7 +76,7 @@ public class FullCondSC {
 		
 		// initiate agents to compare bids
 		KatzHLValue value = new KatzHLValue(no_agents-1, max_value, rng);		
-		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
+		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, no_agents, 0);
 //		KatzmanUniformImpreciseAgent katz_agent = new KatzmanUniformImpreciseAgent(value, 0, precision);
 		FullCondMDPAgent mdp_agent_old = new FullCondMDPAgent(value, 1);
 		FullCondMDPAgent mdp_agent_new = new FullCondMDPAgent(value, 1);
@@ -127,7 +127,7 @@ public class FullCondSC {
 			SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
 			
 			// generate a new pp
-			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log);
+			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,false);
 			u = jcf.utility;
 			u_mean[it+1] = Statistics.mean(u);
 			u_stdev[it+1] = Statistics.stdev(u)/java.lang.Math.sqrt((no_per_iteration*no_agents));

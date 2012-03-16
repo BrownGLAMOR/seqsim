@@ -18,7 +18,7 @@ public class TestMenezesAgent {
 		Random rng = new Random();
 
 		// Test MenezesValue.java ... affirmative
-		MenezesValue v = new MenezesValue(max_value, rng);
+		MenezesValue v = new MenezesValue(max_value, rng, true);
 		System.out.println("MenezesValue, x = " + v.getValue(1) + ", delta(x) = " + v.getValue(2) + ", delta(x) - x = " + (v.getValue(2) - v.getValue(1)));
 		
 		// create distribution F
@@ -33,8 +33,8 @@ public class TestMenezesAgent {
 		
 		// Create Agent & assign valuation
 		MenezesAgent[] agent = new MenezesAgent[1];
-		agent[0] = new MenezesAgent(v, 1);
-		agent[0].setParameters(F, max_value, no_agents);
+		agent[0] = new MenezesAgent(v, no_agents, 1);
+//		agent[0].setParameters(F, max_value, no_agents);
 		
 		// Create auction
 		SeqAuction auction = new SeqAuction(agent, 2, no_goods);

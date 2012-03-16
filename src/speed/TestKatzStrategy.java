@@ -31,7 +31,7 @@ public class TestKatzStrategy {
 
 		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
 		for (int i = 0; i<no_agents; i++)
-			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents - 1, max_value, rng), i);
+			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents - 1, max_value, rng), no_agents, i);
 
 		// Create auction
 		SeqAuction katz_auction = new SeqAuction(katz_agents, nth_price, no_goods);
@@ -54,7 +54,7 @@ public class TestKatzStrategy {
 		
 		KatzHLValue value = new KatzHLValue(no_agents - 1, max_value, rng);
 		
-		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, 0);
+		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, no_agents, 0);
 
 		FullMDPAgent2 mdp_agent = new FullMDPAgent2(value, 1);
 		mdp_agent.setJointDistribution(pp);

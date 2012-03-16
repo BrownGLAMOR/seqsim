@@ -261,7 +261,7 @@ public class JointCondDistributionEmpirical_old extends JointCondDistribution {
 	}
 
 	// sample the probability distribution, and returns an array of prices, one per good
-	@Override
+//	@Override
 	public int[] getSample(Random rng) {
 		if (!ready)
 			throw new RuntimeException("must normalize first");

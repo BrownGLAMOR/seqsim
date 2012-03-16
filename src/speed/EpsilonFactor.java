@@ -148,10 +148,10 @@ public class EpsilonFactor {
 		// Q ~ 3 agent Katzman
 		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
 		for (int i = 0; i<no_agents; i++)
-			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_price, rng), i);
+			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_price, rng), no_agents, i);
 		
 		SeqAuction katz_auction = new SeqAuction(katz_agents, 2, no_goods);
-		Q = jcf.simulAllAgentsOnePP(katz_auction, no_Q_simulations, false);
+		Q = jcf.simulAllAgentsOnePP(katz_auction, no_Q_simulations, false, false);
 
 		double[] u = jcf.utility;
 		System.out.println("EU(Q|Q) = " + Statistics.mean(u) + ", stdev U(Q|Q) = " + Statistics.stdev(u)/java.lang.Math.sqrt((no_Q_simulations*no_agents)));
