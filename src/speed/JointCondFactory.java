@@ -92,17 +92,20 @@ public class JointCondFactory extends Thread {
 	}
 
 	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent.
-	public JointCondDistributionEmpirical simulAllAgentsOnePP(SeqAuction auction, int no_simulations, boolean take_log, boolean record_prices) throws IOException {	
+	public JointCondDistributionEmpirical simulAllAgentsOnePP(SeqAuction auction, int no_simulations, boolean take_log, boolean record_prices, boolean record_utility) throws IOException {	
 		
 		SeqAgent[] agents = auction.agents;
-		double[][] price_log = new double[no_simulations][auction.no_goods];			// record realized prices from seller's point of view
-		if (record_prices == true)
+		if (record_prices == true){
+			double[][] price_log = new double[no_simulations][auction.no_goods];			// record realized prices from seller's point of view
 			this.price_log = price_log;
+		}
 
-		// create JDEs, one per agent	
+		// create one JCDE	
 		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price, take_log);
-		double[] utility = new double[agents.length*no_simulations];
-		this.utility = utility;
+		if (record_utility == true) {
+			double[] utility = new double[agents.length*no_simulations];
+			this.utility = utility;
+		}
 
 		// Play auctions
 		for (int j = 0; j<no_simulations; j++) {
@@ -132,22 +135,11 @@ public class JointCondFactory extends Thread {
 				}
 				jcde.populate(w,auction.hob[k]);
 
-				// record utility
+			// record utility
+			if (record_utility == true) {
 				utility[j*agents.length + k] = auction.profit[k];
-
+			}
 				
-
-//				if (k == 0) {
-//					System.out.println("agent0, [v(1) v(2)] = [" + agents[0].v.getValue(1) + " " + agents[0].v.getValue(2) + "]");
-//					int won = 0;
-//					for (int l = 0; l < no_goods; l++){
-//						if (w[l] == true)
-//							won ++;
-//					}
-//					System.out.println("agent0, won " + won + " goods.");
-//					System.out.println("agent0, payment = " + auction.payment[0]);
-//					System.out.println("agent0, profit = " + auction.profit[0]);
-//				}
 			}
 		}
 		
@@ -218,7 +210,7 @@ public class JointCondFactory extends Thread {
 		
 		// Simulate
 		System.out.print("Start simulating... ");
-		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(auction, no_simulations,true, true);
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(auction, no_simulations,true, true, false);
 
 		// Write realized prices
 		System.out.println();

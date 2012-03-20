@@ -28,7 +28,7 @@ public class FullCondSCMenezes {
 		boolean decreasing = true;						// decreasing MV in Menezes valuation
 		
 		boolean take_log = false;						// record prices for agents
-		boolean record_prices = true;					// record prices for seller
+		boolean record_prices = false;					// record prices for seller
 		
 		boolean print_intermediary = true;				// compare bids b/w S(t) and S(0)
 		boolean print_intermediary_itself = true;		// compare bids b/w S(t) and S(t+1)
@@ -56,7 +56,7 @@ public class FullCondSCMenezes {
 		// Create auction
 		SeqAuction mene_auction = new SeqAuction(mene_agents, nth_price, no_goods);
 		System.out.println("Generating initial PP");
-		PP[0] = jcf.simulAllAgentsOnePP(mene_auction, no_initial_simulations,take_log,record_prices);
+		PP[0] = jcf.simulAllAgentsOnePP(mene_auction, no_initial_simulations,take_log,record_prices,false);
 				
 //			// Output raw realized vectors
 //		if (take_log == true){
@@ -113,7 +113,7 @@ public class FullCondSCMenezes {
 			SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
 			
 			// generate a new pp
-			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,record_prices);
+			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,record_prices,false);
 			u = jcf.utility;
 			u_mean[it+1] = Statistics.mean(u);
 			u_stdev[it+1] = Statistics.stdev(u)/java.lang.Math.sqrt((no_per_iteration*no_agents));

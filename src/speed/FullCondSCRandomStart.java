@@ -63,8 +63,8 @@ public class FullCondSCRandomStart {
 		// Create PP
 		System.out.println("Generating initial PP");
 		PP[0][0] = jcf.makeUniform(take_log);
-		PP[0][1] = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log,record_prices);
-		PP[0][2] = jcf.simulAllAgentsOnePP(mene_auction, no_initial_simulations,take_log,record_prices);
+		PP[0][1] = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log,record_prices,false);
+		PP[0][2] = jcf.simulAllAgentsOnePP(mene_auction, no_initial_simulations,take_log,record_prices,false);
 //		PP[0][3] = jcf.simulAllAgentsOnePP(weber_auction, no_initial_simulations,take_log,record_prices);
 				
 		// Output raw realized vectors
@@ -131,7 +131,7 @@ public class FullCondSCRandomStart {
 			
 			// generate new PPs
 			for (int i = 0; i < no_cases; i++)
-				PP[it+1][i] = jcf.simulAllAgentsOnePP(updating_auctions[i], no_per_iteration,take_log,record_prices);
+				PP[it+1][i] = jcf.simulAllAgentsOnePP(updating_auctions[i], no_per_iteration,take_log,record_prices,false);
 			
 //			// Record realized prices from seller's point of view
 //			if (record_prices == true){

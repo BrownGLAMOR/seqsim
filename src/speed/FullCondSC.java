@@ -57,7 +57,7 @@ public class FullCondSC {
 		// Create auction
 		SeqAuction katz_auction = new SeqAuction(katz_agents, nth_price, no_goods);
 		System.out.println("Generating initial PP");
-		PP[0] = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log,false);
+		PP[0] = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log,false,false);
 //		pp0 = jcf.simulAllAgentsOnePP(katz_auction, no_initial_simulations,take_log);
 //		pp_new = pp0;
 		
@@ -127,7 +127,7 @@ public class FullCondSC {
 			SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
 			
 			// generate a new pp
-			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,false);
+			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,false,false);
 			u = jcf.utility;
 			u_mean[it+1] = Statistics.mean(u);
 			u_stdev[it+1] = Statistics.stdev(u)/java.lang.Math.sqrt((no_per_iteration*no_agents));

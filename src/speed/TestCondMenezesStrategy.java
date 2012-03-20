@@ -15,13 +15,13 @@ public class TestCondMenezesStrategy {
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 2;
+		int no_agents = 4;
 		int nth_price = 2;
 
 		boolean output_pp = false;
 		boolean decreasing = true;
-		int no_simulations = 10000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
-		int max_iterations = 100000;
+		int no_simulations = 1000000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
+		int max_iterations = 10000;
 		
 		JointCondFactory jcf = new JointCondFactory(no_goods, jf_precision, max_price);
 
@@ -36,7 +36,7 @@ public class TestCondMenezesStrategy {
 
 		// Generate initial condition
 		System.out.print("Generating initial PP from Menezes agents...");
-		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(menezes_auction, no_simulations, output_pp, false);
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(menezes_auction, no_simulations, output_pp, false, false);
 		pp.outputNormalized();
 		
 		// Output raw realized vectors
@@ -47,18 +47,16 @@ public class TestCondMenezesStrategy {
 			fw.close();
 		}
 		
-		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/play" + no_agents + ".csv");
-//		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/precision_" + jf_precision + "play" + no_agents + ".csv");
-//		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/increasing_play" + no_agents + ".csv");
+//		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/play" + no_agents + ".csv");
+		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/fixed_pt/menezes_" + no_agents + "_" + jf_precision + ".csv");
 
 		System.out.println("done");
 		System.out.println("Generating " + max_iterations + " first-round bids...");
 		
-		MenezesValue value = new MenezesValue(max_value, rng, decreasing);
 
 		// initial agents for comparison
-		MenezesAgent menezes_agent = new MenezesAgent(value, no_agents, 3);
-		
+		MenezesValue value = new MenezesValue(max_value, rng, decreasing);
+		MenezesAgent menezes_agent = new MenezesAgent(value, no_agents, 3);		
 		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
 		mdp_agent.setCondJointDistribution(pp);
 		
