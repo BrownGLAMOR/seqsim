@@ -3,8 +3,8 @@ package speed;
 import java.util.HashMap;
 import java.util.Random;
 
-public class FullCondMDPAgent extends SeqAgent {
-	
+public class FullCondMDPAgent2 extends SeqAgent {
+
 	Random rng = new Random();
 	
 	// auction variables
@@ -21,7 +21,8 @@ public class FullCondMDPAgent extends SeqAgent {
 	IntegerArray realized, realized_plus;
 	BooleanArray winner, winner_plus;
 	
-	double epsilon = 0.00000001;		// the minimum utility difference that will make us favor a higher bid than a lower bid
+	double epsilon;
+	boolean break_randomly;
 	
 	HashMap<WinnerAndRealized, Double>[] pi; // [t].get([winner] [realized]) ==> pi
 	HashMap<WinnerAndRealized, Double>[] V; // [t].get([winner] [realized]) ==> V
@@ -30,14 +31,22 @@ public class FullCondMDPAgent extends SeqAgent {
 	double[] Reward;
 	double[] b;
 	
+	
+	
+	
 	IntegerArray[] tmp_r;
 	BooleanArray[] tmp_w;
 	WinnerAndRealized[] tmp_wr;
 	
 	WinnerAndRealized wr, wr_plus;
 
-	public FullCondMDPAgent(Value valuation, int agent_idx) {
+	// The same as FullCondMDPAgent.java, except has different tie breaking rules when comparing bids giving similar utility. 
+	// epsilon > 0 means favoring lower bids; don't favor higher bids unless beating lower bid's utility by epsilon
+	// epsilon < 0 means favoing higher bids
+	public FullCondMDPAgent2(Value valuation, int agent_idx, double epsilon, boolean break_randomly) {
 		super(agent_idx, valuation);
+		this.epsilon = epsilon;
+		this.break_randomly = break_randomly;
 	}
 	
 	// What does this do? 
@@ -48,8 +57,6 @@ public class FullCondMDPAgent extends SeqAgent {
 
 		for (int i = 0; i < b.length; i++)
 			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.49999);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision	
-//			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.500001);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
-//		b[0] = 0.000001;
 
 		Q = new double[price_length];		
 		Reward = new double[price_length];		
@@ -179,27 +186,17 @@ public class FullCondMDPAgent extends SeqAgent {
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			}
 		    			
-//		    			// print out ties
-//			    		if (temp2 == max_value && i > 0)
-//			    			System.out.println("ties!");
-
-		    			// print out close ties
-//		    			if (temp2 > max_value && temp2 < max_value + epsilon)
-//		    				System.out.println("beat by " + (temp2 - max_value));
-		    			
-//			    		if (temp2 > max_value + epsilon || i == 0) { 
-//			    			max_value = temp2;
-//			    			max_idx = i;
-//			    		}
-
-		    			// XXX: randomly breaking ties
-		    			if (i == 0 || (temp2 > max_value - epsilon && temp2 < max_value + epsilon)) {
-//		    				System.out.println("i = " + i +  ", temp2 = " + temp2 + ", max_value = " + max_value + ", utility = " + v.getValue(1));
+			    		if ((temp2 > max_value + epsilon && break_randomly == false ) || i == 0) { 
+			    			max_value = temp2;
+			    			max_idx = i;
+			    		}
+			    		// break ties randomly if |temp2 - max_value| < epsilon
+			    		else if ( (temp2 > max_value - epsilon && temp2 < max_value + epsilon) && break_randomly == true) {
 			    			if (rng.nextDouble() > 0.5){
-				    			max_value = temp2;
-				    			max_idx = i;
-			    			}
-			    		}			    		
+			    				max_value = temp2;
+			    				max_idx = i;
+		    				}			    			
+			    		}
 		    			
 			    		Q[i] = temp2;		// why do I even care about storing this Q
 		    		}

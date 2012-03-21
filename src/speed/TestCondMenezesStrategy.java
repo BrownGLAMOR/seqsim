@@ -10,17 +10,20 @@ public class TestCondMenezesStrategy {
 		Cache.init();
 		Random rng = new Random();
 		
+		double epsilon = 0.00001;
+		boolean break_randomly = true;
+		
 		double max_value = 1.0;
 		double jf_precision = 0.02;
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 4;
+		int no_agents = 2;
 		int nth_price = 2;
 
 		boolean output_pp = false;
 		boolean decreasing = true;
-		int no_simulations = 1000000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
+		int no_simulations = 100000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
 		int max_iterations = 10000;
 		
 		JointCondFactory jcf = new JointCondFactory(no_goods, jf_precision, max_price);
@@ -56,8 +59,9 @@ public class TestCondMenezesStrategy {
 
 		// initial agents for comparison
 		MenezesValue value = new MenezesValue(max_value, rng, decreasing);
-		MenezesAgent menezes_agent = new MenezesAgent(value, no_agents, 3);		
+		MenezesAgent menezes_agent = new MenezesAgent(value, no_agents, 3);
 		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
+//		FullCondMDPAgent2 mdp_agent = new FullCondMDPAgent2(value, 1, epsilon, break_randomly);	// XXX: change things here
 		mdp_agent.setCondJointDistribution(pp);
 		
 		fw_play.write("max_value (to menezes valuation): " + max_value + "\n");
