@@ -15,7 +15,7 @@ public class TestCondKatzStrategy {
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 4;
+		int no_agents = 2;
 		int nth_price = 2;
 
 		int no_simulations = 2000000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.		
