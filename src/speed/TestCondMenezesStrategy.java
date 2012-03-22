@@ -10,8 +10,9 @@ public class TestCondMenezesStrategy {
 		Cache.init();
 		Random rng = new Random();
 		
-		double epsilon = 0.00001;
+		double epsilon = - 0.0001;
 		boolean break_randomly = true;
+		double break_threshold = 0.9;
 		
 		double max_value = 1.0;
 		double jf_precision = 0.02;
@@ -60,8 +61,8 @@ public class TestCondMenezesStrategy {
 		// initial agents for comparison
 		MenezesValue value = new MenezesValue(max_value, rng, decreasing);
 		MenezesAgent menezes_agent = new MenezesAgent(value, no_agents, 3);
-		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
-//		FullCondMDPAgent2 mdp_agent = new FullCondMDPAgent2(value, 1, epsilon, break_randomly);	// XXX: change things here
+//		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
+		FullCondMDPAgent2 mdp_agent = new FullCondMDPAgent2(value, 1, epsilon, break_randomly, break_threshold);	// XXX: change things here
 		mdp_agent.setCondJointDistribution(pp);
 		
 		fw_play.write("max_value (to menezes valuation): " + max_value + "\n");

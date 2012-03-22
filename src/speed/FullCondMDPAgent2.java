@@ -23,6 +23,7 @@ public class FullCondMDPAgent2 extends SeqAgent {
 	
 	double epsilon;
 	boolean break_randomly;
+	double break_threshold;
 	
 	HashMap<WinnerAndRealized, Double>[] pi; // [t].get([winner] [realized]) ==> pi
 	HashMap<WinnerAndRealized, Double>[] V; // [t].get([winner] [realized]) ==> V
@@ -43,10 +44,11 @@ public class FullCondMDPAgent2 extends SeqAgent {
 	// The same as FullCondMDPAgent.java, except has different tie breaking rules when comparing bids giving similar utility. 
 	// epsilon > 0 means favoring lower bids; don't favor higher bids unless beating lower bid's utility by epsilon
 	// epsilon < 0 means favoing higher bids
-	public FullCondMDPAgent2(Value valuation, int agent_idx, double epsilon, boolean break_randomly) {
+	public FullCondMDPAgent2(Value valuation, int agent_idx, double epsilon, boolean break_randomly, double break_threshold) {
 		super(agent_idx, valuation);
 		this.epsilon = epsilon;
 		this.break_randomly = break_randomly;
+		this.break_threshold = break_threshold;
 	}
 	
 	// What does this do? 
@@ -185,18 +187,36 @@ public class FullCondMDPAgent2 extends SeqAgent {
 		    				winner_plus.d[winner.d.length] = false;
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			}
-		    			
-			    		if ((temp2 > max_value + epsilon && break_randomly == false ) || i == 0) { 
+
+		    			// compare
+		    			if (i == 0) {
 			    			max_value = temp2;
-			    			max_idx = i;
-			    		}
-			    		// break ties randomly if |temp2 - max_value| < epsilon
-			    		else if ( (temp2 > max_value - epsilon && temp2 < max_value + epsilon) && break_randomly == true) {
-			    			if (rng.nextDouble() > 0.5){
-			    				max_value = temp2;
-			    				max_idx = i;
-		    				}			    			
-			    		}
+			    			max_idx = i;		    							    				
+		    			}
+		    			else if (temp2 > max_value + epsilon) {
+		    				if (break_randomly == false){
+				    			max_value = temp2;
+				    			max_idx = i;		    					
+		    				}
+		    				else {
+				    			if (rng.nextDouble() > break_threshold){
+				    				max_value = temp2;
+				    				max_idx = i;
+			    				}			    			
+		    				}
+		    			}
+		    			
+//			    		if ((temp2 > max_value + epsilon && break_randomly == false ) || i == 0) {
+//			    			max_value = temp2;
+//			    			max_idx = i;
+//			    		}
+//			    		// break ties randomly if |temp2 - max_value| < epsilon
+//			    		else if ( (temp2 > max_value - epsilon && temp2 < max_value + epsilon) && break_randomly == true) {	// XXX: comparison here
+//			    			if (rng.nextDouble() > 0.5){
+//			    				max_value = temp2;
+//			    				max_idx = i;
+//		    				}			    			
+//			    		}
 		    			
 			    		Q[i] = temp2;		// why do I even care about storing this Q
 		    		}

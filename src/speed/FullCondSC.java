@@ -62,8 +62,6 @@ public class FullCondSC {
 //		pp_new = pp0;
 		
 		u = jcf.utility;
-		u_mean[0] = Statistics.mean(u);
-		u_stdev[0] = Statistics.stdev(u)/java.lang.Math.sqrt((no_initial_simulations*no_agents));
 		
 //			// Output raw realized vectors
 //		if (take_log == true){
@@ -129,8 +127,6 @@ public class FullCondSC {
 			// generate a new pp
 			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,false,false);
 			u = jcf.utility;
-			u_mean[it+1] = Statistics.mean(u);
-			u_stdev[it+1] = Statistics.stdev(u)/java.lang.Math.sqrt((no_per_iteration*no_agents));
 
 			// 2.3) Compare: how different are we from previous MDP?
 			if (print_intermediary_itself == true) {

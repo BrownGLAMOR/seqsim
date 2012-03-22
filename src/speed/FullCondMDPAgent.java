@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class FullCondMDPAgent extends SeqAgent {
 	
-	Random rng = new Random();
+//	Random rng = new Random();
 	
 	// auction variables
 	SeqAuction auction;
@@ -21,7 +21,7 @@ public class FullCondMDPAgent extends SeqAgent {
 	IntegerArray realized, realized_plus;
 	BooleanArray winner, winner_plus;
 	
-	double epsilon = 0.00000001;		// the minimum utility difference that will make us favor a higher bid than a lower bid
+//	double epsilon = 0.00000001;		// the minimum utility difference that will make us favor a higher bid than a lower bid
 	
 	HashMap<WinnerAndRealized, Double>[] pi; // [t].get([winner] [realized]) ==> pi
 	HashMap<WinnerAndRealized, Double>[] V; // [t].get([winner] [realized]) ==> V
@@ -187,19 +187,19 @@ public class FullCondMDPAgent extends SeqAgent {
 //		    			if (temp2 > max_value && temp2 < max_value + epsilon)
 //		    				System.out.println("beat by " + (temp2 - max_value));
 		    			
-//			    		if (temp2 > max_value + epsilon || i == 0) { 
-//			    			max_value = temp2;
-//			    			max_idx = i;
-//			    		}
+			    		if (temp2 > max_value || i == 0) { 
+			    			max_value = temp2;
+			    			max_idx = i;
+			    		}
 
 		    			// XXX: randomly breaking ties
-		    			if (i == 0 || (temp2 > max_value - epsilon && temp2 < max_value + epsilon)) {
-//		    				System.out.println("i = " + i +  ", temp2 = " + temp2 + ", max_value = " + max_value + ", utility = " + v.getValue(1));
-			    			if (rng.nextDouble() > 0.5){
-				    			max_value = temp2;
-				    			max_idx = i;
-			    			}
-			    		}			    		
+//		    			if (i == 0 || (temp2 > max_value - epsilon && temp2 < max_value + epsilon)) {
+////		    				System.out.println("i = " + i +  ", temp2 = " + temp2 + ", max_value = " + max_value + ", utility = " + v.getValue(1));
+//			    			if (rng.nextDouble() > 0.5){
+//				    			max_value = temp2;
+//				    			max_idx = i;
+//			    			}
+//			    		}			    		
 		    			
 			    		Q[i] = temp2;		// why do I even care about storing this Q
 		    		}
