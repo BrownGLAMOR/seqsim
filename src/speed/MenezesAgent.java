@@ -54,7 +54,8 @@ public class MenezesAgent extends SeqAgent {
 			return (numerator/denominator);
 		}
 		else {
-			return (delta_x - x);
+//			return (delta_x - x);
+			return (delta_x - x)*(delta_x - x); // TODO: to be changed back. Now is lower bound
 		}
 	}
 	

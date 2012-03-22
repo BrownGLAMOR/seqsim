@@ -1,9 +1,10 @@
 package speed;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-public class FullCondMDPAgent2 extends SeqAgent {
+public class FullCondMDPAgent3 extends SeqAgent {
 
 	Random rng = new Random();
 	
@@ -14,17 +15,15 @@ public class FullCondMDPAgent2 extends SeqAgent {
 	int agent_idx;
 	int no_goods_won;
 	int no_goods;
+	int idx;
 	
 	// computational variables
 	int price_length;
 	double optimal_bid, temp, winning_prob;
 	IntegerArray realized, realized_plus;
 	BooleanArray winner, winner_plus;
-	
-	double epsilon;
-	boolean break_randomly;
-	double break_threshold;
-	
+
+	ArrayList<Integer> indices = new ArrayList<Integer>();			// The set of indices to consider when choosing the optimal bid
 	HashMap<WinnerAndRealized, Double>[] pi; // [t].get([winner] [realized]) ==> pi
 	HashMap<WinnerAndRealized, Double>[] V; // [t].get([winner] [realized]) ==> V
 
@@ -32,23 +31,24 @@ public class FullCondMDPAgent2 extends SeqAgent {
 	double[] Reward;
 	double[] b;
 	
-	
-	
-	
 	IntegerArray[] tmp_r;
 	BooleanArray[] tmp_w;
 	WinnerAndRealized[] tmp_wr;
 	
 	WinnerAndRealized wr, wr_plus;
 
+	// preference variables, used when breaking ties
+	int preference;
+	double epsilon;
+	
+	
 	// The same as FullCondMDPAgent.java, except has different tie breaking rules when comparing bids giving similar utility. 
-	// epsilon > 0 means favoring lower bids; don't favor higher bids unless beating lower bid's utility by epsilon
-	// epsilon < 0 means favoing higher bids
-	public FullCondMDPAgent2(Value valuation, int agent_idx, double epsilon, boolean break_randomly, double break_threshold) {
+	// preference = {-1,0,1,2}, each representing: favor lower bound, choose highest, favoring upper bound, favor mixing.  
+	// The agent will choose bid from the bids generating the highest utility, or within epsilon of the highest utility
+	public FullCondMDPAgent3(Value valuation, int agent_idx, int preference, double epsilon) {
 		super(agent_idx, valuation);
 		this.epsilon = epsilon;
-		this.break_randomly = break_randomly;
-		this.break_threshold = break_threshold;
+		this.preference = preference;
 	}
 	
 	// What does this do? 
@@ -58,8 +58,10 @@ public class FullCondMDPAgent2 extends SeqAgent {
 		b = new double[price_length];
 
 		for (int i = 0; i < b.length; i++)
-			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.49999);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision	
-
+			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.25);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
+//			b[i] = jcde.precision*(i-0.7);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision XXX: tweak bs
+//			b[i] = jcde.precision*i;		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision	
+		
 		Q = new double[price_length];		
 		Reward = new double[price_length];		
 		V = new HashMap[jcde.no_goods+1]; // Value function V		
@@ -167,10 +169,8 @@ public class FullCondMDPAgent2 extends SeqAgent {
 
 	    			
 	    			// Compute Q(b,state) for each bid b
-		    		// At same time, Find \pi_(state) = argmax_b Q(b,state)
 		    		double max_value = Double.MIN_VALUE;		// Value of largest Q((X,t),b)
-			    	int max_idx = -1;							// Index of largest Q((X,t),b)
-			    	
+			    	int max_idx = -1;							// Index of largest Q((X,t),b)			    	
 	    			for (int i = 0; i < b.length; i++) {
 		    			double temp2 = Reward[i];
 
@@ -187,66 +187,71 @@ public class FullCondMDPAgent2 extends SeqAgent {
 		    				winner_plus.d[winner.d.length] = false;
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			}
-
-		    			// compare
-		    			if (i == 0) {
+		    			
+			    		if (temp2 > max_value || i == 0) { 
 			    			max_value = temp2;
-			    			max_idx = i;		    							    				
-		    			}
-		    			else if (temp2 > max_value + epsilon) {		// all ad hoc changes; to modify TODO
-		    				max_value = temp2;
 			    			max_idx = i;
-		    			}
-		    			else if (temp > max_value) {
-		    				if (break_randomly == false){	// accept improvements within epsilon
-				    			max_value = temp2;
-				    			max_idx = i;		    					
-		    				}
-		    				else {
-		    					if (rng.nextDouble() > break_threshold){	// flip a coin
-		    						System.out.print(".");
-				    				max_value = temp2;
-				    				max_idx = i;
-			    				}			    			
-		    				}
-		    			}
-		    			
-//			    		if ((temp2 > max_value + epsilon && break_randomly == false ) || i == 0) {
-//			    			max_value = temp2;
-//			    			max_idx = i;
-//			    		}
-//			    		// break ties randomly if |temp2 - max_value| < epsilon
-//			    		else if ( (temp2 > max_value - epsilon && temp2 < max_value + epsilon) && break_randomly == true) {	// XXX: comparison here
-//			    			if (rng.nextDouble() > 0.5){
-//			    				max_value = temp2;
-//			    				max_idx = i;
-//		    				}			    			
-//			    		}
-		    			
-			    		Q[i] = temp2;		// why do I even care about storing this Q
+			    		}
+
+			    		Q[i] = temp2;
 		    		}
 	    			
-	    			
-		    		// Now we found the optimal bid for state (X,t). Assign values to \pi((X,t)) and V((X,t))
-		    		V[t].put(wr, Q[max_idx]);
-		    		pi[t].put(wr, b[max_idx]);
-		    		
-// Print condDist		    		
-					//System.out.println("realized.length = " + realized.d.length);
-					// Print conditional Prices
-					/*System.out.print("condDist(no realized) = [");
-					for (int i = 0; i < condDist.length; i++)
-						System.out.print(condDist[i] + " ");
-					System.out.println("]");
-					*/
-
-// print Q function 
-//			    		System.out.print("Q(b,(" + x + "," + t +"))=");
-//			    		for (int i = 0; i < Q.length; i++)
-//			    			System.out.print(Q[i]+",");
-//			    		System.out.println();
-//			    	
-//					System.out.println("first round: \t MDP agent bids " + pi[0][0].get(realized));
+	    			// just choose the best one
+	    			if (preference == 0){
+	    					V[t].put(wr, Q[max_idx]);
+				    		pi[t].put(wr, b[max_idx]);
+				    	}
+	    			else{	
+	    				// find all the choosable bids, and select according to preference
+	    				indices.clear();
+	    				for (int i = 0; i < Q.length; i++){
+		    				if (Q[i] > max_value - epsilon){
+		    					indices.add(i);		    					
+		    				}
+		    			}
+		    			if (preference == -1){	// prefer lowerbound
+		    				V[t].put(wr,Q[indices.get(0)]);
+		    				pi[t].put(wr, b[indices.get(0)]);
+		    			}
+		    			else if (preference == 1){ // prefer upperbound
+//		    				if (indices.size()>1){
+//			    				V[t].put(wr,Q[indices.get(indices.size()-2)]);
+//			    				pi[t].put(wr, b[indices.get(indices.size()-2)]);
+//		    				}
+//		    				else {
+			    				V[t].put(wr,Q[indices.get(indices.size()-1)]);
+			    				pi[t].put(wr, b[indices.get(indices.size()-1)]);
+//			    				// ad hoc...
+//			    				if (b[indices.get(indices.size()-1)] > 0.5 && indices.size()>1){
+//			    					pi[t].put(wr, b[indices.get(indices.size()-2)]);
+//			    				}
+//		    				}
+		    			}
+		    			else{ // randomly choose one XXX: here
+//		    				if (indices.size() > 2){	// prefer strict interior if possible
+//		    					int idx = indices.get(rng.nextInt(indices.size()-2));
+//		    		    		V[t].put(wr,Q[idx+1]);
+//			    				pi[t].put(wr, b[idx+1]);
+//
+//		    				}
+//		    				else {
+//			    				if (indices.size()>1)
+//			    					idx = indices.get(rng.nextInt(indices.size()-1));	// If possible, avoid bidding the highest bid
+//			    				else
+			    					idx = indices.get(rng.nextInt(indices.size()));	// pick one randomly
+			    				V[t].put(wr,Q[idx]);
+			    				pi[t].put(wr, b[idx]);
+//		    				}
+//		    				// print Q function 
+//				    		System.out.print("Q(list)=");
+//				    		for (int i = 0; i < Q.length; i++)
+//				    			System.out.print(Q[i]+",");
+//				    		System.out.println();				    	
+//		    				System.out.println("idx = " + idx + " out of " + indices.size() +  ". Chose b = " + b[idx] + "and Q = " + Q[idx]);
+		    			}
+	    				
+		    		}
+	    				
 	    		}
     		}		    	
 		}

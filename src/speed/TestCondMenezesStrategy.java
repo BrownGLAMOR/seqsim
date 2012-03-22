@@ -10,9 +10,11 @@ public class TestCondMenezesStrategy {
 		Cache.init();
 		Random rng = new Random();
 		
-		double epsilon = - 0.0001;
-		boolean break_randomly = true;
-		double break_threshold = 0.9;
+		// tie breaking preferences
+		double epsilon = 0.00005;
+		int preference = 2;
+//		boolean break_randomly = true;
+//		double break_threshold = 0.5;
 		
 		double max_value = 1.0;
 		double jf_precision = 0.02;
@@ -24,7 +26,7 @@ public class TestCondMenezesStrategy {
 
 		boolean output_pp = false;
 		boolean decreasing = true;
-		int no_simulations = 100000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
+		int no_simulations = 50000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
 		int max_iterations = 10000;
 		
 		JointCondFactory jcf = new JointCondFactory(no_goods, jf_precision, max_price);
@@ -52,7 +54,7 @@ public class TestCondMenezesStrategy {
 		}
 		
 //		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/Menezes_vs_fullCondMDP/play" + no_agents + ".csv");
-		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/fixed_pt/menezes_" + no_agents + "_" + jf_precision + ".csv");
+		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/fixed_pt/menezes_" + no_agents + "_" + jf_precision + "_againstlower.csv");
 
 		System.out.println("done");
 		System.out.println("Generating " + max_iterations + " first-round bids...");
@@ -62,7 +64,8 @@ public class TestCondMenezesStrategy {
 		MenezesValue value = new MenezesValue(max_value, rng, decreasing);
 		MenezesAgent menezes_agent = new MenezesAgent(value, no_agents, 3);
 //		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
-		FullCondMDPAgent2 mdp_agent = new FullCondMDPAgent2(value, 1, epsilon, break_randomly, break_threshold);	// XXX: change things here
+//		FullCondMDPAgent2 mdp_agent = new FullCondMDPAgent2(value, 1, epsilon, break_randomly, break_threshold);	// XXX: change things here
+		FullCondMDPAgent3 mdp_agent = new FullCondMDPAgent3(value, 1, preference, epsilon);	// XXX: change things here
 		mdp_agent.setCondJointDistribution(pp);
 		
 		fw_play.write("max_value (to menezes valuation): " + max_value + "\n");

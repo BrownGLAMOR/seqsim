@@ -9,15 +9,19 @@ public class TestCondWeberStrategy {
 	public static void main(String[] args) throws IOException {
 		Cache.init();
 		Random rng = new Random();
-				
+
+		// tie breaking preferences
+		double epsilon = 0.000001;
+		int preference = -1;
+
 		double max_value = 1.0;
-		double jf_precision = 0.02;
+		double jf_precision = 0.1;
 		
 		int no_goods = 2;
 		int no_agents = 4;
 		int nth_price = 2;
 
-		int no_simulations = 1000000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
+		int no_simulations = 100000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.
 		int max_iterations = 10000;
 		
 //		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Weber/Weber_vs_fullCondMDP/player" + no_agents + ".csv");
@@ -53,7 +57,8 @@ public class TestCondWeberStrategy {
 
 		// initial agents for comparison
 		WeberAgent weber_agent = new WeberAgent(value, 3, no_agents, no_goods);
-		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
+//		FullCondMDPAgent mdp_agent = new FullCondMDPAgent(value, 1);
+		FullCondMDPAgent3 mdp_agent = new FullCondMDPAgent3(value, 1, preference, epsilon);	// XXX: change things here
 		mdp_agent.setCondJointDistribution(pp);
 		
 		fw_play.write("max_value (to unit valuation): " + max_value + "\n");
