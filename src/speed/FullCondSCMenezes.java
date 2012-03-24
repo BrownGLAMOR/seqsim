@@ -19,104 +19,66 @@ public class FullCondSCMenezes {
 		int no_agents = 3;
 		int nth_price = 2;
 
-		int no_initial_simulations = 3000000/no_agents;	// generating initial PP		
-		int no_iterations = 50;								// no. of Wellman updates 
-		int no_per_iteration = 100000/no_agents;			// no. of games played in each Wellman iteration
-		int no_for_comparison = 1000;						// no. of points for bid comparison
-		int no_for_EUdiff = 10000;						// no. of points for EU comparison
-				
+		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
+		int no_iterations = 20;								// no. of Wellman updates 
+		int no_per_iteration = 50000/no_agents;			// no. of games played in each Wellman iteration		
+		double cmp_precision = 0.001;						// discretization step for valuation examining
+		int no_for_cmp = (int) (1/cmp_precision) + 1;
+		int no_for_EUdiff = 10000;							// no. of points for EU comparison
+		int price_lags = 3;									// compute epsilon factor for PPs different up to "price_lags" iterations apart
+
+		// agent preferences		
+		int preference = -1;							// MDP agent preference
+		double epsilon = 0.00005;						// tie-breaking threshold
 		boolean decreasing = true;						// decreasing MV in Menezes valuation
+		int mene_type = 0;								// Menezes agent
 		
 		boolean take_log = false;						// record prices for agents
-		boolean record_prices = false;					// record prices for seller
-		
-		boolean print_intermediary = true;				// compare bids b/w S(t) and S(0)
-		boolean print_intermediary_itself = true;		// compare bids b/w S(t) and S(t+1)
-		boolean print_end = false;						// compare S(T) and S(0)
-		boolean print_diff = true;						// compare EUs and output
+		boolean record_prices = false;					// record prices for seller		
+		boolean print_strategy = true;				// Output strategy S(t)
+		boolean compute_epsilon = true;					// Compute epsilon factors and output
 		
 		// record all prices (to compute distances later)
-		JointCondDistributionEmpirical[] PP = new JointCondDistributionEmpirical[no_iterations+1];
-		
-		// record descriptive statistics of utility
-		double[] u;
-		double[] u_mean = new double[no_iterations+1];
-		double[] u_stdev = new double[no_iterations+1];
-		
-		// record PP differences
-		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
+		JointCondDistributionEmpirical[] PP = new JointCondDistributionEmpirical[no_iterations+1];		
 
 		// 1)  Initiate PP from Menezes
+		System.out.println("Generating initial PP");
+		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
 		
-		// Create agents
+		// Create agents and auction
 		MenezesAgent[] mene_agents = new MenezesAgent[no_agents];
 		for (int i = 0; i<no_agents; i++)
-			mene_agents[i] = new MenezesAgent(new MenezesValue(max_value, rng, decreasing), no_agents, i);
-
-		// Create auction
+			mene_agents[i] = new MenezesAgent(new MenezesValue(max_value, rng, decreasing), no_agents, i, mene_type);
 		SeqAuction mene_auction = new SeqAuction(mene_agents, nth_price, no_goods);
-		System.out.println("Generating initial PP");
+		
 		PP[0] = jcf.simulAllAgentsOnePP(mene_auction, no_initial_simulations,take_log,record_prices,false);
 				
-//			// Output raw realized vectors
-//		if (take_log == true){
-////			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/FullCondUpdates/initial" + no_agents + ".csv");
-//			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/test.csv");
-//			pp_new.outputRaw(fw);
-//			fw.close();
-//		}
-		
-		// initiate agents to compare bids
+		// initiate agents for later bid comparison
 		MenezesValue value = new MenezesValue(max_value, rng, decreasing);
-		MenezesAgent mene_agent = new MenezesAgent(value, no_agents, 0);
-		FullCondMDPAgent mdp_agent_old = new FullCondMDPAgent(value, 1);
-		FullCondMDPAgent mdp_agent_new = new FullCondMDPAgent(value, 1);
+		FullCondMDPAgent3 mdp_agent = new FullCondMDPAgent3(value, 1, preference, epsilon);
+
+		// initiate tools to compare strategies
+		double[] v = new double[no_for_cmp]; 		
+		for (int i = 0; i < no_for_cmp; i++)
+			v[i] = i*cmp_precision;
+		double[][] strategy = new double[no_iterations][no_for_cmp];
+		
 		
 		// 2) Wellman updates
 		for (int it = 0; it < no_iterations; it++) {
 			
 			System.out.println("Wellman iteration = " + it);
 
-			// 2.1) Compare: how different are we from original strategy?
-			if (print_intermediary == true) {
-				FileWriter fw_comp1 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/FullCondUpdates/" + no_agents + "_" + it + ".csv");
-				
-				fw_comp1.write("max_value (to katz valuation): " + max_value + "\n");
-				fw_comp1.write("precision: " + precision + "\n");
-				fw_comp1.write("max_price (to jde): " + max_price + "\n");
-				fw_comp1.write("no_goods: " + no_goods + "\n");
-				fw_comp1.write("no_agents: " + no_agents + "\n");
-				fw_comp1.write("nth_price: " + nth_price + "\n");
-				fw_comp1.write("no_simulations (to generate initial pp): " + no_initial_simulations + " * no_agents = " + (no_initial_simulations*no_agents) + "\n");
-				fw_comp1.write("no_per_iteration = " + no_per_iteration + "\n");
-				fw_comp1.write("\n");
-				fw_comp1.write("getValue(1),getValue(2),katz first round bid,mdp first round bid\n");
-	
-				mdp_agent_old.setCondJointDistribution(PP[it]);			// set the bid... 
-				
-				for (int i = 0; i < no_for_comparison; i++) {
-					value.reset();
-					mene_agent.reset(null);
-					mdp_agent_old.reset(null);				
-					fw_comp1.write(value.getValue(1) + "," + value.getValue(2) + "," + mene_agent.getFirstRoundBid() + "," + mdp_agent_old.getFirstRoundBid() + "\n");
-				}
-	
-				fw_comp1.close();
-			}
-			
-			// 2.2) Do next iteration to generate a new PP
-			FullCondMDPAgent[] mdp_agents = new FullCondMDPAgent[no_agents];
+			// 2.1) Do next iteration to generate a new PP
+			FullCondMDPAgent3[] mdp_agents = new FullCondMDPAgent3[no_agents];
 			for (int i = 0; i < no_agents; i++) {
-				mdp_agents[i] = new FullCondMDPAgent(new MenezesValue(max_value, rng, decreasing), i);
+				mdp_agents[i] = new FullCondMDPAgent3(new MenezesValue(max_value, rng, decreasing), i, preference, epsilon);
 				mdp_agents[i].setCondJointDistribution(PP[it]);
 			}
 			SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
 			
 			// generate a new pp
 			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,record_prices,false);
-			u = jcf.utility;
-			u_mean[it+1] = Statistics.mean(u);
-			u_stdev[it+1] = Statistics.stdev(u)/java.lang.Math.sqrt((no_per_iteration*no_agents));
 			
 			// Record realized prices from seller's point of view
 			if (record_prices == true){
@@ -130,101 +92,56 @@ public class FullCondSCMenezes {
 				fw_prices.close();
 			}
 
-			// 2.3) Compare: how different are we from previous MDP?
-			if (print_intermediary_itself == true) {
+			// 2.2) Compare: how different are we from previous step? output bids. 
+			if (print_strategy == true) {
+					
+				// initiate agents to compare bids
+				mdp_agent.setCondJointDistribution(PP[it]);
 				
-				FileWriter fw_comp2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/FullCondUpdates/" + no_agents + "_itself_" + it + ".csv");
-//				FileWriter fw_comp2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/test.csv");
-				
-				fw_comp2.write("max_value (to katz valuation): " + max_value + "\n");
-				fw_comp2.write("precision: " + precision + "\n");
-				fw_comp2.write("max_price (to jde): " + max_price + "\n");
-				fw_comp2.write("no_goods: " + no_goods + "\n");
-				fw_comp2.write("no_agents: " + no_agents + "\n");
-				fw_comp2.write("nth_price: " + nth_price + "\n");
-				fw_comp2.write("no_simulations (to generate initial pp): " + no_initial_simulations + " * no_agents = " + (no_initial_simulations*no_agents) + "\n");
-				fw_comp2.write("no_per_iteration = " + no_per_iteration + "\n");
-				fw_comp2.write("\n");
-				fw_comp2.write("getValue(1),getValue(2),old mdp first round bid,new mdp first round bid\n");
-	
-					// initiate agents to compare bids
-				mdp_agent_new.setCondJointDistribution(PP[it+1]);			// set the bid... 
-				
-				for (int i = 0; i < no_for_comparison; i++) {
-					mdp_agent_old.reset(null);
-					mdp_agent_new.reset(null);
-					fw_comp2.write(value.getValue(1) + "," + value.getValue(2) + "," + mdp_agent_old.getFirstRoundBid() + "," + mdp_agent_new.getFirstRoundBid() + "\n");
-					value.reset();
+				// Assign values, instead of sample values
+				for (int i = 0; i < no_for_cmp; i++) {
+					value.x = v[i];
+					if (decreasing == true)
+						value.delta_x = v[i] + v[i]*v[i];
+					else
+						value.delta_x = v[i] + java.lang.Math.sqrt(v[i]);
+					mdp_agent.reset(null);		// recompute MDP
+					strategy[it][i] = mdp_agent.getFirstRoundBid();
+				}	
+			}
+		}
+
+		// output each step's strategy
+		if (print_strategy == true){
+			FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/updates/mene_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
+			for (int i = 0; i < strategy.length; i++){
+				for (int j = 0; j < strategy[i].length - 1; j++){
+					fw_strat.write(strategy[i][j] + ",");
 				}
-	
-				fw_comp2.close();
-				
+				fw_strat.write(strategy[i][strategy[i].length-1] + "\n");
 			}
-
+			fw_strat.close();
 		}
-				
+		
+		// Compute PP distances and output
+		if (compute_epsilon == true) {
+			System.out.println("computing price distances...");
 
-		if (print_end == true) {
-			FileWriter fw_comp1 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/FullCondUpdates/" + no_agents + "_end_" + no_iterations + ".csv");
-			
-			fw_comp1.write("max_value (to katz valuation): " + max_value + "\n");
-			fw_comp1.write("precision: " + precision + "\n");
-			fw_comp1.write("max_price (to jde): " + max_price + "\n");
-			fw_comp1.write("no_goods: " + no_goods + "\n");
-			fw_comp1.write("no_agents: " + no_agents + "\n");
-			fw_comp1.write("nth_price: " + nth_price + "\n");
-			fw_comp1.write("no_simulations (to generate initial pp): " + no_initial_simulations + " * no_agents = " + (no_initial_simulations*no_agents) + "\n");
-			fw_comp1.write("no_per_iteration = " + no_per_iteration + "\n");
-			fw_comp1.write("\n");
-			fw_comp1.write("getValue(1),getValue(2),katz first round bid,mdp first round bid\n");
-
-			mdp_agent_old.setCondJointDistribution(PP[0]);			// set the bid... 
-			
-			for (int i = 0; i < no_for_comparison; i++) {
-				mene_agent.reset(null);
-				mdp_agent_old.reset(null);				
-				fw_comp1.write(value.getValue(1) + "," + value.getValue(2) + "," + mene_agent.getFirstRoundBid() + "," + mdp_agent_old.getFirstRoundBid() + "\n");
-				value.reset();
+			FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/updates/mene_EUdiff_" + no_agents + "_" + precision + " " + no_iterations + ".csv");
+		
+			EpsilonFactor ef = new EpsilonFactor(no_goods);
+			// compute distance with future BR PPs, not past ones
+			for (int it = 0; it < PP.length - price_lags; it++){
+				for (int j = 0; j < price_lags - 1; j++){
+					ef.jcdeDistance(rng, PP[it+j+1], PP[it], value, no_for_EUdiff);
+					fw_EUdiff.write(ef.EU_diff + "," + Statistics.stdev(ef.udiff) + ",");
+				}
+				int j = price_lags - 1;
+				ef.jcdeDistance(rng, PP[it+j+1], PP[it], value, no_for_EUdiff);
+				fw_EUdiff.write(ef.EU_diff + "," + Statistics.stdev(ef.udiff) + "\n");				
 			}
-
-			fw_comp1.close();
-		}
-		
-		
-		// Compute distances and output
-		if (print_diff == true) {
-		
-		EpsilonFactor ef = new EpsilonFactor(no_goods);
-		EpsilonFactor ef_2 = new EpsilonFactor(no_goods);	// 2 lags
-		
-		FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/FullCondUpdates/EUdiffer" + no_agents + "_" + no_iterations + ".csv");
-		fw_EUdiff.write("EU diff1, EU stdev1, EU diff2, EU stdev2, EU high, EU low \n");
-		int lag = 2;
-		for (int it = 0; it < no_iterations-lag+1; it++){
-			ef.jcdeDistance(rng, PP[it+1], PP[it], new MenezesValue(max_value, rng, decreasing), no_for_EUdiff);
-			ef_2.jcdeDistance(rng, PP[it+2], PP[it], new MenezesValue(max_value, rng, decreasing), no_for_EUdiff);
-
-			fw_EUdiff.write(ef.EU_diff + "," + ef.stdev_diff + "," + ef_2.EU_diff + "," + ef_2.stdev_diff + "," + ef.EU_P + "," + ef.EU_Q + "," + ef_2.EU_P + "," + ef_2.EU_Q + "\n");
-			System.out.print(ef.EU_diff + "," + ef.stdev_diff + "," + ef_2.EU_diff + "," + ef_2.stdev_diff + "," + ef.EU_P + "," + ef.EU_Q + "," + ef_2.EU_P + "," + ef_2.EU_Q + "\n");
-		}
 		
 		fw_EUdiff.close();
-		
-		
-		int start = 4;	// second comparison
-		FileWriter fw_EUdiff2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Menezes/FullCondUpdates/EUdiff_fromstart" + no_agents + "_" + no_iterations + ".csv");
-		fw_EUdiff2.write("EU diff w/ pp[0], stdev, EU diff w/ pp[" + start + "], stdev\n");
-		for (int it = 1; it < no_iterations; it++){
-			ef.jcdeDistance(rng, PP[0], PP[it], new MenezesValue(max_value, rng, decreasing), no_for_EUdiff);
-			ef_2.jcdeDistance(rng, PP[start], PP[it], new MenezesValue(max_value, rng, decreasing), no_for_EUdiff);
-
-			fw_EUdiff2.write(ef.EU_diff + "," + ef.stdev_diff + "," + ef_2.EU_diff + "," + ef_2.stdev_diff + "\n");
-			System.out.print(ef.EU_diff + "," + ef.stdev_diff + "," + ef_2.EU_diff + "," + ef_2.stdev_diff + "\n");
-		}
-		
-		fw_EUdiff2.close();
-		
-		
 		System.out.println("done done");
 		
 		}
