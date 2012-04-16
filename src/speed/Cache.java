@@ -12,6 +12,30 @@ public class Cache {
 	static final int max_goods = 11;
 
 	
+	// Cache: store MDP policies. map: v_id --> pi(v_id)
+	static HashMap<Integer,HashMap<WinnerAndRealized, Double>[]> MDPpolicies;
+	
+	// Call when moving on to next Wellman iteration
+	static void clearMDPpolicy(){
+		MDPpolicies.clear();
+	}
+	
+	// Is the MDP policy for this v_id already calculated? 
+	static boolean hasMDPpolicy(int v_id){
+		return MDPpolicies.containsKey(v_id);
+	}
+	
+	// get MDP policy
+	static HashMap<WinnerAndRealized, Double>[] getMDPpolicy(int v_id){
+		return MDPpolicies.get(v_id);
+	}
+	
+	// store MDP policy computed by agent
+	static void storeMDPpolicy(int v_id, HashMap<WinnerAndRealized, Double>[] pi){
+		MDPpolicies.put(v_id, pi);
+	}
+
+	
 	// CACHE: store all possible WinnerAndRealized, and map them back and forth into indices
 	static Set<WinnerAndRealized> allWR;
 	static HashMap<WinnerAndRealized,Integer> WR2idx;
@@ -133,6 +157,9 @@ public class Cache {
 	
 	@SuppressWarnings("unchecked")
 	public static void init() {
+		
+		// All MDP policies
+		MDPpolicies = new HashMap<Integer,HashMap<WinnerAndRealized, Double>[]>();
 		
 		// Mapping between WinnerAndRealized and indices
 		allWR = new HashSet<WinnerAndRealized>();

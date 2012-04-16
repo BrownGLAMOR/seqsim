@@ -4,7 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-// Test if strategy computed from MDP would deviate if initiated from a Menezes-generated Conditional price distribution
+// Iterative updates under Menezes model
 public class FullCondSCMenezes {
 	public static void main(String[] args) throws IOException {
 		Cache.init();

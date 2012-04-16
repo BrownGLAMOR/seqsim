@@ -50,7 +50,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		Cache.init();
 
 		// Initiate mapping b/w WR and indices in Cache
-		Cache.GenarateAllWR(no_goods, max_price, precision);
+		Cache.GenarateAllWR(no_goods - 1, max_price, precision);	// no_goods - 1 should be enough, no? 
 		
 		this.take_log = take_log;
 		this.no_goods = no_goods;
@@ -536,6 +536,64 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		
 		System.out.println("Actual realizations == " + total_act + " of a maximum == " + total_exp);
 	}
+	
+//	// Output hits for each possible WR history (inspect holes)
+//	public void outputHits(FileWriter fw) throws IOException {
+//		int total_act = 0;
+//		int total_exp = 0;
+//		
+////		System.out.println("max_price witnessed = " + witnessed_max_price);
+//		
+//		
+//		for (int i = 0; i<no_goods; i++) {
+//			int max_realizations = MathOps.ipow(this.no_bins, i);
+//			
+//			total_exp += max_realizations;
+//			total_act += prob[i].size();
+//			
+////			System.out.println("prob[" + i + "].size() == " + prob[i].size() + ", max_realizations=" + max_realizations);
+//			
+//			int[][] hits;
+//			hits = new int[bins.d.length][bins.d.length];
+//			for (BooleanArray winner : Cache.getWinningHistory(i)) {
+//				
+////				for (IntegerArray realized : Cache.getCartesianProduct(bins, i)) {
+//					wr = new WinnerAndRealized(winner, realized); 	    		
+// 
+////				}
+//			}
+//			
+////			for (WinnerAndRealized wr : Cache.allWR){
+////				
+////			}
+//			
+//			
+//			for (Entry<WinnerAndRealized, double[]> e : prob[i].entrySet()) {
+//				System.out.print("pr(" + i + " | w = {");
+//
+//				for (boolean p : e.getKey().w.d) {
+//					if (p == true)
+//						System.out.print("1 ,");
+//					else
+//						System.out.print("0 ,");
+//				}
+//				System.out.print("}, p = {");
+//
+//				for (int p : e.getKey().r.d)
+//					System.out.print(val(p, precision) + ", ");
+//				
+//				System.out.print("}) [hits=" + sum[i].get(e.getKey()) + "] ==> {");
+//				
+//				for (double p : e.getValue())
+//					System.out.print(p + ", ");
+//				
+//				System.out.println("}");				
+//			}
+//		}
+//		
+//		System.out.println("Actual realizations == " + total_act + " of a maximum == " + total_exp);
+//	}
+
 	
 	public static void main(String args[]) {
 		// TESTING / EXAMPLE

@@ -28,14 +28,17 @@ public class WeberAgent extends SeqAgent {
 			if (auction.winner[good_id-1] == agent_idx)
 				no_goods_won++;
 		}
-		// bid according to Weber (1981)
+
+		// bid according to Weber (82)
 		if (no_goods_won > 0)
 			return 0.0;
 		else {
+//			System.out.println("x = " + x + ", round = " + (good_id+1) +", bid = " + x*(no_agents - no_goods)/(no_agents-(good_id+1)));
 			x = valuation.getValue(1);
 			return x*(no_agents - no_goods)/(no_agents-(good_id+1));
 		}
-	}
+
+}
 
 }
 
