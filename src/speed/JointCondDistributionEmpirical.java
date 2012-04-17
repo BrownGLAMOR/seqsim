@@ -74,8 +74,9 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		this.sum = new HashMap[no_goods];
 		
 		int max_realizations = 1; 
-		for (int i = 0; i<no_goods; i++) {
-			max_realizations *= no_bins;
+		for (int i = 0; i<no_goods; i++) {	
+			if (i != 0)
+				max_realizations *= no_bins;	// XXX: I believe this is right
 			
 			this.prob[i] = new HashMap<WinnerAndRealized, double[]>(max_realizations);
 			this.CDF[i] = new HashMap<WinnerAndRealized, double[]>(max_realizations);
@@ -219,19 +220,18 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				sum[i].put(wr, 1);
 				
 			} else {
-				p[past.r.d[i]]++;
+				p[bin(hob[i],precision)]++;
+
+				// TODO: Include some addition to near by bins as well, or to similar conditional situations as well
 				
 				// We don't need to make a copy of IntegerArray here because when put() overwrites an existing entry
 				// in the HashMap, it keeps the existing key.
 				sum[i].put(wr, sum[i].get(wr) + 1);
 			}
-
 			// record unconditional probability
-			marg_prob[i][past.r.d[i]]++;
+			marg_prob[i][bin(hob[i],precision)]++;
 		}
-
-		marg_sum++;
-	
+		marg_sum++;	
 	}
 	
 	// Call this once per realized price vector to populate the joint distribution

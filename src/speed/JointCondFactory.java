@@ -20,6 +20,67 @@ public class JointCondFactory extends Thread {
 	}
 	
 	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent.
+	public JointCondDistributionEmpirical simulAllAgentsOneRealPP(SeqAuction auction, int no_simulations, boolean take_log, boolean record_prices, boolean record_utility) throws IOException {	
+		
+		SeqAgent[] agents = auction.agents;
+		
+		if (record_prices == true){
+			double[][] price_log = new double[no_simulations][auction.no_goods];			// record realized prices from seller's point of view
+			this.price_log = price_log;
+		}
+
+		// create one JCDE	
+		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price, take_log);
+		if (record_utility == true) {
+			double[] utility = new double[agents.length*no_simulations];
+			this.utility = utility;
+		}
+		
+		// Play auctions
+		for (int j = 0; j<no_simulations; j++) {
+			// Cause each agent to take on a new valuation by calling reset() on their valuation function
+			for (int k = 0; k<agents.length; k++)
+				agents[k].v.reset();
+		
+			// Play the auction. This will call the agent's reset(), which will cause MDP to be recomputed.
+			// so long as the agent's reset() function calls its computeMDP().
+			auction.play(true, null);		// true=="quiet mode", null=="don't write to disk"
+			
+			// record realized prices from seller's point of view
+			if (record_prices == true){
+				for (int i = 0; i < no_goods; i++)
+					price_log[j] = auction.price.clone();
+			}
+			// Add results from ALL agents to PP distribution
+			for (int k = 0; k<agents.length; k++) {
+				
+				// record prices from agents' point of view
+				boolean[] w = new boolean[no_goods];
+				for (int l = 0; l < no_goods; l++) {
+					if (auction.winner[l] == k)
+						w[l] = true;
+					else
+						w[l] = false;
+				}
+				jcde.populateReal(w,auction.fp,auction.hob[k]);
+//				jcde.populate(w,auction.hob[k]);
+
+			// record utility
+			if (record_utility == true) {
+				utility[j*agents.length + k] = auction.profit[k];
+			}
+				
+			}
+		}
+		
+		jcde.normalize();
+		this.ready = true;		// utilities are recorded
+		
+		return jcde;
+	}
+
+	
+	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent.
 	public JointCondDistributionEmpirical simulAllAgentsOnePP(SeqAuction auction, int no_simulations, boolean take_log, boolean record_prices, boolean record_utility) throws IOException {	
 		
 		SeqAgent[] agents = auction.agents;

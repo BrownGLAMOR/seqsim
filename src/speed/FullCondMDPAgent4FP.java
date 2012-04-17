@@ -118,9 +118,10 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 
 				// Compute HOB cdf and cost incurred by bidding
 				double temp = 0;
-	    		for (int j = 0; j < b.length; j++){				// TODO: take into account tie breaking
+	    		for (int j = 0; j < b.length; j++){				
 	    			temp += condPMF[j];	// add -f(p)
-	    			condCDF[j] = temp;							 
+	    			condCDF[j] = temp;
+//	    			condCDF[j] = temp - condPMF[j]/2;					// XXX: suppose 1/2 chance tie breaking: doesn't work well
 	    			Reward[j] = - condCDF[j]*j*jcde.precision;
 	    		}
 	    		
@@ -164,9 +165,7 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 		    				V[t].put(wr,Q[idx]);
 		    				pi[t].put(wr, b[idx]);
 	    			}
-    				
-	    		}
-    				
+	    		}    				
     		}
 		}		    	
 	
@@ -200,9 +199,10 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 
 					// Compute HOB cdf and cost incurred by bidding
 					double temp = 0;
-		    		for (int j = 0; j < b.length; j++){				// TODO: take into account tie breaking
+		    		for (int j = 0; j < b.length; j++){
 		    			temp += condPMF[j];							// add f(p)
 		    			condCDF[j] = temp;							 
+//		    			condCDF[j] = temp - condPMF[j]/2;					// XXX: suppose 1/2 chance tie breaking: doesn't work well							 
 		    			Reward[j] = - condCDF[j]*j*jcde.precision;
 		    		}					
 	    			
@@ -217,7 +217,12 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 	    				winner_plus.d[winner.d.length] = true;
 	    				temp2 += condCDF[i] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			
-		    			// if agent doesn't win
+//		    			// if agent doesn't win	    				
+//	    				int j = i;			// half chance will lose in tie breaking
+//	    				realized_plus.d[realized.d.length] = j;
+//	    				winner_plus.d[winner.d.length] = false;
+//	    				temp2 += (condPMF[j]/2) * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
+	    				
 		    			for (int j = i+1; j < condPMF.length; j++) {
 		    				realized_plus.d[realized.d.length] = j;
 		    				winner_plus.d[winner.d.length] = false;
@@ -376,11 +381,7 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 		// no goods won. good_id == 0. tmp_r[0] is a special global for good 0. 
 		return pi[0].get(new WinnerAndRealized(new BooleanArray(new boolean[] {}) {},new IntegerArray(new int[] {}) ));
 	}
-	
-	public double getIntermediateRoundBid(WinnerAndRealized wr) {
-		return pi[0].get(wr);	// XXX: copy of? 
-	}
-	
+		
 	public double getLastRoundBid(int no_goods_won) {
 		// truthful bidding. realized prices don't matter.
 		return v.getValue(no_goods_won+1) - v.getValue(no_goods_won);
