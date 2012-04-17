@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-// A FullCondMDPAgent that can handle discretized types, save MDP computed for each type into Cache, and handle first price.  
-public class FullCondMDPAgent4flex extends SeqAgent {
+// A FullCondMDPAgent4 that bids in first price auction.   
+public class FullCondMDPAgent4FP extends SeqAgent {
 
 	Random rng = new Random();
 	
 	// auction variables
 	SeqAuction auction;
-	boolean first_ardprice;
 	JointCondDistributionEmpirical jcde;
 	
 	// agent variables
@@ -35,12 +34,12 @@ public class FullCondMDPAgent4flex extends SeqAgent {
 
 	double[] Q;
 	double[] Reward;
+	double[] condCDF;
 	double[] b;
 	
 	IntegerArray[] tmp_r;
 	BooleanArray[] tmp_w;
 	WinnerAndRealized[] tmp_wr;
-	
 	WinnerAndRealized wr, wr_plus;
 
 	// preference variables (some used when breaking ties)
@@ -54,24 +53,23 @@ public class FullCondMDPAgent4flex extends SeqAgent {
 	// 
 	// discretize_value --> whether to discretize types or not
 	// and if yes, v_precision --> precision
-	public FullCondMDPAgent4flex(Value valuation, int agent_idx, boolean first_price, int preference, double epsilon, boolean discretize_value, double v_precision) {
+	public FullCondMDPAgent4FP(Value valuation, int agent_idx, int preference, double epsilon, boolean discretize_value, double v_precision) {
 		super(agent_idx, valuation);
 		this.epsilon = epsilon;
 		this.preference = preference;
 		this.v_precision = v_precision;
 		this.discretize_value = discretize_value;
-		this.first_price = first_price;
 	}
 	
-	// What does this do? 
 	// Allocate memory for MDP calculation
 	@SuppressWarnings("unchecked")
 	private void allocate() {
 		// list of possible bids (to maximize over)
 		b = new double[price_length];
+		condCDF = new double[price_length];		// for later use
 
 		for (int i = 0; i < b.length; i++)
-			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.5);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
+			b[i] = jcde.precision*i;		// bid = p_{i}
 		
 		Q = new double[price_length];		
 		Reward = new double[price_length];		
@@ -105,68 +103,38 @@ public class FullCondMDPAgent4flex extends SeqAgent {
 				pi[i].clear();
 		}
 		
-		// 1) ******************************** The last round of auction: truthful bidding is no longer optimal
+		// 1) ******************************** The last round of auction: truthful bidding no longer optimal
 		
 		t = jcde.no_goods-1;
 		
-		// > Loop over possible price histories
-		for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
-			
-			winner_plus = new BooleanArray(t+1);	// Needs to redeclare since size changing as t changes
-			realized_plus = new IntegerArray(t+1);
-			
-			// copy realized prices (to append later)
-			for (int k = 0; k < realized.d.length; k++)
-				realized_plus.d[k] = realized.d[k];
-			
-    		// > Loop over possible winning histories 
-    		for (BooleanArray winner : Cache.getWinningHistory(t)) {	// TODO: get losing history for weber
-    			
+		// > Loop over possible price histories and winning histories
+		for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {			
+    		for (BooleanArray winner : Cache.getWinningHistory(t)) {	// TODO: get losing history for weber    			
+
     			wr = new WinnerAndRealized(winner, realized);	
 
-    			// copy winner array (to append later)
-	    		for (int k = 0; k < winner.d.length; k++)
-					winner_plus.d[k] = winner.d[k];
-
     			// get conditional HOB distribution
-				double[] condDist = jcde.getPMF(wr);				
+				double[] condPMF = jcde.getPMF(wr);
 
-				// Compute cost incurred by bidding
-				double temp = 0;								// Sum
+				// Compute HOB cdf and cost incurred by bidding
+				double temp = 0;
 	    		for (int j = 0; j < b.length; j++){				// TODO: take into account tie breaking
-//	    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p)
-	    			temp += - condDist[j];	// add -f(p)
-	    			Reward[j] = temp;
+	    			temp += condPMF[j];	// add -f(p)
+	    			condCDF[j] = temp;							 
+	    			Reward[j] = - condCDF[j]*j*jcde.precision;
 	    		}
 	    		
-	    		for (int j = 0; j < b.length; j++)
-	    			Reward[j] = b[j]*Reward[j];
-    			
     			// Compute Q(b,state) for each bid b
 	    		double max_value = Double.MIN_VALUE;		// Value of largest Q((X,t),b)
 		    	int max_idx = -1;							// Index of largest Q((X,t),b)			    	
     			for (int i = 0; i < b.length; i++) {
 	    			double temp2 = Reward[i];
-
-	    			// if agent wins round t
-    				realized_plus.d[realized.d.length] = i;
-    				winner_plus.d[winner.d.length] = true;
-	    			for (int j = 0; j <= i; j++) {			    			// XXX: j <= i or j < i? Do we assume winning if bids are the same? 
-	    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));  
-	    			}
-	    			
-	    			// if agent doesn't win round t
-	    			for (int j = i+1; j < condDist.length; j++) {
-	    				realized_plus.d[realized.d.length] = j;
-	    				winner_plus.d[winner.d.length] = false;
-	    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
-	    			}
+    				temp2 += condCDF[i]*v.getValue(winner.getSum()+1) + (1-condCDF[i])*v.getValue(winner.getSum());
 	    			
 		    		if (temp2 > max_value || i == 0) { 
 		    			max_value = temp2;
 		    			max_idx = i;
 		    		}
-
 		    		Q[i] = temp2;
 	    		}
     			
@@ -203,53 +171,16 @@ public class FullCondMDPAgent4flex extends SeqAgent {
 		}		    	
 	
 
-//		
-//		for (BooleanArray winner : Cache.getWinningHistory(t)) {
-//			for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {				
-//				wr = new WinnerAndRealized(winner, realized); 	    		
-//				
-//				value_if_win = v.getValue(winner.getSum()+1);
-//				value_if_lose = v.getValue(winner.getSum());
-//				
-//				if (discretize_value == true){
-//					value_if_win = v_precision*legacy.DiscreteDistribution.bin(value_if_win,v_precision);
-//					value_if_lose = v_precision*legacy.DiscreteDistribution.bin(value_if_lose,v_precision);
-////					System.out.print
-//				}
-//				
-//				optimal_bid = value_if_win - value_if_lose;	    		
-//				pi[t].put(wr, optimal_bid);
-//				double[] condDist = jcde.getPMF(wr);
-//				
-////// Print conditional Prices
-////				System.out.print("condDist(realized = " + realized.d[0]*jde.precision + ") = ");
-////				for (int i = 0; i < condDist.length; i++)
-////					System.out.print(condDist[i] + " ");
-////				System.out.println("]");
-//				
-//				// Compute Reward and F(p)
-//				temp = 0;
-//	    		winning_prob = 0;
-//	    		for (int j = 0; j*jcde.precision < optimal_bid && j < condDist.length; j++) {	// TODO: take into account tie breaking, ie, optimal bid = j*jcde.precision?
-//	    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p): incur lose due to bidding
-//	    			winning_prob += condDist[j];
-//	    		}
-//
-//    			temp += winning_prob*value_if_win + (1-winning_prob)*value_if_lose;	    		
-//	    		V[t].put(wr, temp);
-//			}
-//		}
-
-		// 3) ******************************** Recursively assign values for t = no_slots-1,...,1
+		// 2) ******************************** Recursively assign values for t = no_slots-1,...,1
 		
 		// > Loop over auction t
 		for (t = jcde.no_goods-2; t>-1; t--) {
 
-    		// > Loop over possible price histories
+			realized_plus = new IntegerArray(t+1);
+			winner_plus = new BooleanArray(t+1);
+
+			// > Loop over possible price histories
 			for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
-				
-				winner_plus = new BooleanArray(t+1);	// Needs to redeclare since size changing as t changes
-				realized_plus = new IntegerArray(t+1);
 				
 				// copy realized prices (to append later)
 				for (int k = 0; k < realized.d.length; k++)
@@ -258,22 +189,22 @@ public class FullCondMDPAgent4flex extends SeqAgent {
 	    		// > Loop over possible winning histories 
 	    		for (BooleanArray winner : Cache.getWinningHistory(t)) {
 	    			
-	    			wr = new WinnerAndRealized(winner, realized);	
-
 	    			// copy winner array (to append later)
 		    		for (int k = 0; k < winner.d.length; k++)
 						winner_plus.d[k] = winner.d[k];
-
+	    			
+	    			wr = new WinnerAndRealized(winner, realized);	
+	    			
 	    			// get conditional HOB distribution
-					double[] condDist = jcde.getPMF(wr);				
+					double[] condPMF = jcde.getPMF(wr);				
 
-					// Compute Reward
-					double temp = 0;								// Sum
+					// Compute HOB cdf and cost incurred by bidding
+					double temp = 0;
 		    		for (int j = 0; j < b.length; j++){				// TODO: take into account tie breaking
-		    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p)
-		    			Reward[j] = temp;
-		    		}
-
+		    			temp += condPMF[j];							// add f(p)
+		    			condCDF[j] = temp;							 
+		    			Reward[j] = - condCDF[j]*j*jcde.precision;
+		    		}					
 	    			
 	    			// Compute Q(b,state) for each bid b
 		    		double max_value = Double.MIN_VALUE;		// Value of largest Q((X,t),b)
@@ -281,18 +212,16 @@ public class FullCondMDPAgent4flex extends SeqAgent {
 	    			for (int i = 0; i < b.length; i++) {
 		    			double temp2 = Reward[i];
 
-		    			// if agent wins round t
-		    			for (int j = 0; j <= i; j++) {			    			// XXX: j <= i or j < i? Do we assume winning if bids are the same? 
-		    				realized_plus.d[realized.d.length] = j;
-		    				winner_plus.d[winner.d.length] = true;
-		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));  
-		    			}
+		    			// if agent wins
+	    				realized_plus.d[realized.d.length] = i;
+	    				winner_plus.d[winner.d.length] = true;
+	    				temp2 += condCDF[i] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			
-		    			// if agent doesn't win round t
-		    			for (int j = i+1; j < condDist.length; j++) {
+		    			// if agent doesn't win
+		    			for (int j = i+1; j < condPMF.length; j++) {
 		    				realized_plus.d[realized.d.length] = j;
 		    				winner_plus.d[winner.d.length] = false;
-		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
+		    				temp2 += condPMF[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			}
 		    			
 			    		if (temp2 > max_value || i == 0) { 
@@ -395,6 +324,12 @@ public class FullCondMDPAgent4flex extends SeqAgent {
 		}
 	}
 		
+	// Short cut
+	public double getBid(WinnerAndRealized wr){
+		int good_id = wr.r.d.length + 1;
+		return pi[good_id].get(new WinnerAndRealized(winner, realized));
+	}
+	
 	// Outputting bids by inputting past winner and realized price sequence
 	public double getBid(int good_id, boolean[] input_winner, double[] input_realized) {	
 

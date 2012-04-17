@@ -179,6 +179,60 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		marg_sum++;
 	
 	}
+
+	
+	// Distinguish b/w prices & highest opponent bids. 
+	public void populateReal(boolean[] winner, double[] prices, double[] hob) {
+//		if (past.r.d.length != no_goods || past.w.d.length != no_goods)
+//			throw new RuntimeException("length of realized price/winner vector must == no_goods");
+		
+//		// Store indices, not WRs
+//		if (take_log == true)
+//			log_indices.add(Cache.getWRidx(past));
+		
+		// for each good		
+		for (int i = 0; i<no_goods; i++) {
+			// create array with binned conditional prices only
+			WinnerAndRealized wr = wr_tmp[i];
+			for (int j = 0; j<i; j++) { 
+				wr.w.d[j] = winner[j];
+				wr.r.d[j] = bin(prices[j],precision);
+			}
+			// get the distribution conditioned on earlier prices
+			double[] p = prob[i].get(wr);
+						
+			if (p == null) {
+				// this is our first entry into the distribution; create it
+				p = new double[no_bins];
+
+				// also create the corresponding cdf
+				double[] temp = CDF[i].get(wr);
+				temp = new double[no_bins];
+			
+				p[bin(hob[i],precision)]++;
+				
+				// Make a copy of IntegerArray since we are PUTing a new copy to the HashMap.
+				wr = new WinnerAndRealized(new BooleanArray(Arrays.copyOf(wr.w.d, wr.w.d.length)), new IntegerArray(Arrays.copyOf(wr.r.d, wr.r.d.length)));
+				
+				prob[i].put(wr, p);
+				CDF[i].put(wr, temp);
+				sum[i].put(wr, 1);
+				
+			} else {
+				p[past.r.d[i]]++;
+				
+				// We don't need to make a copy of IntegerArray here because when put() overwrites an existing entry
+				// in the HashMap, it keeps the existing key.
+				sum[i].put(wr, sum[i].get(wr) + 1);
+			}
+
+			// record unconditional probability
+			marg_prob[i][past.r.d[i]]++;
+		}
+
+		marg_sum++;
+	
+	}
 	
 	// Call this once per realized price vector to populate the joint distribution
 	// realized.length must == no_goods from last reset()

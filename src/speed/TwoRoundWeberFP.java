@@ -21,7 +21,7 @@ public class TwoRoundWeberFP {
 		// simulation & evaluation parameters
 		double p_precision = 0.02;	// price precision
 		double v_precision = 0.0001;	// valuation precision
-		int no_initial_simulations = 1000000000/no_agents;	// generating initial PP		
+		int no_initial_simulations = 100000000/no_agents;	// generating initial PP		
 		double cmp_precision = 0.01;						// discretization precision when evaluating strategy 
 		int no_for_cmp = (int) (1/cmp_precision) + 1;
 
@@ -57,7 +57,7 @@ public class TwoRoundWeberFP {
 
 			// Initiate agent
 			UnitValue value = new UnitValue(max_value, rng);
-			FullCondMDPAgent4 mdp_agent = new FullCondMDPAgent4(value, 1, preference, epsilon, discretize_value, v_precision);
+			FullCondMDPAgent4FP mdp_agent = new FullCondMDPAgent4FP(value, 1, preference, epsilon, discretize_value, v_precision);
 			mdp_agent.setCondJointDistribution(PP0);
 			
 			// valuations to compare bids at
