@@ -4,16 +4,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-// Do static testing for three round second price auction, under Weber set up, initiated with Weber agents
-public class ThreeRoundWeber {
+// Same as TwoRoundWeber, just on FP
+public class TwoRoundWeberFP {
 	public static void main(String[] args) throws IOException {
 		Cache.init();
 		Random rng = new Random();
 		
 		// general Parameters
+		boolean first_price = true;
 		int no_goods = 3;
 		int no_agents = 4;
-		int nth_price = 2;
+		int nth_price = 1;
 		double max_value = 1.0;
 		double max_price = max_value;
 
@@ -25,7 +26,7 @@ public class ThreeRoundWeber {
 		int no_for_cmp = (int) (1/cmp_precision) + 1;
 
 		// agent preferences		
-		boolean discretize_value = true;		// whether to discretized value
+		boolean discretize_value = false;		// whether to discretized value
 		int preference = 0;							// MDP agent preference: 2 = favor mixing, -1 = favor lower bound
 		double epsilon = 0.00005;						// tie-breaking threshold
 		
@@ -39,7 +40,7 @@ public class ThreeRoundWeber {
 		// create agents and action for initialization
 		WeberAgent[] weber_agents = new WeberAgent[no_agents];
 		for (int i = 0; i<no_agents; i++)
-			weber_agents[i] = new WeberAgent(new UnitValue(max_value, rng), i, no_agents, no_goods);
+			weber_agents[i] = new WeberAgent(new UnitValue(max_value, rng), i, no_agents, no_goods, first_price);
 
 		JointCondFactory jcf = new JointCondFactory(no_goods, p_precision, max_price);		
 		SeqAuction auction = new SeqAuction(weber_agents, nth_price, no_goods);

@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-// A FullCondMDPAgent that can handle discretized types, save MDP computed for each type into Cache, and reuse them later on. 
-public class FullCondMDPAgent4 extends SeqAgent {
+// A FullCondMDPAgent that can handle discretized types, save MDP computed for each type into Cache, and handle first price.  
+public class FullCondMDPAgent4flex extends SeqAgent {
 
 	Random rng = new Random();
 	
 	// auction variables
 	SeqAuction auction;
+	boolean first_ardprice;
 	JointCondDistributionEmpirical jcde;
 	
 	// agent variables
@@ -53,13 +54,13 @@ public class FullCondMDPAgent4 extends SeqAgent {
 	// 
 	// discretize_value --> whether to discretize types or not
 	// and if yes, v_precision --> precision
-	public FullCondMDPAgent4(Value valuation, int agent_idx, int preference, double epsilon, boolean discretize_value, double v_precision) {
+	public FullCondMDPAgent4flex(Value valuation, int agent_idx, boolean first_price, int preference, double epsilon, boolean discretize_value, double v_precision) {
 		super(agent_idx, valuation);
 		this.epsilon = epsilon;
 		this.preference = preference;
 		this.v_precision = v_precision;
 		this.discretize_value = discretize_value;
-//		this.v_id = legacy.DiscreteDistribution.bin(valuation.getValue(1), v_precision);
+		this.first_price = first_price;
 	}
 	
 	// What does this do? 
@@ -71,8 +72,6 @@ public class FullCondMDPAgent4 extends SeqAgent {
 
 		for (int i = 0; i < b.length; i++)
 			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.5);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
-//			b[i] = jcde.precision*(i-0.7);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
-//			b[i] = jcde.precision*i;		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision	
 		
 		Q = new double[price_length];		
 		Reward = new double[price_length];		
@@ -106,58 +105,141 @@ public class FullCondMDPAgent4 extends SeqAgent {
 				pi[i].clear();
 		}
 		
-		// 1) ******************************** Initialize V values for t = no_slots; corresponding to after all rounds are closed. 
-//		t = jcde.no_goods;
-//
-//		// for all possible winning histories and possible realized prices
-//		for (BooleanArray winner : Cache.getWinningHistory(t)) {
-//				for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
-//					if (discretize_value == true)
-//						V[t].put(new WinnerAndRealized(winner, realized), legacy.DiscreteDistribution.bin(v.getValue(winner.getSum()),v_precision)*v_precision);		// Discretization here
-//					else
-//						V[t].put(new WinnerAndRealized(winner, realized), v.getValue(winner.getSum())); 
-//				}
-//		}
-
-		// 2) ******************************** The last round of auction: truthful bidding is optimal
+		// 1) ******************************** The last round of auction: truthful bidding is no longer optimal
 		
 		t = jcde.no_goods-1;
 		
-		for (BooleanArray winner : Cache.getWinningHistory(t)) {
-			for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {				
-				wr = new WinnerAndRealized(winner, realized); 	    		
-				
-				value_if_win = v.getValue(winner.getSum()+1);
-				value_if_lose = v.getValue(winner.getSum());
-				
-				if (discretize_value == true){
-					value_if_win = v_precision*legacy.DiscreteDistribution.bin(value_if_win,v_precision);
-					value_if_lose = v_precision*legacy.DiscreteDistribution.bin(value_if_lose,v_precision);
-//					System.out.print
-				}
-				
-				optimal_bid = value_if_win - value_if_lose;	    		
-				pi[t].put(wr, optimal_bid);
-				double[] condDist = jcde.getPMF(wr);
-				
-//// Print conditional Prices
-//				System.out.print("condDist(realized = " + realized.d[0]*jde.precision + ") = ");
-//				for (int i = 0; i < condDist.length; i++)
-//					System.out.print(condDist[i] + " ");
-//				System.out.println("]");
-				
-				// Compute Reward and F(p)
-				temp = 0;
-	    		winning_prob = 0;
-	    		for (int j = 0; j*jcde.precision < optimal_bid && j < condDist.length; j++) {	// TODO: take into account tie breaking, ie, optimal bid = j*jcde.precision?
-	    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p): incur lose due to bidding
-	    			winning_prob += condDist[j];
-	    		}
+		// > Loop over possible price histories
+		for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
+			
+			winner_plus = new BooleanArray(t+1);	// Needs to redeclare since size changing as t changes
+			realized_plus = new IntegerArray(t+1);
+			
+			// copy realized prices (to append later)
+			for (int k = 0; k < realized.d.length; k++)
+				realized_plus.d[k] = realized.d[k];
+			
+    		// > Loop over possible winning histories 
+    		for (BooleanArray winner : Cache.getWinningHistory(t)) {	// TODO: get losing history for weber
+    			
+    			wr = new WinnerAndRealized(winner, realized);	
 
-    			temp += winning_prob*value_if_win + (1-winning_prob)*value_if_lose;	    		
-	    		V[t].put(wr, temp);
-			}
-		}
+    			// copy winner array (to append later)
+	    		for (int k = 0; k < winner.d.length; k++)
+					winner_plus.d[k] = winner.d[k];
+
+    			// get conditional HOB distribution
+				double[] condDist = jcde.getPMF(wr);				
+
+				// Compute cost incurred by bidding
+				double temp = 0;								// Sum
+	    		for (int j = 0; j < b.length; j++){				// TODO: take into account tie breaking
+//	    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p)
+	    			temp += - condDist[j];	// add -f(p)
+	    			Reward[j] = temp;
+	    		}
+	    		
+	    		for (int j = 0; j < b.length; j++)
+	    			Reward[j] = b[j]*Reward[j];
+    			
+    			// Compute Q(b,state) for each bid b
+	    		double max_value = Double.MIN_VALUE;		// Value of largest Q((X,t),b)
+		    	int max_idx = -1;							// Index of largest Q((X,t),b)			    	
+    			for (int i = 0; i < b.length; i++) {
+	    			double temp2 = Reward[i];
+
+	    			// if agent wins round t
+    				realized_plus.d[realized.d.length] = i;
+    				winner_plus.d[winner.d.length] = true;
+	    			for (int j = 0; j <= i; j++) {			    			// XXX: j <= i or j < i? Do we assume winning if bids are the same? 
+	    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));  
+	    			}
+	    			
+	    			// if agent doesn't win round t
+	    			for (int j = i+1; j < condDist.length; j++) {
+	    				realized_plus.d[realized.d.length] = j;
+	    				winner_plus.d[winner.d.length] = false;
+	    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
+	    			}
+	    			
+		    		if (temp2 > max_value || i == 0) { 
+		    			max_value = temp2;
+		    			max_idx = i;
+		    		}
+
+		    		Q[i] = temp2;
+	    		}
+    			
+    			// just choose the best one
+    			if (preference == 0){
+    					V[t].put(wr, Q[max_idx]);
+			    		pi[t].put(wr, b[max_idx]);
+			    	}
+    			else{
+    				// find all the choosable bids, and select according to preference
+    				indices.clear();
+    				for (int i = 0; i < Q.length; i++){
+	    				if (Q[i] > max_value - epsilon){
+	    					indices.add(i);		    					
+	    				}
+	    			}
+	    			if (preference == -1){	// prefer lowerbound
+	    				V[t].put(wr,Q[indices.get(0)]);
+	    				pi[t].put(wr, b[indices.get(0)]);
+	    			}
+	    			else if (preference == 1){ // prefer upperbound
+		    				V[t].put(wr,Q[indices.get(indices.size()-1)]);
+		    				pi[t].put(wr, b[indices.get(indices.size()-1)]);
+	    			}
+	    			else{
+		    				idx = indices.get(rng.nextInt(indices.size()));	// pick one randomly
+		    				V[t].put(wr,Q[idx]);
+		    				pi[t].put(wr, b[idx]);
+	    			}
+    				
+	    		}
+    				
+    		}
+		}		    	
+	
+
+//		
+//		for (BooleanArray winner : Cache.getWinningHistory(t)) {
+//			for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {				
+//				wr = new WinnerAndRealized(winner, realized); 	    		
+//				
+//				value_if_win = v.getValue(winner.getSum()+1);
+//				value_if_lose = v.getValue(winner.getSum());
+//				
+//				if (discretize_value == true){
+//					value_if_win = v_precision*legacy.DiscreteDistribution.bin(value_if_win,v_precision);
+//					value_if_lose = v_precision*legacy.DiscreteDistribution.bin(value_if_lose,v_precision);
+////					System.out.print
+//				}
+//				
+//				optimal_bid = value_if_win - value_if_lose;	    		
+//				pi[t].put(wr, optimal_bid);
+//				double[] condDist = jcde.getPMF(wr);
+//				
+////// Print conditional Prices
+////				System.out.print("condDist(realized = " + realized.d[0]*jde.precision + ") = ");
+////				for (int i = 0; i < condDist.length; i++)
+////					System.out.print(condDist[i] + " ");
+////				System.out.println("]");
+//				
+//				// Compute Reward and F(p)
+//				temp = 0;
+//	    		winning_prob = 0;
+//	    		for (int j = 0; j*jcde.precision < optimal_bid && j < condDist.length; j++) {	// TODO: take into account tie breaking, ie, optimal bid = j*jcde.precision?
+//	    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p): incur lose due to bidding
+//	    			winning_prob += condDist[j];
+//	    		}
+//
+//    			temp += winning_prob*value_if_win + (1-winning_prob)*value_if_lose;	    		
+//	    		V[t].put(wr, temp);
+//			}
+//		}
+
 		// 3) ******************************** Recursively assign values for t = no_slots-1,...,1
 		
 		// > Loop over auction t

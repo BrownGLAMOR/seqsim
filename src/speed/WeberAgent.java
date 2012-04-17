@@ -4,15 +4,17 @@ package speed;
 public class WeberAgent extends SeqAgent {
 
 	int agent_idx, no_agents, no_goods_won, no_goods, i;
-	Value valuation;
+	UnitValue valuation;
 	double x;
+	boolean first_price;
 	
-	public WeberAgent(Value valuation, int agent_idx, int no_agents, int no_goods) {
+	public WeberAgent(UnitValue valuation, int agent_idx, int no_agents, int no_goods, boolean first_price) {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
 		this.valuation = valuation;
 		this.no_agents = no_agents;
 		this.no_goods = no_goods;
+		this.first_price = first_price;
 	}
 
 	@Override
@@ -33,11 +35,13 @@ public class WeberAgent extends SeqAgent {
 		if (no_goods_won > 0)
 			return 0.0;
 		else {
-//			System.out.println("x = " + x + ", round = " + (good_id+1) +", bid = " + x*(no_agents - no_goods)/(no_agents-(good_id+1)));
 			x = valuation.getValue(1);
-			return x*(no_agents - no_goods)/(no_agents-(good_id+1));
+			if (first_price == true)
+				return x*(no_agents - no_goods)/(no_agents-good_id);
+			else
+				return x*(no_agents - no_goods)/(no_agents-(good_id+1));
+//			System.out.println("x = " + x + ", round = " + (good_id+1) +", bid = " + x*(no_agents - no_goods)/(no_agents-(good_id+1)));
 		}
-
 }
 
 }
