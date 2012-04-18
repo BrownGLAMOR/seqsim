@@ -4,223 +4,151 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-// Test if strategy computed from MDP would deviate if initiated from a Weber-generated Conditional price distribution
+// Self confirming updates under Weber set up. Multiround, first price. 
 public class FullCondSCWeberMRFP {
 	public static void main(String[] args) throws IOException {
 		Cache.init();
 		Random rng = new Random();
 		
-		// Parameters
-		double max_value = 1.0;
-		double precision = 0.05;
-		double max_price = max_value;
-		
+		// general Parameters
+		boolean first_price = true;
 		int no_goods = 2;
 		int no_agents = 3;
-		int nth_price = 2;
+		int nth_price = 1;
+		double max_value = 1.0;
+		double max_price = max_value;
 
-		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
-		int no_iterations = 4;								// no. of Wellman updates 
-		int no_per_iteration = 1000000/no_agents;			// no. of games played in each Wellman iteration
-		int no_for_comparison = 1000;						// no. of points for bid comparison
-		int no_for_EUdiff = 10000;						// no. of points for EU comparison
-				
-		boolean take_log = false;						// take log of prices
-		boolean print_intermediary = true;				// compare bids b/w S(t) and S(0)
-		boolean print_intermediary_itself = true;		// compare bids b/w S(t) and S(t+1)
-		boolean print_end = false;						// compare S(T) and S(0)
-		boolean print_diff = true;						// compare EUs and output
+		// calculation & evaluation parameters
+		double p_precision = 0.02;	// price precision
+		double v_precision = 0.0001;	// valuation precision
+		double cmp_precision = 0.05;						// discretization precision when evaluating strategy 
+		int no_for_cmp = (int) (1/cmp_precision) + 1;
 		
-		// record all prices (to compute distances later)
+		// simulation parameters
+		int no_initial_simulations = 1000000/no_agents;	// generating initial PP		
+		int no_iterations = 10;								// no. of Wellman updates 
+		int no_per_iteration = 1000000/no_agents;			// no. of games played in each Wellman iteration
+		int no_for_EUdiff = 1000;							// no. of points for EU comparison
+				
+		// agent preferences		
+		boolean discretize_value = true;		// whether to discretized value
+		int preference = 0;							// MDP agent preference: 2 = favor mixing, -1 = favor lower bound
+		double epsilon = 0.00005;						// tie-breaking threshold
+		
+		// what to record
+		boolean take_log = false;						// record prices for agents
+		boolean print_strategy = true;					// whether to print out strategy functions after each Wellman update
+		boolean cmp_with_Weber = true;					// whether to compute distance to Weber equilibrium after each Wellman update
+		
+		// Some spaces
 		JointCondDistributionEmpirical[] PP = new JointCondDistributionEmpirical[no_iterations+1];
 		
-		
-		// record descriptive statistics of utility
-		double[] u;
-		double[] u_mean = new double[no_iterations+1];
-		double[] u_stdev = new double[no_iterations+1];
-		
-		// record PP differences
-		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
+		// 1) Initialize PP0 -- from Wellman
+		System.out.println("Generating PP[0]");
 
-		// 1)  Initiate PP from Weber
-		
-		// Create agents
+		// create agents and action for initialization
 		WeberAgent[] weber_agents = new WeberAgent[no_agents];
 		for (int i = 0; i<no_agents; i++)
-			weber_agents[i] = new WeberAgent(new UnitValue(max_value, rng), i, no_agents, no_goods);
+			weber_agents[i] = new WeberAgent(new UnitValue(max_value, rng), i, no_agents, no_goods, first_price);
 
-		
-		// Create auction
-		SeqAuction weber_auction = new SeqAuction(weber_agents, nth_price, no_goods);
-		System.out.println("Generating initial PP");
-		PP[0] = jcf.simulAllAgentsOnePP(weber_auction, no_initial_simulations,take_log,false,false);
-		
-//		u = jcf.utility;
-//		u_mean[0] = Statistics.mean(u);
-//		u_stdev[0] = Statistics.stdev(u)/java.lang.Math.sqrt((no_initial_simulations*no_agents));
-		
-//			// Output raw realized vectors
-//		if (take_log == true){
-////			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Katzman/FullCondUpdates/initial" + no_agents + ".csv");
-//			FileWriter fw = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/test.csv");
-//			pp_new.outputRaw(fw);
-//			fw.close();
+		JointCondFactory jcf = new JointCondFactory(no_goods, p_precision, max_price);		
+		SeqAuction auction = new SeqAuction(weber_agents, nth_price, no_goods);
+		PP[0] = jcf.simulAllAgentsOneRealPP(auction, no_initial_simulations,take_log,false,cmp_with_Weber);
+		PP[0].outputNormalized();		
+
+		// 0.1) Initialize utility comparison device
+//		if (cmp_with_Weber==true){
+			// record mean and stdev of utility when playing against Weber
+			double[] Umean = new double[no_iterations+1];
+			double[] Ustdev = new double[no_iterations+1];
+			Umean[0] = Statistics.mean(jcf.utility);
+			Ustdev[0] = Statistics.stdev(jcf.utility);
+			
+			// create comparison device
+			EpsilonFactor2 ef = new EpsilonFactor2(no_goods);
+			SeqAgent[] cmp_agents = new SeqAgent[no_agents];
+			cmp_agents[0] = new FullCondMDPAgent4FP(new UnitValue(max_value, rng), 0, preference, epsilon, discretize_value, v_precision);
+			for (int k = 1; k < no_agents; k++)
+				cmp_agents[k] = new WeberAgent(new UnitValue(max_value, rng), k, no_agents, no_goods, first_price);
+			SeqAuction cmp_auction = new SeqAuction(cmp_agents,nth_price, no_goods);			
 //		}
 		
-		// initiate agents to compare bids
+//		FileWriter fw_pp0 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/threerounds/weber_pp0_" + no_agents + "_" + v_precision + "_" + p_precision + "_" + no_iterations + ".csv");
+//		PP[0].outputRaw(fw_pp0);
+//		fw_pp0.close();
+
+		// 0.2) Strategy outputting devices
+//		if (print_strategy == true){
 		UnitValue value = new UnitValue(max_value, rng);
-		WeberAgent weber_agent = new WeberAgent(value, 0, no_agents, no_goods);
-		FullCondMDPAgent mdp_agent_old = new FullCondMDPAgent(value, 1);
-		FullCondMDPAgent mdp_agent_new = new FullCondMDPAgent(value, 1);
+		FullCondMDPAgent4FP mdp_agent = new FullCondMDPAgent4FP(value, 1, preference, epsilon, false, v_precision);	// XXX: never discretize here
+			// valuations to compare bids at
+			double[] v = new double[no_for_cmp]; 		
+			for (int i = 0; i < no_for_cmp; i++)
+				v[i] = i*cmp_precision;
+			double[][] strategy = new double[no_iterations][no_for_cmp];
+			
+			
+//		}
 		
+		// 0.3) Agent for updating (always needed)
+		FullCondMDPAgent4FP[] updating_agents = new FullCondMDPAgent4FP[no_agents];
+		for (int i = 0; i < no_agents; i++)
+			updating_agents[i] = new FullCondMDPAgent4FP(new UnitValue(max_value, rng), i, preference, epsilon, discretize_value, v_precision);
+		SeqAuction updating_auction = new SeqAuction(updating_agents, nth_price, no_goods);
+	
+
 		// 2) Wellman updates
 		for (int it = 0; it < no_iterations; it++) {
 			
-			System.out.println("Wellman iteration = " + it);
-
-			// 2.1) Compare: how different are we from original strategy?
-			if (print_intermediary == true) {
-				FileWriter fw_comp1 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Weber/FullCondUpdates/" + no_agents + "_" + it + ".csv");
-				
-				fw_comp1.write("max_value (to katz valuation): " + max_value + "\n");
-				fw_comp1.write("precision: " + precision + "\n");
-				fw_comp1.write("max_price (to jde): " + max_price + "\n");
-				fw_comp1.write("no_goods: " + no_goods + "\n");
-				fw_comp1.write("no_agents: " + no_agents + "\n");
-				fw_comp1.write("nth_price: " + nth_price + "\n");
-				fw_comp1.write("no_simulations (to generate initial pp): " + no_initial_simulations + " * no_agents = " + (no_initial_simulations*no_agents) + "\n");
-				fw_comp1.write("no_per_iteration = " + no_per_iteration + "\n");
-				fw_comp1.write("\n");
-				fw_comp1.write("getValue(1),getValue(2),katz first round bid,mdp first round bid\n");
-	
-				mdp_agent_old.setCondJointDistribution(PP[it]);			// set the bid... 
-				
-				for (int i = 0; i < no_for_comparison; i++) {
-					value.reset();
-					weber_agent.reset(null);
-					mdp_agent_old.reset(null);				
-					fw_comp1.write(value.getValue(1) + "," + value.getValue(2) + "," + weber_agent.getBid(0) + "," + mdp_agent_old.getFirstRoundBid() + "\n");
+			// 2.1) Output local strategy? 
+			if (print_strategy == true){
+				mdp_agent.setCondJointDistribution(PP[it]);
+				System.out.println("round " + it + "bidding strategy: = [");
+				for (int i = 0; i < v.length; i++) {
+					value.x = v[i];
+					mdp_agent.reset(null);		// recompute MDP
+					strategy[it][i] = mdp_agent.getFirstRoundBid();
+					System.out.print(strategy[it][i] + ",");
 				}
-	
-				fw_comp1.close();
+			}
+			System.out.println("]");
+			
+			// 2.2) Output utility difference? 
+			if (cmp_with_Weber == true){
+				cmp_agents[0].setCondJointDistribution(PP[it]);				
+				
+				ef.StrategyDistance(cmp_auction, no_for_EUdiff);
+				Umean[it+1] = Statistics.mean(ef.utility);
+				Ustdev[it+1] = Statistics.stdev(ef.utility);
+				System.out.println("it = " + it + ", Umean = " + Umean[it+1] + ", Ustdev = " + Ustdev[it+1]);
 			}
 			
-			// 2.2) Do next iteration to generate a new PP
-			FullCondMDPAgent[] mdp_agents = new FullCondMDPAgent[no_agents];
-			for (int i = 0; i < no_agents; i++) {
-				mdp_agents[i] = new FullCondMDPAgent(new UnitValue(max_value, rng), i);
-				mdp_agents[i].setCondJointDistribution(PP[it]);
-			}
-			SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
-			
-			// generate a new pp
-			PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,false,false);
-			u = jcf.utility;
-			u_mean[it+1] = Statistics.mean(u);
-			u_stdev[it+1] = Statistics.stdev(u)/java.lang.Math.sqrt((no_per_iteration*no_agents));
-
-			// 2.3) Compare: how different are we from previous MDP?
-			if (print_intermediary_itself == true) {
-				
-				FileWriter fw_comp2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Weber/FullCondUpdates/" + no_agents + "_itself_" + it + ".csv");
-//				FileWriter fw_comp2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/test.csv");
-				
-				fw_comp2.write("max_value (to katz valuation): " + max_value + "\n");
-				fw_comp2.write("precision: " + precision + "\n");
-				fw_comp2.write("max_price (to jde): " + max_price + "\n");
-				fw_comp2.write("no_goods: " + no_goods + "\n");
-				fw_comp2.write("no_agents: " + no_agents + "\n");
-				fw_comp2.write("nth_price: " + nth_price + "\n");
-				fw_comp2.write("no_simulations (to generate initial pp): " + no_initial_simulations + " * no_agents = " + (no_initial_simulations*no_agents) + "\n");
-				fw_comp2.write("no_per_iteration = " + no_per_iteration + "\n");
-				fw_comp2.write("\n");
-				fw_comp2.write("getValue(1),getValue(2),old mdp first round bid,new mdp first round bid\n");
-	
-					// initiate agents to compare bids
-				mdp_agent_new.setCondJointDistribution(PP[it+1]);			// set the bid... 
-				
-				for (int i = 0; i < no_for_comparison; i++) {
-					mdp_agent_old.reset(null);
-					mdp_agent_new.reset(null);
-					fw_comp2.write(value.getValue(1) + "," + value.getValue(2) + "," + mdp_agent_old.getFirstRoundBid() + "," + mdp_agent_new.getFirstRoundBid() + "\n");
-					value.reset();
-				}
-	
-				fw_comp2.close();
-				
-			}
-
+			// 2.3) Update: PP[it] --> PP[it+1]
+			for (int i = 0; i < no_agents; i++)
+				updating_agents[i].setCondJointDistribution(PP[it]);
+			Cache.clearMDPpolicy();
+			PP[it+1] = jcf.simulAllAgentsOneRealPP(updating_auction, no_per_iteration,take_log,false,false);
 		}
-				
 
-		if (print_end == true) {
-			FileWriter fw_comp1 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Weber/FullCondUpdates/" + no_agents + "_end_" + no_iterations + ".csv");
-			
-			fw_comp1.write("max_value (to katz valuation): " + max_value + "\n");
-			fw_comp1.write("precision: " + precision + "\n");
-			fw_comp1.write("max_price (to jde): " + max_price + "\n");
-			fw_comp1.write("no_goods: " + no_goods + "\n");
-			fw_comp1.write("no_agents: " + no_agents + "\n");
-			fw_comp1.write("nth_price: " + nth_price + "\n");
-			fw_comp1.write("no_simulations (to generate initial pp): " + no_initial_simulations + " * no_agents = " + (no_initial_simulations*no_agents) + "\n");
-			fw_comp1.write("no_per_iteration = " + no_per_iteration + "\n");
-			fw_comp1.write("\n");
-			fw_comp1.write("getValue(1),getValue(2),katz first round bid,mdp first round bid\n");
-
-			mdp_agent_old.setCondJointDistribution(PP[0]);			// set the bid... 
-			
-			for (int i = 0; i < no_for_comparison; i++) {
-				weber_agent.reset(null);
-				mdp_agent_old.reset(null);				
-				fw_comp1.write(value.getValue(1) + "," + value.getValue(2) + "," + weber_agent.getBid(0) + "," + mdp_agent_old.getFirstRoundBid() + "\n");
-				value.reset();
-			}
-
-			fw_comp1.close();
-		}
-		
-
-		// output utility log
-//		for (int i = 0; i < no_iterations+1; i++)
-//			System.out.println("mean(u) = " + u_mean[i] + ", stdev(u) = " + u_stdev[i]);
-		
-		// Compute distances and output
-		if (print_diff == true) {
-		
-		EpsilonFactor ef = new EpsilonFactor(no_goods);
-		EpsilonFactor ef_2 = new EpsilonFactor(no_goods);	// 2 lags
-		
-		FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Weber/FullCondUpdates/EUdiff" + no_agents + "_" + no_iterations + ".csv");
-		fw_EUdiff.write("EU diff1, EU stdev1, EU diff2, EU stdev2, EU high, EU low \n");
-		int lag = 2;
-		for (int it = 0; it < no_iterations-lag+1; it++){
-			ef.jcdeDistance(rng, PP[it+1], PP[it], new UnitValue(max_value, rng), no_for_EUdiff);
-			ef_2.jcdeDistance(rng, PP[it+2], PP[it], new UnitValue(max_value, rng), no_for_EUdiff);
-
-			fw_EUdiff.write(ef.EU_diff + "," + ef.stdev_diff + "," + ef_2.EU_diff + "," + ef_2.stdev_diff + "," + ef.EU_P + "," + ef.EU_Q + "," + ef_2.EU_P + "," + ef_2.EU_Q + "\n");
-			System.out.print(ef.EU_diff + "," + ef.stdev_diff + "," + ef_2.EU_diff + "," + ef_2.stdev_diff + "," + ef.EU_P + "," + ef.EU_Q + "," + ef_2.EU_P + "," + ef_2.EU_Q + "\n");
-		}
-		
-		fw_EUdiff.close();
 		
 		
-		int start = 5;	// second comparison
-		FileWriter fw_EUdiff2 = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/Weber/FullCondUpdates/EUdiff_fromstart" + no_agents + "_" + no_iterations + ".csv");
-		fw_EUdiff2.write("EU diff w/ pp[0], stdev, EU diff w/ pp[" + start + "], stdev\n");
-		for (int it = 1; it < no_iterations; it++){
-			ef.jcdeDistance(rng, PP[0], PP[it], new UnitValue(max_value, rng), no_for_EUdiff);
-			ef_2.jcdeDistance(rng, PP[start], PP[it], new UnitValue(max_value, rng), no_for_EUdiff);
-
-			fw_EUdiff2.write(ef.EU_diff + "," + ef.stdev_diff + "," + ef_2.EU_diff + "," + ef_2.stdev_diff + "\n");
-			System.out.print(ef.EU_diff + "," + ef.stdev_diff + "," + ef_2.EU_diff + "," + ef_2.stdev_diff + "\n");
-		}
 		
-		fw_EUdiff2.close();
-		
-		System.out.println("done done");
-		
-		}
+//		// file to write to
+//		FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/firstprice/weber_" + no_goods + "_" + no_agents + "_" + v_precision + "_" + p_precision + "_discretized.csv");
+//		
+//		Cache.clearMDPpolicy();
+//		for (int i = 0; i < no_for_cmp; i++) {
+//			value.x = v[i];
+//			mdp_agent.reset(null);		// recompute MDP
+//			
+//			fw_strat.write(v[i] + "," + mdp_agent.getFirstRoundBid() + "\n");					
+////				if (value.x != 0) {
+////					System.out.println("value.x = " + value.x);
+////					mdp_agent.printpi();
+////					mdp_agent.printV();
+////				}
+//			}	
+//		fw_strat.close();
 	}
 }
 

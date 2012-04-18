@@ -65,11 +65,10 @@ public class JointCondFactory extends Thread {
 				jcde.populateReal(w,auction.fp,auction.hob[k]);
 //				jcde.populate(w,auction.hob[k]);
 
-			// record utility
-			if (record_utility == true) {
-				utility[j*agents.length + k] = auction.profit[k];
-			}
-				
+				// record utility
+				if (record_utility == true) {
+					utility[j*agents.length + k] = auction.profit[k];
+				}
 			}
 		}
 		

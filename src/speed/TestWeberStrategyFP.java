@@ -21,7 +21,7 @@ public class TestWeberStrategyFP {
 		// simulation & evaluation parameters
 		double p_precision = 0.02;	// price precision
 		double v_precision = 0.0001;	// valuation precision
-		int no_initial_simulations = 100000000/no_agents;	// generating initial PP		
+		int no_initial_simulations = 100000000/no_agents;	// generating initial PP
 		double cmp_precision = 0.01;						// discretization precision when evaluating strategy 
 		int no_for_cmp = (int) (1/cmp_precision) + 1;
 
