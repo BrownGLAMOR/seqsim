@@ -36,7 +36,7 @@ public class SeqAuction {
 	// Random number generator
 	private Random rng;
 	
-	// construct the agent with a set of agents.
+	// construct the auction with a set of agents.
 	public SeqAuction(SeqAgent[] agents, double nth_price, int no_goods) {
 		this.agents = agents;
 		this.no_agents = agents.length;

@@ -10,10 +10,10 @@ import java.util.Random;
 public class PolynomialAgent extends SeqAgent {
 
 	int agent_idx;
-	MenezesValue valuation;
+	Value valuation;
 	double x, order;
 	
-	public PolynomialAgent(MenezesValue valuation, int agent_idx, double order) {
+	public PolynomialAgent(Value valuation, int agent_idx, double order) {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
 		this.valuation = valuation;

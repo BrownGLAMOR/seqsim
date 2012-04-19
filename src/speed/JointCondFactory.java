@@ -19,7 +19,7 @@ public class JointCondFactory extends Thread {
 		this.max_price = max_price;
 	}
 	
-	// return an array of joints by playing simulations. the distribution is produced by taking the HOB of each agent.
+	// Really differentiating prices and hobs.  
 	public JointCondDistributionEmpirical simulAllAgentsOneRealPP(SeqAuction auction, int no_simulations, boolean take_log, boolean record_prices, boolean record_utility) throws IOException {	
 		
 		SeqAgent[] agents = auction.agents;
@@ -62,8 +62,20 @@ public class JointCondFactory extends Thread {
 					else
 						w[l] = false;
 				}
-				jcde.populateReal(w,auction.fp,auction.hob[k]);
-//				jcde.populate(w,auction.hob[k]);
+				jcde.populateReal(w,auction.price,auction.hob[k]);
+
+//				System.out.print("agent " + k + ": w = [");
+//				for (int i = 0; i < w.length; i++)
+//					System.out.print(w[i] + " ");
+//				System.out.print("]. fp = ");
+//				for (int i = 0; i < auction.fp.length; i++)
+//					System.out.print(auction.fp[i] + " ");
+//				System.out.print("]. . hob = ");
+//				for (int i = 0; i < auction.hob[k].length; i++)
+//					System.out.print(auction.hob[k][i] + " ");
+//				System.out.println();
+
+				//				jcde.populate(w,auction.hob[k]);
 
 				// record utility
 				if (record_utility == true) {

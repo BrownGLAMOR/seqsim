@@ -68,9 +68,9 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 		b = new double[price_length];
 		condCDF = new double[price_length];		// for later use
 
-		b[0] = 0;
-		for (int i = 1; i < b.length; i++)
-			b[i] = jcde.precision*(i-1);		// bid = p_{i}	XXX: can play around with this
+//		b[0] = 0;
+		for (int i = 0; i < b.length; i++)
+			b[i] = jcde.precision*i;		// bid = p_{i}	XXX: can play around with this
 		
 		Q = new double[price_length];		
 		Reward = new double[price_length];		
@@ -121,8 +121,8 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 				double temp = 0;
 	    		for (int j = 0; j < b.length; j++){				
 	    			temp += condPMF[j];	// add -f(p)
-	    			condCDF[j] = temp;
-//	    			condCDF[j] = temp - condPMF[j]/2;					// XXX: suppose 1/2 chance tie breaking: doesn't work well
+//	    			condCDF[j] = temp;
+	    			condCDF[j] = temp - condPMF[j]/2;					// XXX: suppose 1/2 chance tie breaking: doesn't work well
 	    			Reward[j] = - condCDF[j]*j*jcde.precision;
 	    		}
 	    		
@@ -139,6 +139,26 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 		    		}
 		    		Q[i] = temp2;
 	    		}
+    			
+    			// Print Q values TODO: to remove
+    			if (v.getValue(1) == 0.8 && winner.getSum() == 0 && realized.d[0]*jcde.precision > 0.28){
+//    				System.out.println("\nunder wr = " + "(" + wr.w.getSum()  + "," + wr.r.d[0] +  ")");
+    				
+    				System.out.print(realized.d[0]*jcde.precision + ",");
+//    				System.out.print("condPMF = [");
+    				for (int i = 0; i < Q.length; i++)
+    					System.out.print(condPMF[i] + ",");
+    				System.out.println();
+    				
+//    				System.out.print("Q(b) = [");
+
+//    				System.out.print(realized.d[0]*jcde.precision + ",");
+//    				for (int i = 0; i < Q.length; i++)
+//    					System.out.print(Q[i] + ",");
+//    				System.out.println();
+
+//    				System.out.println("]");
+    			}
     			
     			// just choose the best one
     			if (preference == 0){
@@ -278,7 +298,7 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 			for (BooleanArray winner : Cache.getWinningHistory(t)) {
 				for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
 					wr = new WinnerAndRealized(winner,realized);
-					if (winner.getSum() == 0)
+//					if (winner.getSum() == 0)
 						System.out.println("V[" + t + "](" + wr.print() + ") = " + V[t].get(wr));
 				}
 			}
@@ -291,7 +311,7 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 			for (BooleanArray winner : Cache.getWinningHistory(t)) {
 				for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
 					wr = new WinnerAndRealized(winner,realized);
-					if (winner.getSum() == 0)
+//					if (winner.getSum() == 0)
 						System.out.println("pi[" + t + "](" + wr.print() + ") = " + pi[t].get(wr));
 				}
 			}
@@ -382,7 +402,7 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 		// no goods won. good_id == 0. tmp_r[0] is a special global for good 0. 
 		return pi[0].get(new WinnerAndRealized(new BooleanArray(new boolean[] {}) {},new IntegerArray(new int[] {}) ));
 	}
-		
+
 	public double getLastRoundBid(int no_goods_won) {
 		// truthful bidding. realized prices don't matter.
 		return v.getValue(no_goods_won+1) - v.getValue(no_goods_won);

@@ -70,9 +70,7 @@ public class FullCondMDPAgent4 extends SeqAgent {
 		b = new double[price_length];
 
 		for (int i = 0; i < b.length; i++)
-			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.5);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
-//			b[i] = jcde.precision*(i-0.7);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
-//			b[i] = jcde.precision*i;		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision	
+			b[i] = jcde.precision*i;		// XXX: can play around with this
 		
 		Q = new double[price_length];		
 		Reward = new double[price_length];		
@@ -293,7 +291,7 @@ public class FullCondMDPAgent4 extends SeqAgent {
 			else {
 				computeFullMDP();
 				Cache.storeMDPpolicy(v_id, pi);
-				System.out.println("v_id = " + v_id + ", calculate MDP... ");
+//				System.out.println("v_id = " + v_id + ", calculate MDP... ");
 			}
 		}
 		else{
