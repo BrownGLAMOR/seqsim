@@ -21,12 +21,12 @@ public class TwoRoundWeberFP {
 		// simulation & evaluation parameters
 		double p_precision = 0.01;	// price precision
 		double v_precision = 0.0001;	// valuation precision
-		int no_initial_simulations = 100000000/no_agents;	// generating initial PP		
-		double cmp_precision = 0.01;						// discretization precision when evaluating strategy 
+		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
+		double cmp_precision = 0.005;						// discretization precision when evaluating strategy 
 		int no_for_cmp = (int) (1/cmp_precision) + 1;
 
 		// agent preferences		
-		boolean discretize_value = true;		// whether to discretized value
+		boolean discretize_value = false;		// whether to discretized value
 		int preference = 0;							// MDP agent preference: 2 = favor mixing, -1 = favor lower bound
 		double epsilon = 0.00005;						// tie-breaking threshold
 		
@@ -63,7 +63,8 @@ public class TwoRoundWeberFP {
 			v[i] = i*cmp_precision;
 
 		// file to write to
-		FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/firstprice/weber_" + no_goods + "_" + no_agents + "_" + v_precision + "_" + p_precision + "_discretized.csv");
+		FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/firstprice/weber_" + no_goods + "_" + no_agents + "_" + v_precision + "_" + p_precision + "_2.csv");
+//		FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/firstprice/weber_" + no_goods + "_" + no_agents + "_" + v_precision + "_" + p_precision + "_discretized.csv");
 		
 		Cache.clearMDPpolicy();
 		for (int i = 0; i < no_for_cmp; i++) {
@@ -71,6 +72,7 @@ public class TwoRoundWeberFP {
 			mdp_agent.reset(null);		// recompute MDP
 			
 			fw_strat.write(v[i] + "," + mdp_agent.getFirstRoundBid() + "\n");					
+			System.out.println(v[i] + "," + mdp_agent.getFirstRoundBid());					
 //				if (value.x != 0) {
 //					System.out.println("value.x = " + value.x);
 //					mdp_agent.printpi();

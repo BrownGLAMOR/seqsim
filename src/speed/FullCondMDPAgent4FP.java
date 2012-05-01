@@ -121,8 +121,8 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 				double temp = 0;
 	    		for (int j = 0; j < b.length; j++){				
 	    			temp += condPMF[j];	// add -f(p)
-//	    			condCDF[j] = temp;
-	    			condCDF[j] = temp - condPMF[j]/2;					// XXX: suppose 1/2 chance tie breaking: doesn't work well
+	    			condCDF[j] = temp;
+//	    			condCDF[j] = temp - condPMF[j]/2;					// XXX: suppose 1/2 chance tie breaking: doesn't work well
 	    			Reward[j] = - condCDF[j]*j*jcde.precision;
 	    		}
 	    		
@@ -222,7 +222,8 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 					double temp = 0;
 		    		for (int j = 0; j < b.length; j++){
 		    			temp += condPMF[j];							// add f(p)
-		    			condCDF[j] = temp;							 
+//		    			condCDF[j] = temp;							 
+		    			condCDF[j] = temp + condPMF[j]/2;
 //		    			condCDF[j] = temp - condPMF[j]/2;					// XXX: suppose 1/2 chance tie breaking: doesn't work well							 
 		    			Reward[j] = - condCDF[j]*j*jcde.precision;
 		    		}					
