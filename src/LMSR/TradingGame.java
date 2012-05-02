@@ -1,6 +1,7 @@
 package LMSR;
 
 import java.io.IOException;
+import java.util.Random;
 
 public class TradingGame {
 	int no_agents;				// number of agents playing
@@ -28,9 +29,11 @@ public class TradingGame {
 		this.agents = agents;
 		this.no_agents = agents.length;
 		this.no_rounds = no_rounds;
+		this.signal = signal;
 				
 		// do all of our memory allocations upfront.
 		mover = new int[no_agents*no_rounds];		
+		history = new int[no_agents*no_rounds];
 		price = new double[no_agents*no_rounds+1];		// prior is price[0]
 		reward = new double[no_agents*no_rounds];
 		profit = new double[no_agents];
@@ -62,13 +65,14 @@ public class TradingGame {
 		
 		// Regenerate the signal
 		signal.reset();
+		this.world = signal.world;
 		
 		// tell all the agents that we are playing a new game.
 		for (TradingAgent a : agents)
 			a.reset(this);
 		
 		// Set the prior
-		price[0] = Signal.priorPrice;
+		price[0] = signal.p0;
 		
 		// Ask players to submit actions, record it in history
 		for (int i = 0; i < mover.length; i++){
@@ -88,12 +92,14 @@ public class TradingGame {
 			for (int i = 0; i < price.length-1; i++){
 				reward[i] = java.lang.Math.log(price[i+1]/price[i]);
 				profit[mover[i]] += reward[i];
+//				System.out.println("world true, reward[" + i + "] = log(" + price[i+1] + "/" + price[i] + ")");
 			}
 		}
 		else{
 			for (int i = 0; i < price.length-1; i++){
-				reward[i] = java.lang.Math.log(1-price[i+1]/1-price[i]);
+				reward[i] = java.lang.Math.log((1-price[i+1])/(1-price[i]));
 				profit[mover[i]] += reward[i];
+//				System.out.println("world false, reward[" + i + "] = log(" + (1-price[i+1]) + "/" + (1-price[i]) + ")");
 			}
 		}
 		
@@ -107,7 +113,7 @@ public class TradingGame {
 			}
 
 			// Print "mover"
-			System.out.print("agent moving sequence: ");
+			System.out.print("\nagent moving sequence: ");
 			for (int i = 0; i < mover.length; i++)
 				System.out.print(mover[i] + " ");
 			
@@ -156,6 +162,23 @@ public class TradingGame {
 
 	// Test
 	public static void main(String[] args) throws IOException {
+		
+		// parameters
+		int no_rounds = 2;
+		int no_agents = 2;
+		double p0 = 0.5;
+		double rho = 0.9;
+		Random rng = new Random();
+
+		// Set up agents, signal, and game
+		TradingAgent[] agents = new TradingAgent[no_agents];
+		for(int i = 0; i < no_agents; i++)
+			agents[i] = new TruthfulAgent(i);
+		SimpleSignal signal = new SimpleSignal(p0, rho, no_agents, rng);		
+		TradingGame G = new TradingGame(agents, no_rounds, signal);
+		
+		// play
+		G.play(false);
 		
 	}
 	

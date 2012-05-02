@@ -1,9 +1,5 @@
 package LMSR;
 
-import speed.JointCondDistributionEmpirical;
-import speed.JointDistributionEmpirical;
-import speed.SeqAuction;
-import speed.Value;
 
 public abstract class TradingAgent {
 	TradingGame G;
