@@ -13,6 +13,14 @@ public class IntegerArray {
 		this.d = d;
 	}
 	
+	public String print(){
+		String str = "{";
+		for (int i = 0; i < d.length - 1; i++)
+			str += d[i] + ",";
+		str += d[d.length-1] + "}";
+		return str;
+	}
+	
 	@Override
 	public boolean equals(Object that) {
 		// same object

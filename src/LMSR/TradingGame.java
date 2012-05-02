@@ -106,7 +106,7 @@ public class TradingGame {
 		// Print game information if not quiet
 		if (!quiet){
 			// Print world state and signals
-			System.out.println("World state = " + signal.world);
+			System.out.println("\n\nWorld state = " + signal.world);
 			System.out.print("Player signals: ");
 			for (int i = 0; i < agents.length; i++){
 				System.out.print(signal.s[i] + " ");
@@ -177,7 +177,7 @@ public class TradingGame {
 		SimpleSignal signal = new SimpleSignal(p0, rho, no_agents, rng);		
 		TradingGame G = new TradingGame(agents, no_rounds, signal);
 		
-		// play
+		// play a few times
 		G.play(false);
 		
 	}
