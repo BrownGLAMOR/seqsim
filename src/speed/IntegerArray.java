@@ -17,7 +17,10 @@ public class IntegerArray {
 		String str = "{";
 		for (int i = 0; i < d.length - 1; i++)
 			str += d[i] + ",";
-		str += d[d.length-1] + "}";
+		if (d.length > 0)
+			str += d[d.length-1] + "}";
+		else
+			str += "}";
 		return str;
 	}
 	

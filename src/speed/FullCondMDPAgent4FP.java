@@ -128,7 +128,7 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 	    		
     			// Compute Q(b,state) for each bid b
 	    		double max_value = Double.MIN_VALUE;		// Value of largest Q((X,t),b)
-		    	int max_idx = -1;							// Index of largest Q((X,t),b)			    	
+	    		int max_idx = -1;							// Index of largest Q((X,t),b)			    	
     			for (int i = 0; i < b.length; i++) {
 	    			double temp2 = Reward[i];
     				temp2 += condCDF[i]*v.getValue(winner.getSum()+1) + (1-condCDF[i])*v.getValue(winner.getSum());

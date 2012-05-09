@@ -5,20 +5,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
 import speed.IntegerArray;
 
-// Stores transition probabilities P and rewards R for all agents in the game. Each state S or (S,A)-pair is an IntegerArray. 
+// Stores transition probabilities P and rewards R for all agents in the game. (\theta,(S,A)) is a state.  
 public class MDP{
 	
 	boolean ready = false;
 	int no_agents, no_rounds, total_rounds;
 	
-	// One per agent
+	// One per agent: differentiate if signal is T (-->1) or F (-->0)
 	HashMap<IntegerArray, ArrayList<IntegerArray>>[] NextStates;	// [round]: (S,A) ==> further S. A list of further S
-	HashMap<IntegerArray, double[]>[] P;							// [round]: (S,A) ==> further S. Transition probs
-	HashMap<IntegerArray, Integer>[] counts;						// [round]: S. num of times S has been reached
-	HashMap<IntegerArray, Double>[] R;								// [round]: (S,A). expected rewards 
+	HashMap<IntegerArray, double[]>[][] P;							// [round][T/F]: (S,A) ==> further S. Transition probs
+	HashMap<IntegerArray, Integer>[][] counts;						// [round][T/F]: S. num of times S has been reached
+	HashMap<IntegerArray, Double>[][] R;							// [round][T/F]: (S,A). expected rewards 
 	
 	// holder of (S,A)s
 	IntegerArray SA_tmp[];
@@ -36,17 +37,21 @@ public class MDP{
 				
 		// MDP mappings: initiate
 		this.NextStates = new HashMap[total_rounds];
-		this.counts = new HashMap[total_rounds];
-		this.P = new HashMap[total_rounds];
-		this.R = new HashMap[total_rounds];
+		this.counts = new HashMap[total_rounds][2];
+		this.P = new HashMap[total_rounds][2];
+		this.R = new HashMap[total_rounds][2];
 		
 		for (int i = 0; i < total_rounds; i++) {	
 			int max_states = (int) java.lang.Math.pow(ActionSpace.d.length, i+1);	// max no. of states in round i 
 			
 			this.NextStates[i] = new HashMap<IntegerArray, ArrayList<IntegerArray>>(max_states); 
-			this.P[i] = new HashMap<IntegerArray, double[]>(max_states);
-			this.counts[i] = new HashMap<IntegerArray, Integer>(max_states);
-			this.R[i] = new HashMap<IntegerArray, Double>(max_states);
+			
+			this.P[i][0] = new HashMap<IntegerArray, double[]>(max_states);
+			this.P[i][1] = new HashMap<IntegerArray, double[]>(max_states);
+			this.counts[i][0] = new HashMap<IntegerArray, Integer>(max_states);
+			this.counts[i][1] = new HashMap<IntegerArray, Integer>(max_states);
+			this.R[i][0] = new HashMap<IntegerArray, Double>(max_states);
+			this.R[i][1] = new HashMap<IntegerArray, Double>(max_states);
 		}
 		
 		// initiate: temporary state holder
@@ -63,18 +68,31 @@ public class MDP{
 		// clean HashMaps
 		for (HashMap<IntegerArray, ArrayList<IntegerArray>> a : this.NextStates)
 			a.clear();
-		for (HashMap<IntegerArray, double[]> a : this.P)
+		for (HashMap<IntegerArray, double[]> a : this.P[0])
 			a.clear();
-		for (HashMap<IntegerArray, Integer> a : this.counts)
+		for (HashMap<IntegerArray, double[]> a : this.P[1])
 			a.clear();
-		for (HashMap<IntegerArray, Double> a : this.R)
+		for (HashMap<IntegerArray, Integer> a : this.counts[0])
+			a.clear();
+		for (HashMap<IntegerArray, Integer> a : this.counts[1])
+			a.clear();
+		for (HashMap<IntegerArray, Double> a : this.R[0])
+			a.clear();
+		for (HashMap<IntegerArray, Double> a : this.R[1])
 			a.clear();
 	}
 	
 	// Call this once per realized game
-	public void populate(IntegerArray history, double[] reward) {
+	public void populate(IntegerArray history, double[] reward, Signal theta) {
 		if (history.d.length != total_rounds || reward.length != total_rounds)
 			throw new RuntimeException("length game history must equal reward vector length");
+
+		// signals into 0/1 format 
+		int[] s = new int[no_agents];
+		for (int k = 0; k < no_agents; k++){
+			if (theta.getSignal(k) == true)
+				s[k] = 1;
+		}
 
 		// Store counts: no. of times a state is reached
 		for (int i = 0; i < total_rounds; i++){
@@ -82,17 +100,19 @@ public class MDP{
 			for (int j = 0; j <= i; j++)
 				SA.d[j] = history.d[j];
 			
-			if (!counts[i].containsKey(SA)){
+			int agent_id = i % no_agents;
+			
+			if (!counts[i][s[agent_id]].containsKey(SA)){
 				// create this instance
-				counts[i].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), 1);
-				R[i].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), reward[i]);
+				counts[i][s[agent_id]].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), 1);
+				R[i][s[agent_id]].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), reward[i]);
 
 //				System.out.println("put R(SA" + SA.print() + ") = " + R[i].get(SA));
 //				System.out.println("put counts(SA" + SA.print() + ") = " + counts[i].get(SA));
 			} 
 			else {
-				R[i].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), R[i].get(SA) + reward[i]);
-				counts[i].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), counts[i].get(SA) + 1);
+				R[i][s[agent_id]].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), R[i][s[agent_id]].get(SA) + reward[i]);
+				counts[i][s[agent_id]].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), counts[i][s[agent_id]].get(SA) + 1);
 				
 //				System.out.println("create new, put R(SA" + SA.print() + ") = " + R[i].get(SA));
 //				System.out.println("create new, put counts(SA" + SA.print() + ") = " + counts[i].get(SA));
@@ -101,154 +121,58 @@ public class MDP{
 		}
 	}
 	
-	/*
-		// Call this once per realized game
-		public void populate(IntegerArray history, double[] reward) {
-			if (history.d.length != total_rounds || reward.length != total_rounds)
-				throw new RuntimeException("length game history must equal reward vector length");
-
-			// Store all counts
-			for (int i = 0; i < total_rounds - no_agents; i++) {
-				IntegerArray SA = SA_tmp[i];
-				IntegerArray nextS = SA_tmp[i+no_agents-1];
-				
-				// SA --> nextS. Copy from "history"
-				for (int j = 0; j<i; j++){
-					SA.d[j] = history.d[j];
-					nextS.d[j] = history.d[j];
-				}
-				for (int j = i; j < i+no_agents-1; j++)
-					nextS.d[j] = history.d[j];
-			
-				// get further states conditioned on earlier prices
-				ArrayList<IntegerArray> NS = NextStates[i].get(SA);
-							
-				if (NS == null) {
-					
-					// this is our first entry into the distribution. Initialize
-					NS = Cache.ExtensionStates(SA, no_agents);
-					double[] p = new double[NS.size()];
-					
-					for (int j = 0; j < p.length; j++)
-						p[j] = 0;
-					p[NS.indexOf(nextS)] = 1;
-
-					// Don't have to do "new copy of" right?
-					NextStates[i].put(SA, NS);
-					P[i].put(SA, p);
-				} else {
-					double[] p = P[i].get(SA);
-					p[NS.indexOf(nextS)] ++;
-				}			
-			}
-
-		
-		// Store all R
-		for (int i = 0; i < total_rounds; i++) {
-			IntegerArray SA = SA_tmp[i];
-			
-			// SA. Copy from "history"
-			for (int j = 0; j<i; j++)
-				SA.d[j] = history.d[j];
-		
-			// If this is our first entry into the distribution, initialize						
-			if (! R[i].containsKey(SA))				
-				R[i].put(SA, reward[i]);
-			else
-				R[i].put(SA,R[i].get(SA) + reward[i]);	
-		}
-	}
-	
-	// Call this to do a weighted average of 2 MDPs, used in smoothing. TODO 
-	//	Basically, PNextStates[0] --> w*PNextStates[0] + (1-w)*PNextStates[1] 
-	public void addMDP(JointCondDistributionEmpirical jcde1, double w) {
-		
-		// for all goods
-		for (int i = 0; i<total_rounds; i++) {			
-
-			// normalize conditional pdfs and update cdfs 
-			for (IntegerArray SA : prob[i].keySet()) {
-				double[] p0 = prob[i].get(SA);
-				double[] p1 = jcde1.getPMF(SA);
-				// take weighted average
-
-//				if (p0.length == p1.length){
-//					System.out.println("length is the same.");
-//				}
-//				
-//				System.out.print("p0 before = [");
-//				for (int j = 0; j < p0.length; j++)
-//					System.out.print(p0[j] + ",");
-//				System.out.println("]");
-//				
-//				System.out.print("p1 before = [");
-//				for (int j = 0; j < p1.length; j++)
-//					System.out.print(p1[j] + ",");
-//				System.out.println("]");
-
-				for (int j = 0; j < p0.length; j++)
-					p0[j] = (w*p0[j] + p1[j])/(1+w);
-
-//				System.out.print("p0 after = [");
-//				for (int j = 0; j < p0.length; j++)
-//					System.out.print(p0[j] + ",");
-//				System.out.println("]\n");
-			}
-			
-
-			}
-//		normalize();
-		}
-	*/
 	
 	// Call this to normalize/compute P and R
 	public void normalize() {
 
 		// Normalize P and R for first half of the game
 		for (int i = 0; i < total_rounds-no_agents; i++) {
+			for (int k = 0; k <= 1; k++){
 			
-//			System.out.println("normalizing for round i = " + i + ". counts[i].keySet.size() = " + counts[i].keySet().size());
-			for (IntegerArray SA : counts[i].keySet()) {				
-
-				// Normalize Rewards
-				R[i].put(SA,R[i].get(SA)/counts[i].get(SA));	// modify values, so don't need "copies of"
-//				System.out.println("R[" + i + "].put(" + SA.print() + "," + R[i].get(SA) + ")");
-				
-				// Probabilities: Figure out possible next round states
-				ArrayList<IntegerArray> NS = Cache.ExtensionStates(SA, no_agents);
-				
-				// turn counts into pmf form
-				double[] p = new double[NS.size()];
-				for (int j = 0; j < p.length; j++)
-					p[j] = 0.0;
-
-				Iterator<IntegerArray> it = NS.iterator();
-				int sum = 0;
-				while (it.hasNext()){
-					IntegerArray nextS = it.next();
-					if (counts[i+no_agents-1].containsKey(nextS)) {
-						p[NS.indexOf(nextS)] = counts[i+no_agents-1].get(nextS);						
-						sum += counts[i+no_agents-1].get(nextS);
+	//			System.out.println("normalizing for round i = " + i + ". counts[i].keySet.size() = " + counts[i].keySet().size());
+				for (IntegerArray SA : counts[i][k].keySet()) {				
+	
+					// Normalize Rewards
+					R[i][k].put(SA,R[i][k].get(SA)/counts[i][k].get(SA));	// modify values, so don't need "copies of"
+	//				System.out.println("R[" + i + "].put(" + SA.print() + "," + R[i].get(SA) + ")");
+					
+					// Probabilities: Figure out possible next round states
+					ArrayList<IntegerArray> NS = Cache.ExtensionStates(SA, no_agents);
+					
+					// turn counts into pmf form
+					double[] p = new double[NS.size()];
+					for (int j = 0; j < p.length; j++)
+						p[j] = 0.0;
+	
+					Iterator<IntegerArray> it = NS.iterator();
+					int sum = 0;
+					while (it.hasNext()){
+						IntegerArray nextS = it.next();
+						if (counts[i+no_agents-1][k].containsKey(nextS)) {
+							p[NS.indexOf(nextS)] = counts[i+no_agents-1][k].get(nextS);						
+							sum += counts[i+no_agents-1][k].get(nextS);
+						}
 					}
+					// Normalize
+					for (int j = 0; j < p.length; j++)
+						p[j] /= sum;				
+	
+					// Put into memory
+	//				NextStates[i].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), NS);
+	//				P[i].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), p);				
+					NextStates[i].put(SA, NS);
+					P[i][k].put(SA, p);
 				}
-				// Normalize
-				for (int j = 0; j < p.length; j++)
-					p[j] /= sum;				
-
-				// Put into memory
-//				NextStates[i].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), NS);
-//				P[i].put(new IntegerArray(Arrays.copyOf(SA.d, SA.d.length)), p);				
-				NextStates[i].put(SA, NS);
-				P[i].put(SA, p);
 			}
 		}
 			// Normalize R for second half of the game
-			for (int i = total_rounds-no_agents; i < total_rounds; i++) {			
-				// Normalize Rewards
-				for (IntegerArray SA : counts[i].keySet())
-					R[i].put(SA,R[i].get(SA)/counts[i].get(SA));
+			for (int i = total_rounds-no_agents; i < total_rounds; i++) {
+				for (int k = 0; k <= 1; k++){
+					// Normalize Rewards
+					for (IntegerArray SA : counts[i][k].keySet())
+						R[i][k].put(SA,R[i][k].get(SA)/counts[i][k].get(SA));
+				}
 			}
-	
 			ready = true;	// normalized
 }
 
@@ -258,7 +182,7 @@ public class MDP{
 	}
 
 	// get transition probabilities from (S,A) to further states
-	public double[] getP(IntegerArray SA) {
+	public double[] getP(IntegerArray SA, boolean theta) {
 
 		// Sanity check
 		if (!ready)
@@ -266,17 +190,25 @@ public class MDP{
 		if (SA.d.length > total_rounds - no_agents)
 			throw new IllegalArgumentException("no more rounds");
 		
+		// convert signal into index
+		int id;
+		if (theta == false)
+			id = 0;
+		else
+			id = 1;
+		
 		// Get transition probabilities
-		double[] p = P[SA.d.length-1].get(SA);  
+		double[] p = P[SA.d.length-1][id].get(SA);		
 		
 		// TODO: Should use "near by states" when a (state,action) is not observed, not just an arbitrary one
 		if (p == null){
 			System.out.println("warning: (state,action) = " + SA.print() + " not observed");
 
 			// Use the first one that comes up
-			if (P[SA.d.length-1].entrySet().size() > 0){
-				Iterator<IntegerArray> it = P[SA.d.length].keySet().iterator();
-				p = P[SA.d.length-1].get(it.next());
+			if (P[SA.d.length-1][id].entrySet().size() > 0){
+				Iterator<IntegerArray> it = P[SA.d.length][id].keySet().iterator();
+				p = P[SA.d.length-1][id].get(it.next());
+				System.out.println("used next one");
 			}else{
 				throw new IllegalArgumentException("Nothing observed at all for the round of (state,action) = " + SA.print());
 			}
@@ -286,92 +218,35 @@ public class MDP{
 	}
 	
 	// Get rewards
-	public double getR(IntegerArray SA) {
+	public double getR(IntegerArray SA, int theta_id) {
 		
 		// Sanity check
 		if (!ready)
 			throw new RuntimeException("must normalize first");
-		if (SA.d.length >= total_rounds)
-			throw new IllegalArgumentException("no more rounds");
-
-		if (R[SA.d.length-1].containsKey(SA))
-			return R[SA.d.length-1].get(SA);
+		if (SA.d.length > total_rounds)
+			throw new IllegalArgumentException("no more rounds. total_rounds = " + total_rounds + ", SA.d.length = " + SA.d.length);
+		
+		if (R[SA.d.length-1][theta_id].containsKey(SA))
+			return R[SA.d.length-1][theta_id].get(SA);
 		else
 			return 0.0;		// TODO: something to tweak. Set it artificially high so that all states are explored? 
 	}
 
-	/* might want in the future
-	public void outputRaw(FileWriter fw) throws IOException {
-		if (take_log == false)
-				System.out.println("didn't take price records, can't output");
-		else {
-			IntegerArray history;
-			for (Integer history_idx : log_indices) {
-				history = Cache.getWRfromidx(history_idx);
-				int len = history.r.d.length - 1;
-				
-				// print out winning history [0, a.d.length-1]
-				for (int i = 0; i < len+1; i++) {
-					if (history.w.d[i])
-						fw.SAite("1,");
-					else
-						fw.SAite("0,");
-				}
-				
-				// print out [0, a.d.length-2]
-				for (int i = 0; i<len; i++)
-					fw.SAite(history.r.d[i]*precision + ",");
-				
-				// print out final value, [a.d.length-1]
-				if (history.r.d.length > 0)
-					fw.SAite(history.r.d[len]*precision + "\n");
-			}
-		}
+	// Convert signal from boolean to int before getting reward
+	public double getR(IntegerArray SA, boolean theta) {
+
+		// convert signal into index
+		int theta_id;
+		if (theta == false)
+			theta_id = 0;
+		else
+			theta_id = 1;
+		
+		return getR(SA, theta_id);
 	}
-	
-	@Override
-	public void outputNormalized() {
-		int total_act = 0;
-		int total_exp = 0;
-		
-		System.out.println("max_price witnessed = " + witnessed_max_price);
-		
-		for (int i = 0; i<total_rounds; i++) {
-			int max_realizations = MathOps.ipow(this.no_bins, i);
-			
-			total_exp += max_realizations;
-			total_act += prob[i].size();
-			
-			System.out.println("prob[" + i + "].size() == " + prob[i].size() + ", max_realizations=" + max_realizations);
-			
-			for (Entry<IntegerArray, double[]> e : prob[i].entrySet()) {
-				System.out.print("pr(" + i + " | w = {");
 
-				for (boolean p : e.getKey().w.d) {
-					if (p == true)
-						System.out.print("1 ,");
-					else
-						System.out.print("0 ,");
-				}
-				System.out.print("}, p = {");
 
-				for (int p : e.getKey().r.d)
-					System.out.print(val(p, precision) + ", ");
-				
-				System.out.print("}) [hits=" + sum[i].get(e.getKey()) + "] ==> {");
-				
-				for (double p : e.getValue())
-					System.out.print(p + ", ");
-				
-				System.out.println("}");				
-			}
-		}
-		
-		System.out.println("Actual realizations == " + total_act + " of a maximum == " + total_exp);
-	}
-		*/
-
-	// Testing
+	// Testing: epsilonTruthfulAgent
 	public static void main(String args[]) throws IOException {
 
 		Cache.init();
@@ -380,24 +255,32 @@ public class MDP{
 		int no_rounds = 2;
 		int no_agents = 2;
 		int total_rounds = no_rounds*no_agents;
+		
+		double p0 = 0.5;
+		double rho = 0.9;
+		Random rng = new Random();
 
 		// Manually populate MDP
 		Set<IntegerArray> histories = Cache.genStates(total_rounds);
 		double[] reward = new double[total_rounds];
+		Signal theta = new SimpleSignal(p0, rho, no_agents, rng);
 		
 		MDP mdp = new MDP(no_agents, no_rounds);
 		for (IntegerArray hist: histories){
+			theta.reset();
 			// rewards = simply cumulative sum of action history
 			reward[0] = hist.d[0];
 			for (int i = 1; i < reward.length; i++)
 				reward[i] = reward[i-1] + hist.d[i];
-			mdp.populate(hist, reward);
+			mdp.populate(hist, reward, theta);
 		}
 
 		// create bias of self-transition between 0s
 		int bias = 100;
-		for (int i = 0; i < bias; i++)
-			mdp.populate(new IntegerArray(new int[] {0,0,0,0}), new double[] {0,0,0,0});
+		for (int i = 0; i < bias; i++){
+			theta.reset();
+			mdp.populate(new IntegerArray(new int[] {0,0,0,0}), new double[] {0,0,0,0}, theta);
+		}
 		
 		mdp.normalize();
 		
@@ -415,23 +298,29 @@ public class MDP{
 
 			// Get stuff
 			ArrayList<IntegerArray> NSs = mdp.getNextStates(SA);
-			double[] p = mdp.getP(SA);
-			double r = mdp.getR(SA);
 			
-			// print SA and reward
-			System.out.println("\nSA = " + SA.print() + ": r = " + r);
-			
-			// print next round states
-			System.out.print("NSs = ");
+			// print SA and next round states
+			System.out.println("\nSA = " + SA.print() + ", NSs = ");
 			for (int i = 0; i < NSs.size()-1; i++)
 				System.out.print(NSs.get(i).print() + "  ");
 			System.out.println(NSs.get(NSs.size()-1).print());
 			
-			// print transition probs
-			System.out.print("p = [");
+			// print transitions probs and rewards (if true)
+			double[] p = mdp.getP(SA,true);
+			double r = mdp.getR(SA,true);
+			System.out.print("signal = true: r = " + r + ", p = [");
 			for (int i = 0; i < p.length-1; i++)
 				System.out.print(p[i] + ",");
 			System.out.println(p[p.length-1] + "]");
+
+			// print transitions probs and rewards (if false)
+			p = mdp.getP(SA,false);
+			r = mdp.getR(SA,false);
+			System.out.print("signal = false: r = " + r + ", p = [");
+			for (int i = 0; i < p.length-1; i++)
+				System.out.print(p[i] + ",");
+			System.out.println(p[p.length-1] + "]");
+
 		}
 		
 	}	

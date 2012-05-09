@@ -14,17 +14,6 @@ public class Cache {
 	// Configuration
 	static final int max_times = 15;	// 3^15 = 14 million
 
-//	// Map from StateActionPair to index
-//	static Integer getWRidx(StateActionPair past) {
-//		return WR2idx.get(past);
-//	}
-//
-//	// Map from index to StateActionPair
-//	static StateActionPair getWRfromidx(Integer i){
-//		return idx2WR.get(i);
-//	}
-	
-
 	// XXX: new stuff here
 	static Set<IntegerArray>[] possible_states;
 

@@ -3,8 +3,8 @@ package LMSR;
 public class TruthfulAgent extends TradingAgent{
 
 	boolean reported, bluffed;
-	boolean signal;
-	// Agent that reports signal truthfully their first chance
+	boolean theta;
+	// Agent that reports theta truthfully their first chance
 	public TruthfulAgent(int agent_idx) {
 		super(agent_idx);
 	}
@@ -14,7 +14,7 @@ public class TruthfulAgent extends TradingAgent{
 		// report truthfully for the first time
 		if (reported == false){
 			reported = true;
-			if (signal==true)
+			if (theta==true)
 				return 1;
 			else
 				return -1;
@@ -26,10 +26,10 @@ public class TruthfulAgent extends TradingAgent{
 
 	@Override
 	public void reset(TradingGame G) {
-		// learn signal
-		this.signal = G.signal.getSignal(agent_idx);
+		// learn theta
+		this.theta = G.signal.getSignal(agent_idx);
 
-		// Haven't reported signal yet
+		// Haven't reported theta yet
 		this.reported = false;
 		this.bluffed = false;
 	}

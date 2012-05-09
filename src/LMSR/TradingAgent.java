@@ -17,9 +17,7 @@ public abstract class TradingAgent {
 	
 	// note that this method should be overridden as neccessary in your agent sub-class. if you
 	// override it, however, make sure to call super.reset(auction) as the first task in your reset
-	public void reset(TradingGame G) {
-		this.G = G;
-	}
+	public abstract void reset(TradingGame G);
 	
 	// the game asks agent to move the price at a specific round. Agent should figure out game history
 	// through the public variables
