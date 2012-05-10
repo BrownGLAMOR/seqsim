@@ -21,7 +21,7 @@ public class MDPFactory extends Thread {
 	public MDPFactory() {}
 	
 	//  Main function: generates and records MDP for each player by repeate playing games
-	public MDP simulateMDP(TradingGame G, int no_simulations, boolean take_log, boolean record_utility) throws IOException {	
+	public MDP onPolicyUpdate(TradingGame G, int no_simulations, boolean take_log, boolean record_utility) throws IOException {	
 		
 		// memory allocation
 		if (take_log == true){
@@ -81,7 +81,7 @@ public class MDPFactory extends Thread {
 		
 		// Generate MDP
 		MDPFactory f = new MDPFactory();
-		MDP mdp = f.simulateMDP(G, no_simulations, take_log, record_utility);
+		MDP mdp = f.onPolicyUpdate(G, no_simulations, take_log, record_utility);
 
 		// Print
 		ArrayList<IntegerArray> SAs = new ArrayList<IntegerArray>();

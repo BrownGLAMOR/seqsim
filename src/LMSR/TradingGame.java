@@ -47,8 +47,9 @@ public class TradingGame {
 	
 	// play the game. it is safe to re-play the auction as many times as one wishes.
 	// the results are available in the public memory variables: price, reward, etc.
-	// if quiet == true, then no diagnostic output is sent to the screen
-	public void play(boolean quiet) throws IOException {
+	// 			quiet == true: no diagnostic output is sent to the screen
+	// 			if tremble = true, epsilon > 0: each agent plays each unintended action w/ prob epsilon
+	public void play(boolean quiet, boolean tremble, double epsilon) throws IOException {
 		
 		// Reset memory
 		us = 0;

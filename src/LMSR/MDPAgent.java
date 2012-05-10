@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 import speed.IntegerArray;
+import speed.Statistics;
 
 // An Agent that plays optimal strategy wrt an MDP
 public class MDPAgent extends TradingAgent{
@@ -189,7 +190,7 @@ public class MDPAgent extends TradingAgent{
 		return pi[k][theta_id].get(S);
 	}
 	
-	// Test: play against Trembling Truthful Agent
+	// Test: play against Trembling Truthful Agent. Yes, playing truthfully is a good approach against truthful agents. 
 	public static void main(String[] args) throws IOException {
 		
 		Cache.init();
@@ -198,8 +199,8 @@ public class MDPAgent extends TradingAgent{
 		int no_rounds = 2;
 		int no_agents = 2;
 		double p0 = 0.5;
-		double rho = 0.99;
-		double epsilon = 0.01;
+		double rho = 0.9;
+		double epsilon = 0.1;
 		Random rng = new Random();
 
 		// Simulation parameters
@@ -215,7 +216,7 @@ public class MDPAgent extends TradingAgent{
 		SimpleSignal signal = new SimpleSignal(p0, rho, no_agents, rng);		
 		TradingGame G = new TradingGame(agents, no_rounds, signal);
 		
-		MDP mdp = f.simulateMDP(G, no_simulations, take_log, record_utility);
+		MDP mdp = f.onPolicyUpdate(G, no_simulations, take_log, record_utility);
 		
 		// Set up MDP agents
 		MDPAgent[] mdp_agents = new MDPAgent[no_agents];
@@ -228,10 +229,12 @@ public class MDPAgent extends TradingAgent{
 			// Print Bellman solutions
 			System.out.println("\nagent " + k + ":");
 			mdp_agents[k].printpi();
-			
+		
 		}
 		
-			
+		// Print utilities
+		System.out.println("\nagent0 mean(u) = " + Statistics.mean(f.utility[0]) + ", stdev(u) = " + Statistics.stdev(f.utility[0]));
+		System.out.println("agent1 mean(u) = " + Statistics.mean(f.utility[1]) + ", stdev(u) = " + Statistics.stdev(f.utility[1]));
 	}
 
 
