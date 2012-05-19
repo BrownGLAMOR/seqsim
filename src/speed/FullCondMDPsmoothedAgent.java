@@ -1,12 +1,14 @@
 package speed;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
-// A FullCondMDPAgent that can handle discretized types, save MDP computed for each type into Cache, and reuse them later on. 
-public class FullCondMDPAgent4 extends SeqAgent {
+// Adapted from FullCondMDPAgent4.java, bids a smooth distribution accordingly to Boltzman distribution from tmp_Q-values. 
+// Can handle discretized types, save MDP computed for each type into Cache, and reuse them later on. 
+public class FullCondMDPsmoothedAgent extends SeqAgent {
 
 	Random rng = new Random();
 	
@@ -30,22 +32,23 @@ public class FullCondMDPAgent4 extends SeqAgent {
 
 	// storing devices
 	ArrayList<Integer> indices = new ArrayList<Integer>();			// The set of indices to consider when choosing the optimal bid
-	HashMap<WinnerAndRealized, Double>[] pi; // [t].get([winner] [realized]) ==> pi
-	HashMap<WinnerAndRealized, Double>[] V; // [t].get([winner] [realized]) ==> V
+	HashMap<WinnerAndRealized, Double>[] pi; 	// [t].get([winner] [realized]) ==> pi
+	HashMap<WinnerAndRealized, double[]>[] Q;	// [t].get([winner] prealized]) ==> Q-values
+	HashMap<WinnerAndRealized, Double>[] V; 	// [t].get([winner] [realized]) ==> V
 
-	double[] Q;
 	double[] Reward;
 	double[] b;
 	
+	// temporary storages
+	double[] tmp_Q, cum_value;
 	IntegerArray[] tmp_r;
 	BooleanArray[] tmp_w;
 	WinnerAndRealized[] tmp_wr;
 	
 	WinnerAndRealized wr, wr_plus;
 
-	// preference variables (some used when breaking ties)
-	int preference;
-	double epsilon;
+	// preference variables (used for discretizing values and smoothing bids)
+	double gamma;
 	boolean discretize_value;
 	
 	// The same as FullCondMDPAgent.java, except has different tie breaking rules when comparing bids giving similar utility. 
@@ -54,11 +57,10 @@ public class FullCondMDPAgent4 extends SeqAgent {
 	// 
 	// discretize_value --> whether to discretize types or not
 	// and if yes, v_precision --> precision
-	public FullCondMDPAgent4(Value valuation, int agent_idx, int preference, double epsilon, boolean discretize_value, double v_precision) {
+	public FullCondMDPsmoothedAgent(Value valuation, int agent_idx, double gamma, boolean discretize_value, double v_precision) {
 		super(agent_idx, valuation);
-		this.epsilon = epsilon;
-		this.preference = preference;
 		this.v_precision = v_precision;
+		this.gamma = gamma;
 		this.discretize_value = discretize_value;
 	}
 	
@@ -71,13 +73,16 @@ public class FullCondMDPAgent4 extends SeqAgent {
 		for (int i = 0; i < b.length; i++)
 			b[i] = jcde.precision*i;		// XXX: can play around with this
 		
-		Q = new double[price_length];		
+		tmp_Q = new double[price_length];		
+		cum_value = new double[price_length];		
 		Reward = new double[price_length];		
-		V = new HashMap[jcde.no_goods]; // Value function V		
+		V = new HashMap[jcde.no_goods]; // Value function V
+		Q = new HashMap[jcde.no_goods];
 		pi = new HashMap[jcde.no_goods]; // optimal bidding function \pi
 		
 		for (int i = 0; i<jcde.no_goods; i++) {
 				V[i] = new HashMap<WinnerAndRealized, Double>();
+				Q[i] = new HashMap<WinnerAndRealized, double[]>();
 				pi[i] = new HashMap<WinnerAndRealized, Double>();
 		}
 		
@@ -101,8 +106,10 @@ public class FullCondMDPAgent4 extends SeqAgent {
 		for (int i = 0; i<jcde.no_goods; i++) {
 				V[i].clear();
 				pi[i].clear();
+				Q[i].clear();
 		}
 		
+
 		// 1) ******************************** The last round of auction: truthful bidding is optimal
 		
 		t = jcde.no_goods-1;
@@ -170,9 +177,9 @@ public class FullCondMDPAgent4 extends SeqAgent {
 		    		}
 
 	    			
-	    			// Compute Q(b,state) for each bid b
-		    		double max_value = Double.MIN_VALUE;		// Value of largest Q((X,t),b)
-			    	int max_idx = -1;							// Index of largest Q((X,t),b)			    	
+	    			// Compute tmp_Q(b,state) for each bid b
+		    		double max_value = Double.MIN_VALUE;		// Value of largest tmp_Q((X,t),b)
+			    	int max_idx = -1;							// Index of largest tmp_Q((X,t),b)			    	
 	    			for (int i = 0; i < b.length; i++) {
 		    			double temp2 = Reward[i];
 
@@ -185,11 +192,7 @@ public class FullCondMDPAgent4 extends SeqAgent {
 		    			
 		    			// if agent doesn't win round t
 		    			for (int j = i+1; j < condDist.length; j++) {
-//		    				realized_plus.d[realized.d.length] = j;	//XXX: this is wrong. We don't know what the prices will be. 
-		    				if (i > 3)
-		    					realized_plus.d[realized.d.length] = i-3;
-		    				else
-		    					realized_plus.d[realized.d.length] = i;	// Assume the bid will be the realized price
+		    				realized_plus.d[realized.d.length] = j;
 		    				winner_plus.d[winner.d.length] = false;
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			}
@@ -199,38 +202,43 @@ public class FullCondMDPAgent4 extends SeqAgent {
 			    			max_idx = i;
 			    		}
 
-			    		Q[i] = temp2;
+			    		tmp_Q[i] = temp2;
 		    		}
 	    			
-	    			// just choose the best one
-	    			if (preference == 0){
-	    					V[t].put(wr, Q[max_idx]);
-				    		pi[t].put(wr, b[max_idx]);
-				    	}
-	    			else{
-	    				// find all the choosable bids, and select according to preference
-	    				indices.clear();
-	    				for (int i = 0; i < Q.length; i++){
-		    				if (Q[i] > max_value - epsilon){
-		    					indices.add(i);		    					
-		    				}
-		    			}
-		    			if (preference == -1){	// prefer lowerbound
-		    				V[t].put(wr,Q[indices.get(0)]);
-		    				pi[t].put(wr, b[indices.get(0)]);
-		    			}
-		    			else if (preference == 1){ // prefer upperbound
-			    				V[t].put(wr,Q[indices.get(indices.size()-1)]);
-			    				pi[t].put(wr, b[indices.get(indices.size()-1)]);
-		    			}
-		    			else{
-			    				idx = indices.get(rng.nextInt(indices.size()));	// pick one randomly
-			    				V[t].put(wr,Q[idx]);
-			    				pi[t].put(wr, b[idx]);
-		    			}
-	    				
-		    		}
-	    				
+	    			// Keep track of Q values
+					V[t].put(wr, tmp_Q[max_idx]);
+					Q[t].put(wr, tmp_Q.clone());
+		    		pi[t].put(wr, b[max_idx]);
+	    			
+//	    			// just choose the best one
+//	    			if (preference == 0){
+//	    					V[t].put(wr, tmp_Q[max_idx]);
+//				    		pi[t].put(wr, b[max_idx]);
+//				    	}
+//	    			else{
+//	    				// find all the choosable bids, and select according to preference
+//	    				indices.clear();
+//	    				for (int i = 0; i < tmp_Q.length; i++){
+//		    				if (tmp_Q[i] > max_value - epsilon){
+//		    					indices.add(i);		    					
+//		    				}
+//		    			}
+//		    			if (preference == -1){	// prefer lowerbound
+//		    				V[t].put(wr,tmp_Q[indices.get(0)]);
+//		    				pi[t].put(wr, b[indices.get(0)]);
+//		    			}
+//		    			else if (preference == 1){ // prefer upperbound
+//			    				V[t].put(wr,tmp_Q[indices.get(indices.size()-1)]);
+//			    				pi[t].put(wr, b[indices.get(indices.size()-1)]);
+//		    			}
+//		    			else{
+//			    				idx = indices.get(rng.nextInt(indices.size()));	// pick one randomly
+//			    				V[t].put(wr,tmp_Q[idx]);
+//			    				pi[t].put(wr, b[idx]);
+//		    			}
+//	    				
+//		    		}
+//	    				
 	    		}
     		}		    	
 		}
@@ -329,11 +337,35 @@ public class FullCondMDPAgent4 extends SeqAgent {
 		// figure out realized prices
 		realized = tmp_r[good_id];
 		for (int i = 0; i < realized.d.length; i++)
-			realized.d[i] = JointDistributionEmpirical.bin(auction.price[i], jcde.precision);
-//			realized.d[i] = JointDistributionEmpirical.bin(auction.hob[agent_idx][i], jcde.precision);
+			realized.d[i] = JointDistributionEmpirical.bin(auction.hob[agent_idx][i], jcde.precision);
+		
+		// if last round, Get optimal bid
+		if (good_id == no_goods-1)
+			return pi[good_id].get(new WinnerAndRealized(winner, realized));
+		// XXX Otherwise, smoothed bids 
+		else{
+			tmp_Q = Q[good_id].get(new WinnerAndRealized(winner, realized));
+
+			// compute cumulative exp(\gamma*Q) 
+			cum_value[0] = java.lang.Math.exp(gamma*tmp_Q[0]);
+			for (int i = 1; i < tmp_Q.length; i++)
+				cum_value[i] = cum_value[i-1] + java.lang.Math.exp(gamma*tmp_Q[i]);
 			
-		// Get optimal bid
-		return pi[good_id].get(new WinnerAndRealized(winner, realized));
+			// Randomly choose
+			double r = Math.random()*cum_value[cum_value.length-1];
+			int idx = 0;
+			boolean reached = false;
+			while (reached == false){
+				if (r <= cum_value[idx])
+					reached = true;
+				else
+					idx++;
+			}
+			return b[idx];
+				
+			
+		}
+			
 	}
 	
 	// helpers. these may cheat.
@@ -343,7 +375,7 @@ public class FullCondMDPAgent4 extends SeqAgent {
 	}
 	
 	public double getIntermediateRoundBid(WinnerAndRealized wr) {
-		return pi[0].get(wr);	// XXX: copy of? 
+		return pi[0].get(wr); 
 	}
 	
 	public double getLastRoundBid(int no_goods_won) {
@@ -351,13 +383,79 @@ public class FullCondMDPAgent4 extends SeqAgent {
 		return v.getValue(no_goods_won+1) - v.getValue(no_goods_won);
 	}
 	
-	// Test certain aspects
-	public static void main(String args[]) {
-		// What does bin really do? I see... rounded to nearest integer. Not bad. 
+	
+	
+	
+	
+	
+	
+	
+	
+	// Test it using Katzman setup
+	public static void main(String args[]) throws IOException {
+		Cache.init();
+		Random rng = new Random();
+
+		// tie breaking preferences
+		double epsilon = 0.000001;
+		int preference = 0;
+
+		double max_value = 1.0;
 		double precision = 0.02;
-		for (int i = 0; i < 10; i++){
-			double num = 0.005*i;
-			System.out.println(num + " binned to " + precision*legacy.DiscreteDistribution.bin(num, precision));
+		double max_price = max_value;
+		
+		int no_goods = 2;
+		int no_agents = 2;
+		int nth_price = 2;
+
+		int no_simulations = 10000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.		
+		int max_iterations = 1000;
+		
+		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
+
+		// Create agents
+		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
+		for (int i = 0; i<no_agents; i++)
+			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_value, rng), no_agents, i);
+				
+		// Create auction
+		SeqAuction katz_auction = new SeqAuction(katz_agents, nth_price, no_goods);
+
+		// Generate initial condition
+		System.out.print("Generating initial PP from katzman agents...");
+//		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOneRealPP(katz_auction, no_simulations,false,false,false);
+		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(katz_auction,no_simulations,false,false,false);
+		pp.outputNormalized();
+
+		System.out.println("done");		
+		System.out.println("Generating " + max_iterations + " first-round bids...");
+		
+		KatzHLValue value = new KatzHLValue(no_agents-1, max_value, rng);
+		
+		// initial agents for comparison
+		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, no_agents, 0);
+		FullCondMDPAgent4 mdp_agent = new FullCondMDPAgent4(value, 1, preference, epsilon, false, 0.01);
+
+		mdp_agent.setCondJointDistribution(pp);
+		
+		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/uniform/smoothed.csv");
+		
+		for (int iteration_idx = 0; iteration_idx < max_iterations; iteration_idx++) {			
+			// Have agents create their bidding strategy using the provided valuation
+			// (both agents share the SAME valuation)
+			katz_agent.reset(null);
+			mdp_agent.reset(null);
+			
+			fw_play.write(value.getValue(1) + "," + value.getValue(2) + "," + katz_agent.getFirstRoundBid() + "," + mdp_agent.getFirstRoundBid() + "\n");
+			
+			// Draw new valuation for the next round
+			value.reset();
 		}
+		
+		fw_play.close();
+		System.out.println("done done");
 	}
+
+	
+
 }

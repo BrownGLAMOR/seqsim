@@ -26,7 +26,6 @@ public class UnitValue extends Value {
 	public void reset() {
 		// draw a new valuation
 		this.x = rng.nextDouble() * max_value;
-//		System.out.println("reset, x = " + x);
 	}
 
 }

@@ -4,8 +4,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-// Do self-confirming updates initiated from Polynomial strategies, using Menezes decreasing valuation
-public class FullCondSCPoly {
+// Do self-confirming UNIFORM OFF-PLOICY updates initiated from Polynomial strategies, using Menezes decreasing valuation
+public class FullCondSCPoly_off {
 	public static void main(String[] args) throws IOException {
 		Cache.init();
 		Random rng = new Random();
@@ -20,23 +20,24 @@ public class FullCondSCPoly {
 
 		// agent preferences		
 		double[] ORDER = new double[] {1};
-		int preference = 0;								// MDP agent preference
+		int preference = 0;							// MDP agent preference
 		double epsilon = 0.00005;						// tie-breaking threshold
 		boolean decreasing = true;						// decreasing MV in Menezes valuation
+		boolean discretize_value = false;
+		double v_precision = 0.001;
 
 		// simulation parameters
 		int no_initial_simulations = 1000000/no_agents;	// generating initial PP		
 		int no_iterations = 20;								// no. of Wellman updates 
-		int no_per_iteration = 100000/no_agents;			// no. of games played in each Wellman iteration		
+		int no_per_iteration = 500000;			// no. of games played in each Wellman iteration		
 		double cmp_precision = 0.01;						// discretization step for valuation examining
 		int no_for_cmp = (int) (1/cmp_precision) + 1;
 		int no_for_EUdiff = 10000;							// no. of points for EU comparison
 		int price_lags = 3;									// compute epsilon factor for PPs different up to "price_lags" iterations apart
-
 		
 		boolean take_log = false;						// record prices for agents
 		boolean record_prices = false;					// record prices for seller		
-		boolean print_strategy = true;				// Output strategy S(t)
+		boolean print_strategy = true;					// Output strategy S(t)
 		boolean compute_epsilon = false;					// Compute epsilon factors and output
 
 		
@@ -61,7 +62,7 @@ public class FullCondSCPoly {
 					
 				// initiate agents for later bid comparison
 				MenezesValue value = new MenezesValue(max_value, rng, decreasing);
-				FullCondMDPAgent3 mdp_agent = new FullCondMDPAgent3(value, 1, preference, epsilon);
+				FullCondMDPAgent4 mdp_agent = new FullCondMDPAgent4(value, 1, preference, epsilon, discretize_value, v_precision);
 		
 				// initiate tools to compare strategies
 				double[] v = new double[no_for_cmp]; 		
@@ -73,8 +74,7 @@ public class FullCondSCPoly {
 			for (int i = 0; i < no_for_cmp; i++) {
 				poly_agents[0].valuation.x = v[i];
 				strategy[0][i] = poly_agents[0].getBid(0);
-			}
-	
+			}	
 			
 			// 2) Wellman updates
 			for (int it = 0; it < no_iterations; it++) {
@@ -82,16 +82,15 @@ public class FullCondSCPoly {
 				System.out.println("Wellman iteration = " + it);
 	
 				// 2.1) Do next iteration to generate a new PP
-				FullCondMDPAgent3[] mdp_agents = new FullCondMDPAgent3[no_agents];
+				FullCondMDPAgent4[] mdp_agents = new FullCondMDPAgent4[no_agents];
 				for (int i = 0; i < no_agents; i++) {
-					mdp_agents[i] = new FullCondMDPAgent3(new MenezesValue(max_value, rng, decreasing), i, preference, epsilon);
+					mdp_agents[i] = new FullCondMDPAgent4(new MenezesValue(max_value, rng, decreasing), i, preference, epsilon, discretize_value, v_precision);
 					mdp_agents[i].setCondJointDistribution(PP[it]);
 				}
 				SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
 				
-				// generate a new pp
-				PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration,take_log,record_prices,false);
-				
+				// generate a new pp XXX: changed here
+				PP[it+1] = jcf.offPolicySymmetricReal(updating_auction, no_per_iteration);
 	
 				// 2.2) Compare: how different are we from previous step? output bids. 
 				if (print_strategy == true) {
@@ -114,8 +113,7 @@ public class FullCondSCPoly {
 	
 			// output each step's strategy
 			if (print_strategy == true){
-				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/uniform/onpolicy_poly" + order + "_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
-//				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/updates/poly" + order + "_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
+				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/uniform/poly" + order + "_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
 				for (int i = 0; i < strategy.length; i++){
 					for (int j = 0; j < strategy[i].length - 1; j++){
 						fw_strat.write(strategy[i][j] + ",");
@@ -128,9 +126,8 @@ public class FullCondSCPoly {
 			// Compute PP distances and output
 			if (compute_epsilon == true) {
 				System.out.println("computing price distances...");
-	
-				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/updates/poly" + order + "_EUdiff_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
-
+				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/uniform/poly" + order + "_EUdiff_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
+			
 				EpsilonFactor ef = new EpsilonFactor(no_goods);
 				// compute distance with future BR PPs, not past ones
 				for (int it = 0; it < PP.length - price_lags; it++){

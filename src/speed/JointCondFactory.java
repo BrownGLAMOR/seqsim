@@ -19,6 +19,44 @@ public class JointCondFactory extends Thread {
 		this.max_price = max_price;
 	}
 	
+	// Uniform off-policy updates with symmetric strategy profile, and differentiating prices from hobs
+	public JointCondDistributionEmpirical offPolicySymmetricReal(SeqAuction auction, int no_simulations) throws IOException {	
+		
+		// Set agents
+		SeqAgent[] agents = new SeqAgent[auction.no_agents];
+		agents[0] = new RandomSeqAgent(0, max_price, precision, new SimpleValue(no_goods));
+		for (int i = 1; i < auction.no_agents; i++)
+			agents[i] = auction.agents[i];
+		
+		// Create JCDE -- from agent[0]'s perspective
+		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price, false);		
+		boolean[] w = new boolean[no_goods];
+		for (int j = 0; j<no_simulations; j++) {
+			
+			// Cause each agent to take on a new valuation by calling reset() on their valuation function
+			for (int k = 1; k<agents.length; k++)
+				agents[k].v.reset();
+		
+			// Play the auction. This will call the agent's reset(), which will cause MDP to be recomputed.
+			// so long as the agent's reset() function calls its computeMDP().
+			auction.play(true, null);		// true=="quiet mode", null=="don't write to disk"
+			
+			// Add results from agent[0] to PP distribution
+			for (int l = 0; l < no_goods; l++) {
+				if (auction.winner[l] == 0)
+					w[l] = true;
+				else
+					w[l] = false;
+			jcde.populateReal(w,auction.price,auction.hob[0]);
+
+			}
+		}
+		
+		jcde.normalize();		
+		return jcde;
+	}
+
+	
 	// Really differentiating prices and hobs.  
 	public JointCondDistributionEmpirical simulAllAgentsOneRealPP(SeqAuction auction, int no_simulations, boolean take_log, boolean record_prices, boolean record_utility) throws IOException {	
 		
@@ -67,15 +105,13 @@ public class JointCondFactory extends Thread {
 //				System.out.print("agent " + k + ": w = [");
 //				for (int i = 0; i < w.length; i++)
 //					System.out.print(w[i] + " ");
-//				System.out.print("]. fp = ");
-//				for (int i = 0; i < auction.fp.length; i++)
-//					System.out.print(auction.fp[i] + " ");
+//				System.out.print("]. price= ");
+//				for (int i = 0; i < auction.price.length; i++)
+//					System.out.print(auction.price[i] + " ");
 //				System.out.print("]. . hob = ");
 //				for (int i = 0; i < auction.hob[k].length; i++)
 //					System.out.print(auction.hob[k][i] + " ");
 //				System.out.println();
-
-				//				jcde.populate(w,auction.hob[k]);
 
 				// record utility
 				if (record_utility == true) {

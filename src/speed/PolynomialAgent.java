@@ -17,7 +17,7 @@ public class PolynomialAgent extends SeqAgent {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
 		this.valuation = valuation;
-		this.x = valuation.getValue(1);
+//		this.x = valuation.getValue(1);
 		this.order = order;
 	}
 	

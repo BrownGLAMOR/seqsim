@@ -184,8 +184,6 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	
 	// Distinguish b/w prices & highest opponent bids. 
 	public void populateReal(boolean[] winner, double[] prices, double[] hob) {
-//		if (past.r.d.length != no_goods || past.w.d.length != no_goods)
-//			throw new RuntimeException("length of realized price/winner vector must == no_goods");
 		
 //		// Store indices, not WRs
 //		if (take_log == true)
@@ -273,30 +271,10 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				double[] p1 = jcde1.getPMF(wr);
 				// take weighted average
 
-//				if (p0.length == p1.length){
-//					System.out.println("length is the same.");
-//				}
-//				
-//				System.out.print("p0 before = [");
-//				for (int j = 0; j < p0.length; j++)
-//					System.out.print(p0[j] + ",");
-//				System.out.println("]");
-//				
-//				System.out.print("p1 before = [");
-//				for (int j = 0; j < p1.length; j++)
-//					System.out.print(p1[j] + ",");
-//				System.out.println("]");
-
 				for (int j = 0; j < p0.length; j++)
 					p0[j] = (w*p0[j] + p1[j])/(1+w);
 
-//				System.out.print("p0 after = [");
-//				for (int j = 0; j < p0.length; j++)
-//					System.out.print(p0[j] + ",");
-//				System.out.println("]\n");
 			}
-			
-
 			}
 //		normalize();
 		}
