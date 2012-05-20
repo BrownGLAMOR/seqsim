@@ -5,17 +5,15 @@ import java.io.IOException;
 // Play agent[0] against others and measure its utility 
 public class EpsilonFactor2 {
 
-	int no_goods;
 	double[] utility;
 	
-	public EpsilonFactor2(int no_goods) throws IOException {				
-		this.no_goods = no_goods;
+	public EpsilonFactor2() throws IOException {				
 	}
 
 	// Calculate the first agent's utility against the others 
 	public void StrategyDistance(SeqAuction auction, int no_iters) throws IOException{
 		
-		SeqAgent[] agents = auction.agents;		
+		SeqAgent[] agents = auction.agents;
 		double[] utility = new double[no_iters];
 		this.utility = utility;
 		

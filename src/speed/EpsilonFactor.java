@@ -17,7 +17,7 @@ public class EpsilonFactor {
 		this.no_goods = no_goods;
 	}
 
-	// Calculates the epsilon factor from Q to P: E(S^P|P) - E(S^Q|P) 
+	// Calculates the epsilon factor from s^t to s^{t+1}: E(s^{t+1}|P^t) - E(s^t|P^t) 
 	public void jcdeDistance(Random rng, JointCondDistributionEmpirical P, JointCondDistributionEmpirical Q, Value v, int no_iterations) throws IOException{
 		
 		// pass the same valuation, but set different PPs
