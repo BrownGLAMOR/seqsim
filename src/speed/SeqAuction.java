@@ -70,6 +70,7 @@ public class SeqAuction {
 	// play the auction. it is safe to re-play the auction as many times as one wishes.
 	// the results are available in the public memory variables: bids, prices, hob, winner, etc.
 	
+
 	// if quiet == true, then no diagnostic output is sent to the screen
 	// if fw is non-null, then the FileWriter is appended with the data from this round
 	public void play(boolean quiet, FileWriter fw) throws IOException {

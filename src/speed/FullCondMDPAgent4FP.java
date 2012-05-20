@@ -139,7 +139,7 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 		    		}
 		    		Q[i] = temp2;
 	    		}
-    			
+/*    			
     			// Print Q values TODO: to remove
     			if (v.getValue(1) == 0.8 && winner.getSum() == 0 && realized.d[0]*jcde.precision > 0.28){
 //    				System.out.println("\nunder wr = " + "(" + wr.w.getSum()  + "," + wr.r.d[0] +  ")");
@@ -159,7 +159,7 @@ public class FullCondMDPAgent4FP extends SeqAgent {
 
 //    				System.out.println("]");
     			}
-    			
+*/
     			// just choose the best one
     			if (preference == 0){
     					V[t].put(wr, Q[max_idx]);

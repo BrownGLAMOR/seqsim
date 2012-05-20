@@ -7,7 +7,7 @@ import java.util.Random;
 // Do self-confirming smoothed updates initiated from Polynomial strategies, using Menezes decreasing valuation. 
 // First try 2 rounds and then 3 rounds. 
 
-public class SCPoly_smoothed_FP {
+public class SCPoly_smoothed_SP {
 	public static void main(String[] args) throws IOException {
 		Cache.init();
 		Random rng = new Random();
@@ -19,7 +19,7 @@ public class SCPoly_smoothed_FP {
 		double max_price = max_value;
 		int no_goods = 2;
 		int no_agents = 5;
-		int nth_price = 1;
+		int nth_price = 2;
 		
 		// simulation parameters
 		int no_initial_simulations = 100000/no_agents;	// generating initial PP		
@@ -27,13 +27,13 @@ public class SCPoly_smoothed_FP {
 		int no_per_iteration = 100000/no_agents;			// no. of games played in each Wellman iteration
 		
 		// Cooling scheme
-		double[] ORDER = new double[] {3.0};
+		double[] ORDER = new double[] {1.0};
 		double gamma_0 = 900.0, gamma_end = 1000.0;						// target \gamma values
-		double[] gamma = new double[] {gamma_0, gamma_0};						// initial
+		double gamma = gamma_0;						// initial
 		double alpha = (gamma_end-gamma_0)/Math.log(T), beta = Math.pow(T, gamma_0/(gamma_end-gamma_0));	// corresponding parameters
-		double[][] GAMMA = new double[T][no_goods];
+		double[] GAMMA = new double[T];
 		for (int t = 0; t < T; t++)
-			GAMMA[t] = new double[]{alpha*Math.log(beta*(t+1)), alpha*Math.log(beta*(t+1))};
+			GAMMA[t] = alpha*Math.log(beta*(t+1));
 
 		// agent preferences
 		int preference = 0;					// For simple MDP Agents' tie breaking
@@ -52,8 +52,8 @@ public class SCPoly_smoothed_FP {
 		boolean print_strategy = true;					// Output strategy S(t)
 		boolean compute_epsilon = true;					// Compute epsilon factors and output
 		boolean record_utility = false;
-//		if (compute_epsilon == true)
-//			record_utility = true;
+		if (compute_epsilon == true)
+			record_utility = true;
 		
 		for (int o = 0; o < ORDER.length; o++) {
 			
@@ -83,17 +83,17 @@ public class SCPoly_smoothed_FP {
 			
 				// initiate agents for later bid comparison
 				MenezesValue value = new MenezesValue(max_value, rng, decreasing);
-				MDPAgentFP_smoothed mdp_agent = new MDPAgentFP_smoothed(value, 1, gamma, discretize_value, v_precision);
-//				FullCondMDPAgent4FP mdp_agent = new FullCondMDPAgent4FP(value, 1, preference, epsilon, discretize_value, v_precision);
+//				MDPAgentSP_smoothed mdp_agent = new MDPAgentSP_smoothed(value, 1, gamma, discretize_value, v_precision);
+				FullCondMDPAgent4 mdp_agent = new FullCondMDPAgent4(value, 1, preference, epsilon, discretize_value, v_precision);
 				
 				// initiate updating tools
-				MDPAgentFP_smoothed[] mdp_agents = new MDPAgentFP_smoothed[no_agents];	//XXX: change
-				for (int i = 0; i < no_agents; i++)
-					mdp_agents[i] = new MDPAgentFP_smoothed(new MenezesValue(max_value, rng, decreasing), 1, gamma, discretize_value, v_precision);
-
-//				FullCondMDPAgent4FP[] mdp_agents = new FullCondMDPAgent4FP[no_agents];
+//				MDPAgentSP_smoothed[] mdp_agents = new MDPAgentSP_smoothed[no_agents];	//XXX: change
 //				for (int i = 0; i < no_agents; i++)
-//					mdp_agents[i] = new FullCondMDPAgent4FP(new MenezesValue(max_value, rng, decreasing), 1, preference, epsilon, discretize_value, v_precision);
+//					mdp_agents[i] = new MDPAgentSP_smoothed(new MenezesValue(max_value, rng, decreasing), 1, gamma, discretize_value, v_precision);
+
+				FullCondMDPAgent4[] mdp_agents = new FullCondMDPAgent4[no_agents];
+				for (int i = 0; i < no_agents; i++)
+					mdp_agents[i] = new FullCondMDPAgent4(new MenezesValue(max_value, rng, decreasing), 1, preference, epsilon, discretize_value, v_precision);
 				
 				SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
 				
@@ -116,7 +116,7 @@ public class SCPoly_smoothed_FP {
 	
 				// Set new gamma and PPs
 				for (int i = 0; i < no_agents; i++){
-					mdp_agents[i].setGamma(GAMMA[it]);	// XXX: change
+//					mdp_agents[i].setGamma(GAMMA[it]);	// XXX: change
 					mdp_agents[i].setCondJointDistribution(PP[it]);
 				}
 				
@@ -150,7 +150,7 @@ public class SCPoly_smoothed_FP {
 	
 			// output strategies from each iteration
 			if (print_strategy == true){
-				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/smoothed/poly" + order + "_" + no_agents + "_" + precision + "_" + T + ".csv");
+				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/smoothed/SPpolycmp" + order + "_" + no_agents + "_" + precision + "_" + T + ".csv");
 				for (int i = 0; i < strategy.length; i++){
 					for (int j = 0; j < strategy[i].length - 1; j++){
 						fw_strat.write(strategy[i][j] + ",");
@@ -163,34 +163,30 @@ public class SCPoly_smoothed_FP {
 			// Compute epsilons and output
 			if (compute_epsilon == true) {
 				System.out.println("computing price distances...");
-				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/smoothed/poly_epsilon" + order + "_" + no_agents + "_" + precision + "_" + T + ".csv");
+				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/smoothed/SPpolycmp_epsilon" + order + "_" + no_agents + "_" + precision + "_" + T + ".csv");
 			
 				// initiate comparison tools
 				EpsilonFactor2 ef = new EpsilonFactor2();
 
-				// Bid optimal values for comparison
-				SeqAgent[] cmp_agents = new SeqAgent[no_agents];
-				for (int k = 0; k < no_agents; k++)
-					cmp_agents[k] = new FullCondMDPAgent4FP(new MenezesValue(max_value, rng, decreasing), 1, preference, epsilon, discretize_value, v_precision);
-
-//				FullCondMDPAgent4FP[] cmp_agents = new FullCondMDPAgent4FP[no_agents];
+//				MDPAgentSP_smoothed[] cmp_agents = new MDPAgentSP_smoothed[no_agents];		// XXX: change
+//					// use final GAMMA
 //				for (int k = 0; k < no_agents; k++)
-//					cmp_agents[k] = new FullCondMDPAgent4FP(new MenezesValue(max_value, rng, decreasing), 1, preference, epsilon, discretize_value, v_precision);
+//					cmp_agents[k] = new MDPAgentSP_smoothed(new MenezesValue(max_value, rng, decreasing), k, GAMMA[GAMMA.length-1], discretize_value, v_precision);
+
+				FullCondMDPAgent4[] cmp_agents = new FullCondMDPAgent4[no_agents];
+				for (int k = 0; k < no_agents; k++)
+					cmp_agents[k] = new FullCondMDPAgent4(new MenezesValue(max_value, rng, decreasing), 1, preference, epsilon, discretize_value, v_precision);
 				
 				SeqAuction cmp_auction = new SeqAuction(cmp_agents, nth_price, no_goods);
 				
 				// compute distance with future BR PPs, not past ones
 				for (int it = 0; it < PP.length - 1; it++){
 
-					// \sigma^t against \sigma^t
-					for (int k = 0; k < no_agents; k++)
-						cmp_agents[k].setCondJointDistribution(PP[it]);
-					ef.StrategyDistance(cmp_auction, no_for_EUdiff);
-					means[0][it] = Statistics.mean(ef.utility);
-					stdevs[0][it] = Statistics.stdev(ef.utility);
-
 					// \sigma^{t+1} against \sigma^t
-					cmp_agents[0].setCondJointDistribution(PP[it+1]);					
+					cmp_agents[0].setCondJointDistribution(PP[it+1]);
+					for (int k = 1; k < no_agents; k++)
+						cmp_agents[k].setCondJointDistribution(PP[it]);
+					
 					ef.StrategyDistance(cmp_auction, no_for_EUdiff);
 					means[1][it] = Statistics.mean(ef.utility);
 					stdevs[1][it] = Statistics.stdev(ef.utility);
