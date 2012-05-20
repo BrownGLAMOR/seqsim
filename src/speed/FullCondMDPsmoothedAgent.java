@@ -318,7 +318,42 @@ public class FullCondMDPsmoothedAgent extends SeqAgent {
 			realized.d[i] = JointDistributionEmpirical.bin(input_realized[i], jcde.precision);
 		
 		// Get optimal bid
-		return pi[good_id].get(new WinnerAndRealized(winner, realized));
+		// if last round, Get optimal bid
+		if (good_id == no_goods-1)
+			return pi[good_id].get(new WinnerAndRealized(winner, realized));
+		// Otherwise, smoothed bids 
+		else{
+			
+			tmp_Q = Q[good_id].get(new WinnerAndRealized(winner, realized));
+
+//			System.out.print("tmp_Q = [");
+//			for (int i = 0; i < tmp_Q.length; i++)
+//				System.out.print(tmp_Q[i] + ",");
+//			System.out.println("]");
+
+			// compute cumulative exp(\gamma*Q) 
+			cum_value[0] = java.lang.Math.exp(gamma*tmp_Q[0]);
+			for (int i = 1; i < tmp_Q.length; i++)
+				cum_value[i] = cum_value[i-1] + java.lang.Math.exp(gamma*tmp_Q[i]);
+			
+//			System.out.print("cum_value = [");
+//			for (int i = 0; i < cum_value.length; i++)
+//				System.out.print(cum_value[i] + ",");
+//			System.out.println("]");
+						
+			// Randomly choose
+			double r = Math.random()*cum_value[cum_value.length-1];
+			int idx = 0;
+			boolean reached = false;
+			while (reached == false){
+				if (r <= cum_value[idx])
+					reached = true;
+				else
+					idx++;
+			}
+//			System.out.println("r = " + r + ", so idx = " + idx + ", b[idx] = " + b[idx]);
+			return b[idx];
+		}
 	}
 	
 	@Override
@@ -335,43 +370,18 @@ public class FullCondMDPsmoothedAgent extends SeqAgent {
 		}
 		
 		// figure out realized prices
-		realized = tmp_r[good_id];
-		for (int i = 0; i < realized.d.length; i++)
-			realized.d[i] = JointDistributionEmpirical.bin(auction.hob[agent_idx][i], jcde.precision);
+		double[] realized = new double[good_id];		
+		for (int i = 0; i < realized.length; i++)
+			realized[i] = auction.price[i];
 		
-		// if last round, Get optimal bid
-		if (good_id == no_goods-1)
-			return pi[good_id].get(new WinnerAndRealized(winner, realized));
-		// XXX Otherwise, smoothed bids 
-		else{
-			tmp_Q = Q[good_id].get(new WinnerAndRealized(winner, realized));
-
-			// compute cumulative exp(\gamma*Q) 
-			cum_value[0] = java.lang.Math.exp(gamma*tmp_Q[0]);
-			for (int i = 1; i < tmp_Q.length; i++)
-				cum_value[i] = cum_value[i-1] + java.lang.Math.exp(gamma*tmp_Q[i]);
-			
-			// Randomly choose
-			double r = Math.random()*cum_value[cum_value.length-1];
-			int idx = 0;
-			boolean reached = false;
-			while (reached == false){
-				if (r <= cum_value[idx])
-					reached = true;
-				else
-					idx++;
-			}
-			return b[idx];
-				
-			
-		}
-			
+		return getBid(good_id, winner.d, realized);
 	}
 	
 	// helpers. these may cheat.
 	public double getFirstRoundBid() {
 		// no goods won. good_id == 0. tmp_r[0] is a special global for good 0. 
-		return pi[0].get(new WinnerAndRealized(new BooleanArray(new boolean[] {}) {},new IntegerArray(new int[] {}) ));
+//		return pi[0].get(new WinnerAndRealized(new BooleanArray(new boolean[] {}) {},new IntegerArray(new int[] {}) ));
+		return getBid(0, new boolean[] {}, new double[] {});
 	}
 	
 	public double getIntermediateRoundBid(WinnerAndRealized wr) {
@@ -405,23 +415,20 @@ public class FullCondMDPsmoothedAgent extends SeqAgent {
 		double max_price = max_value;
 		
 		int no_goods = 2;
-		int no_agents = 2;
+		int no_agents = 3;
 		int nth_price = 2;
 
 		int no_simulations = 10000000/no_agents;		// run how many games to generate PP. this gets multiplied by no_agents later.		
-		int max_iterations = 1000;
+		int max_iterations = 10000;
 		
 		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
 
-		// Create agents
+		// Generate initial condition
 		KatzmanUniformAgent[] katz_agents = new KatzmanUniformAgent[no_agents];
 		for (int i = 0; i<no_agents; i++)
 			katz_agents[i] = new KatzmanUniformAgent(new KatzHLValue(no_agents-1, max_value, rng), no_agents, i);
-				
-		// Create auction
 		SeqAuction katz_auction = new SeqAuction(katz_agents, nth_price, no_goods);
 
-		// Generate initial condition
 		System.out.print("Generating initial PP from katzman agents...");
 //		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOneRealPP(katz_auction, no_simulations,false,false,false);
 		JointCondDistributionEmpirical pp = jcf.simulAllAgentsOnePP(katz_auction,no_simulations,false,false,false);
@@ -433,23 +440,29 @@ public class FullCondMDPsmoothedAgent extends SeqAgent {
 		KatzHLValue value = new KatzHLValue(no_agents-1, max_value, rng);
 		
 		// initial agents for comparison
-		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, no_agents, 0);
-		FullCondMDPAgent4 mdp_agent = new FullCondMDPAgent4(value, 1, preference, epsilon, false, 0.01);
+		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, no_agents, 0);		
+		double gamma = 10.0;
+//		FullCondMDPAgent4 mdp_agent = new FullCondMDPAgent4(value, 1, preference, epsilon, false, 0.01);
+		FullCondMDPsmoothedAgent mdp_agent = new FullCondMDPsmoothedAgent(value, 1, gamma, false, 0.01);		
 
 		mdp_agent.setCondJointDistribution(pp);
 		
-		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/uniform/smoothed.csv");
+		FileWriter fw_play = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/uniform/testsmooth_" + gamma + ".csv");
+		
+		
+		mdp_agent.reset(null);		
 		
 		for (int iteration_idx = 0; iteration_idx < max_iterations; iteration_idx++) {			
 			// Have agents create their bidding strategy using the provided valuation
 			// (both agents share the SAME valuation)
-			katz_agent.reset(null);
-			mdp_agent.reset(null);
 			
+//			katz_agent.reset(null);
+//			mdp_agent.reset(null);
+
 			fw_play.write(value.getValue(1) + "," + value.getValue(2) + "," + katz_agent.getFirstRoundBid() + "," + mdp_agent.getFirstRoundBid() + "\n");
 			
 			// Draw new valuation for the next round
-			value.reset();
+//			value.reset();
 		}
 		
 		fw_play.close();
