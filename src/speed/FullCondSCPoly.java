@@ -4,7 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-// Do self-confirming updates initiated from Polynomial strategies, using Menezes decreasing valuation
+// OLD FILE: Do self-confirming updates initiated from Polynomial strategies, using Menezes decreasing valuation
 public class FullCondSCPoly {
 	public static void main(String[] args) throws IOException {
 		Cache.init();
@@ -23,10 +23,12 @@ public class FullCondSCPoly {
 		int preference = 0;								// MDP agent preference
 		double epsilon = 0.00005;						// tie-breaking threshold
 		boolean decreasing = true;						// decreasing MV in Menezes valuation
+		boolean discretize_value = false;
+		double v_precision = 0.0001;
 
 		// simulation parameters
 		int no_initial_simulations = 1000000/no_agents;	// generating initial PP		
-		int no_iterations = 20;								// no. of Wellman updates 
+		int no_iterations = 5;								// no. of Wellman updates 
 		int no_per_iteration = 100000/no_agents;			// no. of games played in each Wellman iteration		
 		double cmp_precision = 0.01;						// discretization step for valuation examining
 		int no_for_cmp = (int) (1/cmp_precision) + 1;
@@ -52,16 +54,21 @@ public class FullCondSCPoly {
 			JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
 			
 			// 1.1)	Create PP[0]
+			MenezesValue[] poly_values = new MenezesValue[no_agents];
 			PolynomialAgent[] poly_agents = new PolynomialAgent[no_agents];
-			for (int i = 0; i<no_agents; i++)
-				poly_agents[i] = new PolynomialAgent(new MenezesValue(max_value, rng, decreasing), no_agents, order);
+			for (int i = 0; i<no_agents; i++){
+				poly_values[i] = new MenezesValue(max_value, rng, decreasing);
+				poly_agents[i] = new PolynomialAgent(poly_values[i], no_agents, order);
+			}
 			SeqAuction poly_auction = new SeqAuction(poly_agents, nth_price, no_goods);
 			
 			PP[0] = jcf.simulAllAgentsOnePP(poly_auction, no_initial_simulations,take_log,record_prices,false);
 					
 				// initiate agents for later bid comparison
 				MenezesValue value = new MenezesValue(max_value, rng, decreasing);
-				FullCondMDPAgent3 mdp_agent = new FullCondMDPAgent3(value, 1, preference, epsilon);
+//				FullCondMDPAgent3 mdp_agent = new FullCondMDPAgent3(value, 1, preference, epsilon);
+				FullCondMDPAgent4 mdp_agent = new FullCondMDPAgent4(value, 1, preference, epsilon, discretize_value, v_precision);
+
 		
 				// initiate tools to compare strategies
 				double[] v = new double[no_for_cmp]; 		
@@ -71,7 +78,7 @@ public class FullCondSCPoly {
 			
 			// 1.2)	Record initial strategy
 			for (int i = 0; i < no_for_cmp; i++) {
-				poly_agents[0].valuation.x = v[i];
+				poly_values[0].x = v[i];
 				strategy[0][i] = poly_agents[0].getBid(0);
 			}
 	
@@ -82,9 +89,14 @@ public class FullCondSCPoly {
 				System.out.println("Wellman iteration = " + it);
 	
 				// 2.1) Do next iteration to generate a new PP
-				FullCondMDPAgent3[] mdp_agents = new FullCondMDPAgent3[no_agents];
+//				FullCondMDPAgent3[] mdp_agents = new FullCondMDPAgent3[no_agents];
+//				for (int i = 0; i < no_agents; i++) {
+//					mdp_agents[i] = new FullCondMDPAgent3(new MenezesValue(max_value, rng, decreasing), i, preference, epsilon);
+//					mdp_agents[i].setCondJointDistribution(PP[it]);
+//				}
+				FullCondMDPAgent4[] mdp_agents = new FullCondMDPAgent4[no_agents];
 				for (int i = 0; i < no_agents; i++) {
-					mdp_agents[i] = new FullCondMDPAgent3(new MenezesValue(max_value, rng, decreasing), i, preference, epsilon);
+					mdp_agents[i] = new FullCondMDPAgent4(new MenezesValue(max_value, rng, decreasing), 1, preference, epsilon, discretize_value, v_precision);
 					mdp_agents[i].setCondJointDistribution(PP[it]);
 				}
 				SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);
@@ -114,7 +126,7 @@ public class FullCondSCPoly {
 	
 			// output each step's strategy
 			if (print_strategy == true){
-				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/uniform/onpolicy_poly" + order + "_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
+				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/old_agent4_" + order + "_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
 //				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/updates/poly" + order + "_" + no_agents + "_" + precision + "_" + no_iterations + ".csv");
 				for (int i = 0; i < strategy.length; i++){
 					for (int j = 0; j < strategy[i].length - 1; j++){

@@ -36,7 +36,7 @@ public class FullCondSCMenezes {
 		boolean take_log = false;						// record prices for agents
 		boolean record_prices = false;					// record prices for seller		
 		boolean print_strategy = true;				// Output strategy S(t)
-		boolean compute_epsilon = true;					// Compute epsilon factors and output
+		boolean compute_epsilon = false;					// Compute epsilon factors and output
 		
 		// record all prices (to compute distances later)
 		JointCondDistributionEmpirical[] PP = new JointCondDistributionEmpirical[no_iterations+1];		
