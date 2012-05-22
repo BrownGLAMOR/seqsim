@@ -4,23 +4,21 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-// An agent who bids a power of his getValue(1) in each round; the power is given by user for each round 
-// For example, in 3 round auction, user specify order = double[] {0.5, 1.0, 2.0}
+// An agent who bids a power of marginal v in each round 
 
 public class PolynomialAgentMultiRound extends SeqAgent {
 
-	int agent_idx, no_goods;
-	UnitValue valuation;
+	int agent_idx, no_goods, goods_won;
+	Value valuation;
 	double x;
-	double[] order;
+	double order;
 	
-	public PolynomialAgentMultiRound(UnitValue valuation, int agent_idx, double[] order) {
+	public PolynomialAgentMultiRound(Value valuation, int agent_idx, int no_goods, double order) {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
 		this.valuation = valuation;
-		this.order = order;
-		
-		this.no_goods = order.length;
+		this.order = order;		
+		this.no_goods = no_goods;
 	}
 	
 	@Override
@@ -28,23 +26,27 @@ public class PolynomialAgentMultiRound extends SeqAgent {
 		this.auction = auction;
 	}
 	
+	// Return bids
+	public double getBid(int good_id, int goods_won){
+		// Bid truthfully in the last round
+		if (good_id == no_goods-1)
+			return valuation.getValue(goods_won+1)-valuation.getValue(goods_won);
+		// Bid a power of marginal value in earlier rounds
+		else
+			return Math.pow(valuation.getValue(goods_won+1)-valuation.getValue(goods_won),order);
+	}
+	
 	@Override
 	public double getBid(int good_id) {
-		// Bid "truthfully" in the second round
 		
-		// if won something already, stop playing
-		boolean still_playing = true;
+		// Figure out number of things won
+		goods_won = 0;
 		for (int i = 0; i < good_id; i++){
 			if (auction.winner[i] == agent_idx)
-				still_playing = false;
+				goods_won++;
 		}
 		
-		if (still_playing == true){
-			this.x = valuation.getValue(1);
-			return java.lang.Math.pow(x,order[good_id]);
-		}else{
-			return 0.0;
-		}
+		return getBid(good_id, goods_won);
 	}
 	
 	// Testing
@@ -52,28 +54,21 @@ public class PolynomialAgentMultiRound extends SeqAgent {
 
 		// general parameters
 		double max_value = 1.0;
-		int no_agents = 2;
 		int no_goods = 3;
-		double[] order = {0.5, 1.0, 2.0};
+		double order = 1.0;
+		
+		boolean decreasing = true;
+		Random rng = new Random();
 		
 		// create agent
-		PolynomialAgentMultiRound poly_agent = new PolynomialAgentMultiRound(new UnitValue(max_value, new Random()), no_agents, order);
+		MenezesMultiroundValue v = new MenezesMultiroundValue(max_value, rng, decreasing);
+		PolynomialAgentMultiRound agent = new PolynomialAgentMultiRound(v, 0, no_goods, order);
 
-		// initiate memory to store strategy function
-		double cmp_precision = 0.2;
-		int no_for_cmp = (int) (1/cmp_precision) + 1;
-		double[] v = new double[no_for_cmp]; 		
-		for (int i = 0; i < no_for_cmp; i++)
-			v[i] = i*cmp_precision;
+		// check if bidding is right
+		v.reset();
+		System.out.println("decreasing scheme: MV(0,1,2,3^rd goods) = [" + v.getValue(0) + "," + (v.getValue(1)-v.getValue(0)) + "," + (v.getValue(2)-v.getValue(1)) + "," + (v.getValue(3)-v.getValue(2)) + "]");
+		System.out.println("marginal bids: getBid(0,0) = " + agent.getBid(0,0) + ", getBid(1,0) = " + agent.getBid(1,0) + ", getBid(1,1) = " + agent.getBid(1,1));
+		System.out.println("getBid(2,0) = " + agent.getBid(2,0) + ", getBid(2,1) = " + agent.getBid(2,1) + ", getBid(2,2) = " + agent.getBid(2,2));
 		
-		// Record strategy
-		for (int i = 0; i < no_for_cmp; i++) {
-			poly_agent.valuation.x = v[i];
-			System.out.println(poly_agent.valuation.getValue(1) + " " + poly_agent.getBid(0) + " " + poly_agent.getBid(1) + " "+ poly_agent.getBid(2));
-		}
-		
-		
-		System.out.println("done");
-
 	}
 }

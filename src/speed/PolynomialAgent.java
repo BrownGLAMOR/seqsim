@@ -49,7 +49,8 @@ public class PolynomialAgent extends SeqAgent {
 		boolean decreasing = true;
 		
 		// create agent
-		PolynomialAgent poly_agent = new PolynomialAgent(new MenezesValue(max_value, new Random(), decreasing), no_agents, order);
+		MenezesValue value = new MenezesValue(max_value, new Random(), decreasing);
+		PolynomialAgent poly_agent = new PolynomialAgent(value, no_agents, order);
 
 		// initiate memory to store strategy function
 		double cmp_precision = 0.01;
@@ -61,11 +62,7 @@ public class PolynomialAgent extends SeqAgent {
 		
 		// Record strategy
 		for (int i = 0; i < no_for_cmp; i++) {
-			poly_agent.valuation.x = v[i];
-//			if (decreasing == true)
-//				poly_agent.valuation.delta_x = v[i] + v[i]*v[i];
-//			else
-//				poly_agent.valuation.delta_x = v[i] + java.lang.Math.sqrt(v[i]);
+			value.x = v[i];
 			System.out.println(poly_agent.valuation.getValue(1) + " " + poly_agent.getBid(0) + " " + java.lang.Math.pow(poly_agent.valuation.getValue(1), order));
 			strategy[i] = poly_agent.getBid(0);
 		}

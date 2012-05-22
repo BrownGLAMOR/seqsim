@@ -15,12 +15,16 @@ public class Cache {
 	// Cache: store MDP policies. map: v_id --> pi(v_id)
 	static HashMap<Integer,HashMap<WinnerAndRealized, Double>[]> MDPpolicies;
 	
+	// Cache: store Q values. map: v_id --> Q(v_id)
+	static HashMap<Integer, HashMap<WinnerAndRealized, double[]>[]> Qs;
+	
 	// Call when moving on to next Wellman iteration
 	static void clearMDPpolicy(){
 		MDPpolicies.clear();
+		Qs.clear();
 	}
 	
-	// Is the MDP policy for this v_id already calculated? 
+	// Is the MDP policy for this v_id already calculated? Can also use to know if Q map is available  
 	static boolean hasMDPpolicy(int v_id){
 		return MDPpolicies.containsKey(v_id);
 	}
@@ -29,12 +33,21 @@ public class Cache {
 	static HashMap<WinnerAndRealized, Double>[] getMDPpolicy(int v_id){
 		return MDPpolicies.get(v_id);
 	}
+
+	// get Q map
+	static HashMap<WinnerAndRealized, double[]>[] getQ(int v_id){
+		return Qs.get(v_id);
+	}
 	
 	// store MDP policy computed by agent
 	static void storeMDPpolicy(int v_id, HashMap<WinnerAndRealized, Double>[] pi){
 		MDPpolicies.put(v_id, pi);
 	}
 
+	// store Q map computed by agent
+	static void storeQ(int v_id, HashMap<WinnerAndRealized, double[]>[] Q){
+		Qs.put(v_id, Q);
+	}
 	
 	// CACHE: store all possible WinnerAndRealized, and map them back and forth into indices
 	static Set<WinnerAndRealized> allWR;
@@ -158,9 +171,10 @@ public class Cache {
 	@SuppressWarnings("unchecked")
 	public static void init() {
 		
-		// All MDP policies
+		// All MDP policies and Q maps
 		MDPpolicies = new HashMap<Integer,HashMap<WinnerAndRealized, Double>[]>();
-		
+		Qs = new HashMap<Integer,HashMap<WinnerAndRealized, double[]>[]>();
+
 		// Mapping between WinnerAndRealized and indices
 		allWR = new HashSet<WinnerAndRealized>();
 		WR2idx = new HashMap<WinnerAndRealized,Integer>();

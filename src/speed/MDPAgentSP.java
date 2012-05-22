@@ -19,6 +19,7 @@ public class MDPAgentSP extends SeqAgent {
 	
 	// computational variables
 	int price_length;
+	int v_id;				// a number that summarizes valuation 
 	double optimal_bid, temp, winning_prob;
 	IntegerArray realized, realized_plus;
 	BooleanArray winner, winner_plus;
@@ -40,8 +41,9 @@ public class MDPAgentSP extends SeqAgent {
 	WinnerAndRealized wr, wr_plus;
 
 	// preference variables
+	boolean discretize_value;
 	int preference;
-	double epsilon, rho;
+	double epsilon, rho, v_precision;
 	double[] GAMMA;
 	
 	// make sure things are inputted
@@ -50,9 +52,11 @@ public class MDPAgentSP extends SeqAgent {
 	// greedy + epsilon:
 	// preference = {-1,0,1,2}, each representing: favor lower bound, choose highest, favoring upper bound, favor random mixing.
 	// preference = {3,4}: Boltzman softmaxing, add uniform mixture
-	public MDPAgentSP(Value valuation, int agent_idx, int preference) {
+	public MDPAgentSP(Value valuation, int agent_idx, int preference, boolean discretize_value, double v_precision) {
 		super(agent_idx, valuation);
 		this.preference = preference;
+		this.discretize_value = discretize_value;
+		this.v_precision = v_precision;
 	}
 	
 	// Allocate memory for MDP calculation
@@ -103,10 +107,6 @@ public class MDPAgentSP extends SeqAgent {
 	// Input parameter gamma (for preference = 3)
 	public void inputGamma(double[] GAMMA){
 		
-		// Sanity check
-//		if (GAMMA.length != jcde.no_goods)
-//			throw new RuntimeException("GAMMA.length must match jcde.no_goods");
-		
 		this.GAMMA = GAMMA;
 		this.gamma_ready = true;
 	}
@@ -145,8 +145,19 @@ public class MDPAgentSP extends SeqAgent {
 		
 		for (BooleanArray winner : Cache.getWinningHistory(t)) {
 			for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {				
-				wr = new WinnerAndRealized(winner, realized); 				// TODO: do we have to do a "new" here? 	    		
-				optimal_bid = v.getValue(winner.getSum()+1) - v.getValue(winner.getSum());
+				wr = new WinnerAndRealized(winner, realized);  	    		
+				
+				double value_if_win = v.getValue(winner.getSum()+1);
+				double value_if_lose = v.getValue(winner.getSum());
+				
+				// XXX: dv
+				if (discretize_value == true){
+					value_if_win = v_precision*legacy.DiscreteDistribution.bin(value_if_win,v_precision);
+					value_if_lose = v_precision*legacy.DiscreteDistribution.bin(value_if_lose,v_precision);
+				}
+
+				
+				optimal_bid = value_if_win - value_if_lose;
 	    		pi[t].put(wr, optimal_bid);
 				double[] condDist = jcde.getPMF(wr);
 				
@@ -293,7 +304,30 @@ public class MDPAgentSP extends SeqAgent {
 	@Override
 	public void reset(SeqAuction auction) {
 		this.auction = auction;		
-		computeFullMDP();
+		
+		if (discretize_value == true) {
+			
+			// Get strategy calculated in Cache if exist, or compute it and store it into Cache XXX: dv
+			this.v_id = legacy.DiscreteDistribution.bin(v.getValue(1), v_precision);
+			if (Cache.hasMDPpolicy(v_id) == true){
+				pi = Cache.getMDPpolicy(v_id);
+				
+				// print first round bids
+//				System.out.println("v_id = " + v_id + ", pi[0] = " + pi[0].get(new WinnerAndRealized(new BooleanArray(new boolean[] {}), new IntegerArray(new int[] {}))));
+				
+//				if (preference == 3)	// TODO: to also Cache
+//					Q = Cache.getQmap(v_id);
+				
+			}
+			else {
+				computeFullMDP();
+				Cache.storeMDPpolicy(v_id, pi);
+//				System.out.println("v_id = " + v_id + ", calculate MDP... ");
+			}
+		}
+		else{
+			computeFullMDP();
+		}
 	}
 
 	public void setCondJointDistribution(JointCondDistributionEmpirical jcde) {
