@@ -22,9 +22,9 @@ public class SCPoly_smoothed_SP {
 		int nth_price = 2;
 		
 		// simulation parameters
-		int no_initial_simulations = 100000000/no_agents;	// generating initial PP		
-		int T = 10;								// no. of Wellman updates 
-		int no_per_iteration = 100000;			// no. of games played in each Wellman iteration
+		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
+		int T = 20;								// no. of Wellman updates 
+		int no_per_iteration = 10000;			// no. of games played in each Wellman iteration
 		
 		// Cooling scheme
 		double[] ORDER = new double[] {1.0};
@@ -36,7 +36,7 @@ public class SCPoly_smoothed_SP {
 				GAMMA[t][i] = alpha*Math.log(beta*(t+1));
 		}
 		// agent preferences
-		String type = "g";								// type of updating procedure XXX
+		String type = "u";								// type of updating procedure XXX
 		int preference;
 		if (type == "s")
 			preference = 3;
@@ -44,13 +44,13 @@ public class SCPoly_smoothed_SP {
 			preference = 0;
 		
 		double epsilon = 0.0001;
-		boolean discretize_value = true;
+		boolean discretize_value = false;
 		double v_precision = 0.0001;
 
 		// evaluation parameters
 		double cmp_precision = 0.01;						// discretization step for valuation examining
 		int no_for_cmp = (int) (1/cmp_precision) + 1;
-		int no_for_EUdiff = no_per_iteration*no_agents;							// no. of points for EU comparison
+		int no_for_EUdiff = Math.min(no_per_iteration*no_agents,1000);							// no. of points for EU comparison XXX: restricted
 		double[][] means, stdevs;
 		
 		boolean take_log = false;						// record prices for agents
@@ -126,7 +126,7 @@ public class SCPoly_smoothed_SP {
 				// Set new gamma and PPs
 				for (int i = 0; i < no_agents; i++){
 					mdp_agents[i].setCondJointDistribution(PP[it]);
-					mdp_agents[i].inputGamma(GAMMA[it]);
+//					mdp_agents[i].inputGamma(GAMMA[it]);
 				}
 				
 				Cache.clearMDPpolicy();
@@ -135,7 +135,8 @@ public class SCPoly_smoothed_SP {
 				if (type == "u")
 					PP[it+1] = jcf.offPolicySymmetricReal(updating_auction, no_per_iteration);
 				else
-					PP[it+1] = jcf.simulAllAgentsOneRealPP(updating_auction, no_per_iteration/no_agents, take_log, record_prices, record_utility);
+					PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration/no_agents, take_log, record_prices, record_utility);
+//					PP[it+1] = jcf.simulAllAgentsOneRealPP(updating_auction, no_per_iteration/no_agents, take_log, record_prices, record_utility);
 	
 				// 2.2) output first round bids for comparison 
 				if (print_strategy == true) {
