@@ -23,7 +23,7 @@ public class FullCondSCPoly {
 		int preference = 0;								// MDP agent preference
 		double epsilon = 0.00005;						// tie-breaking threshold
 		boolean decreasing = true;						// decreasing MV in Menezes valuation
-		boolean discretize_value = false;
+		boolean discretize_value = true;
 		double v_precision = 0.0001;
 
 		// simulation parameters

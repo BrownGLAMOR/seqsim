@@ -20,7 +20,9 @@ public class Cache {
 	
 	// Call when moving on to next Wellman iteration
 	static void clearMDPpolicy(){
+//		System.out.print("MDPpolicies.size() = " + MDPpolicies.size() + "-->");
 		MDPpolicies.clear();
+//		System.out.println("MDPpolicies.size() = " + MDPpolicies.size());
 		Qs.clear();
 	}
 	

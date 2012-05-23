@@ -23,11 +23,12 @@ public class SCPoly_smoothed_SP {
 		
 		// simulation parameters
 		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
-		int T = 20;								// no. of Wellman updates 
-		int no_per_iteration = 10000;			// no. of games played in each Wellman iteration
+		int T = 10;								// no. of Wellman updates 
+//		int no_per_iteration = 10000;		// no. of games played in each Wellman iteration
+		int[] NO_PER_ITERATION = new int[]{100000};
 		
 		// Cooling scheme
-		double[] ORDER = new double[] {1.0};
+		double[] ORDER = new double[] {0.5,1.0,2.0};
 		double gamma_0 = 0.9, gamma_end = 1.0;						// target \gamma values
 		double alpha = (gamma_end-gamma_0)/Math.log(T), beta = Math.pow(T, gamma_0/(gamma_end-gamma_0));	// corresponding parameters
 		double[][] GAMMA = new double[T][no_goods];
@@ -36,21 +37,20 @@ public class SCPoly_smoothed_SP {
 				GAMMA[t][i] = alpha*Math.log(beta*(t+1));
 		}
 		// agent preferences
-		String type = "u";								// type of updating procedure XXX
+		String type = "g";								// type of updating procedure XXX
 		int preference;
 		if (type == "s")
 			preference = 3;
 		else
 			preference = 0;
 		
-		double epsilon = 0.0001;
-		boolean discretize_value = false;
-		double v_precision = 0.0001;
+		boolean discretize_value = true;
+		double v_precision = 0.00001;
 
 		// evaluation parameters
 		double cmp_precision = 0.01;						// discretization step for valuation examining
 		int no_for_cmp = (int) (1/cmp_precision) + 1;
-		int no_for_EUdiff = Math.min(no_per_iteration*no_agents,1000);							// no. of points for EU comparison XXX: restricted
+		int no_for_EUdiff = 10000;							// no. of points for EU comparison XXX: restricted
 		double[][] means, stdevs;
 		
 		boolean take_log = false;						// record prices for agents
@@ -59,6 +59,10 @@ public class SCPoly_smoothed_SP {
 		boolean compute_epsilon = true;					// Compute epsilon factors and output
 		boolean record_utility = false;
 		
+		for (int npi = 0; npi < NO_PER_ITERATION.length; npi++) {
+			
+			int no_per_iteration = NO_PER_ITERATION[npi];
+			
 		for (int o = 0; o < ORDER.length; o++) {
 			
 			double order = ORDER[o];
@@ -159,9 +163,9 @@ public class SCPoly_smoothed_SP {
 			if (print_strategy == true){
 
 				// Name output file
-				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/" + type + "_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + T + "_" + no_per_iteration + "pts.csv");
+				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/" + type + no_goods + "_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + T + "_" + no_per_iteration + "pts.csv");
 				if (preference == 3)
-					fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/" + type + "_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + T + "_gamma" + (int) gamma_end + "_" + no_per_iteration + "pts.csv");
+					fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/" + type + no_goods + "_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + T + "_gamma" + (int) gamma_end + "_" + no_per_iteration + "pts.csv");
 
 				// write first round bidding functions
 				for (int i = 0; i < strategy.length; i++){
@@ -179,9 +183,9 @@ public class SCPoly_smoothed_SP {
 				System.out.println("computing price distances...");
 				
 				// Name output file
-				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/" + type + "epsilon_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + T + "_" + no_per_iteration + "pts.csv");
+				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/" + type + no_goods + "epsilon_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + T + "_" + no_for_EUdiff + "pts.csv");
 				if (preference == 3)
-					fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/" + type + "epsilon_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + T + "_gamma" + (int) gamma_end + "_" + no_per_iteration + "pts.csv");			
+					fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/" + type + no_goods + "epsilon_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + T + "_gamma" + (int) gamma_end + "_" + no_for_EUdiff + "pts.csv");			
 				// initiate comparison tools
 				EpsilonFactor2 ef = new EpsilonFactor2();				
 				
@@ -196,23 +200,28 @@ public class SCPoly_smoothed_SP {
 				// compute distance with future BR PPs, not past ones
 				for (int it = 0; it < PP.length - 1; it++){
 
-					Cache.clearMDPpolicy();
+//					// \sigma^{t} against \sigma^t
+//					Cache.clearMDPpolicy();
+//					for (int k = 0; k < no_agents; k++)
+//						cmp_agents[k].setCondJointDistribution(PP[it]);					
+//					ef.StrategyDistance(cmp_auction, no_for_EUdiff);
+//					means[0][it] = Statistics.mean(ef.utility);
+//					stdevs[0][it] = Statistics.stdev(ef.utility);
+//					
+//					// \sigma^{t+1} against \sigma^t
+//					Cache.clearMDPpolicy();
+//					cmp_agents[0].setCondJointDistribution(PP[it+1]);
+//					ef.StrategyDistance(cmp_auction, no_for_EUdiff);
+//					means[1][it] = Statistics.mean(ef.utility);
+//					stdevs[1][it] = Statistics.stdev(ef.utility);
+					
+//					fw_EUdiff.write((means[1][it]-means[0][it]) + "," + ((Math.sqrt(stdevs[0][it]*stdevs[0][it] + stdevs[1][it]*stdevs[1][it]))/Math.sqrt(no_for_EUdiff)) + "\n");	// Assume additive stdev... 
+//					System.out.print((means[1][it]-means[0][it]) + "," + ((Math.sqrt(stdevs[0][it]*stdevs[0][it] + stdevs[1][it]*stdevs[1][it]))/Math.sqrt(no_for_EUdiff)) + "\n"); 
 
-					// \sigma^{t} against \sigma^t
-					for (int k = 0; k < no_agents; k++)
-						cmp_agents[k].setCondJointDistribution(PP[it]);					
-					ef.StrategyDistance(cmp_auction, no_for_EUdiff);
-					means[0][it] = Statistics.mean(ef.utility);
-					stdevs[0][it] = Statistics.stdev(ef.utility);
+					double[] temp = ef.RefinedStrategyDistance(cmp_auction, PP[it], no_for_EUdiff);
 					
-					// \sigma^{t+1} against \sigma^t
-					cmp_agents[0].setCondJointDistribution(PP[it+1]);
-					ef.StrategyDistance(cmp_auction, no_for_EUdiff);
-					means[1][it] = Statistics.mean(ef.utility);
-					stdevs[1][it] = Statistics.stdev(ef.utility);
-					
-					fw_EUdiff.write((means[1][it]-means[0][it]) + "," + ((Math.sqrt(stdevs[0][it]*stdevs[0][it] + stdevs[1][it]*stdevs[1][it]))/Math.sqrt(no_for_EUdiff)) + "\n");	// Assume additive stdev... 
-					System.out.print((means[1][it]-means[0][it]) + "," + ((Math.sqrt(stdevs[0][it]*stdevs[0][it] + stdevs[1][it]*stdevs[1][it]))/Math.sqrt(no_for_EUdiff)) + "\n"); 
+					fw_EUdiff.write((temp[0]) + "," + temp[1] + "\n");	// Assume additive stdev... 
+					System.out.print((temp[0]) + "," + temp[1] + "\n"); 
 	
 				}
 				fw_EUdiff.close();			
@@ -220,6 +229,7 @@ public class SCPoly_smoothed_SP {
 			
 			}
 		}
+	}
 	}
 }
 

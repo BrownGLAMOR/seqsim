@@ -32,7 +32,7 @@ public class EpsilonFactor2 {
 			
 			// record utility of agent 0
 			utility[j] = auction.profit[0];
-			}
+		}
 	}
 
 	// Refined calculation of strategy distance. 
@@ -47,13 +47,15 @@ public class EpsilonFactor2 {
 		JointCondFactory jcf = new JointCondFactory(auction.no_goods, oldP.precision, oldP.max_price);
 		
 		// evaluate u(\sigma^t,\sigma^t), also generate P[T] 
+		Cache.clearMDPpolicy();
 		JointCondDistributionEmpirical newP = jcf.simulAllAgentsOneRealPP(auction, no_pts/auction.no_agents, false, false, true);
 		means[0] = Statistics.mean(jcf.utility);
 		stdevs[0] = Statistics.stdev(jcf.utility);
 		
 		// evaluate u(\sigma^{t+1}, \sigma^t)
+		Cache.clearMDPpolicy();
 		auction.agents[0].setCondJointDistribution(newP);
-		EpsilonFactor2 ef = new EpsilonFactor2();	// XXX: can call itself here? I believe so. 
+		EpsilonFactor2 ef = new EpsilonFactor2(); 
 		ef.StrategyDistance(auction, no_pts);
 		means[1] = Statistics.mean(ef.utility);
 		stdevs[1] = Statistics.stdev(ef.utility);
