@@ -204,4 +204,136 @@ public class SeqAuction {
 		
 		game_no++;
 	}
+
+//	// Play without resetting values. This is to allow using the same values across different auction simulations. 
+//	public void playWithoutReset() throws IOException {
+//		// reset our internal variables
+//		
+//		// commented out those which really DON'T need to be cleared so long as the
+//		// agent knows not to read array entries which havn't been populated yet.
+//		// For example, if the agent it being asked to bid in auction n, it should
+//		// only read information for auctions 0, ..., n-1
+//		/*
+//		 for (int i = 0; i<no_goods; i++) {
+//			fp[i] = 0.0;
+//			sp[i] = 0.0;
+//			price[i] = 0.0;
+//			winner[i] = 0;
+//			
+//			for (int j = 0; j<no_agents; j++) {
+//				bids[i][j] = 0.0;	
+//			}
+//		}
+//		*/
+//
+//		for (int j = 0; j<no_agents; j++) {
+//			no_goods_won[j] = 0;
+//			payment[j] = 0.0;
+//			//valuation[j] = 0.0;
+//			profit[j] = 0.0;
+//			//tmp[j] = 0;
+//		}
+//		
+////		// tell all the agents that we are playing a new game.
+////		for (SeqAgent a : agents)
+////			a.reset(this);
+//				
+//		// play the game, one good at a time.
+//		for (int i = 0; i<no_goods; i++) {
+//			int cnt = 0;
+//			double _fp = 0;
+//			double _sp = 0;
+//			
+//			for (int j = 0; j<agents.length; j++) {
+//				// ask each agent for its bid
+//				double bid = agents[j].getBid(i);
+//				if (bid < 0)
+//					System.out.println("ERROR: bid of " + bid + " by agent " + j + " on good " + i + " is < 0");
+//				
+//				bids[i][j] = bid;
+//				
+//				// see if we have a new winner or new 2nd price?
+//				if (bid > _fp) {
+//					_sp = _fp;
+//					_fp = bid;
+//					
+//					tmp[0] = j;
+//					cnt = 1; // new highest bidder, force cnt to 1
+//				} else if (bid == _fp) {
+//					// additional winner. note that if agent 0 bids 0, this clause will activate. this is OK.
+//					// note that this causes sp to equal fp due to the tie.
+//					_sp = _fp;
+//					tmp[cnt++] = j;
+//				} else if (bid > _sp) {
+//					_sp = bid;
+//				}
+//			}
+//			
+//			// choose a random winner from the set of winners
+//			int winning_agent = tmp[rng.nextInt(cnt)];
+//			winner[i] = winning_agent;
+//
+//			fp[i] = _fp;
+//			sp[i] = _sp;
+//			price[i] = nth_price == 1 ? _fp : _sp;
+//
+//			// record that winner has a payment obligation & an additional item won
+//			// note that these are CUMULATIVE in the sense that they change as the auction progresses.
+//			// an agent may therefore query these during the course of the auction.
+//			payment[winning_agent] += price[i];
+//			no_goods_won[winning_agent] += 1; 
+//			valuation[winning_agent] = agents[winning_agent].v.getValue(no_goods_won[winning_agent]);
+//			profit[winning_agent] = valuation[winning_agent] - payment[winning_agent];
+//			
+//			// determine each agent's HOB for this good.
+//			// that is, if you are the winner the highest other bid is the second price of the auction. 
+//			// otherwise, the highest other bid is the first price of the auction.
+//			for (int j = 0; j<agents.length; j++) {
+//				hob[j][i] = winner[i] == j ? sp[i] : fp[i];
+//			}
+//			
+//			// note that we do not explicitly post results back to the agent.
+//			// if the agent desires to use auction information in its bidding
+//			// decision for the next round, it should inspect the member
+//			// variables of this auction (prices, bids, etc) during its getBid().			
+//		}
+//				
+//		game_no++;
+//	}
+//
+//	// Testing: playWithoutReset
+//	public static void main(String args[]) throws IOException {
+//		
+//		int no_goods = 3, no_agents = 3, nth_price = 2;
+//		int no_PP_pts = 10000000, no_EU_pts = 10000;
+//		double max_value = 1.0, max_price = max_value, precision = 0.05, v_precision = 0;
+//		boolean decreasing = true, discretize_value = false;
+//		Random rng = new Random();
+//		
+//		// Initiate comparing agents
+//		int fix_preference = 0;
+//		MDPAgentSP[] agents = new MDPAgentSP[no_agents];
+//		for (int k = 0; k < no_agents; k++)
+//			agents[k] = new MDPAgentSP(new MenezesMultiroundValue(max_value, rng, decreasing), k, fix_preference, discretize_value, v_precision);
+//		SeqAuction auction1 = new SeqAuction(agents, nth_price, no_goods);
+//		
+//		// Generate a PP
+//		PolynomialAgentMultiRound[] poly_agents = new PolynomialAgentMultiRound[no_agents];
+//		double order = 2.0;
+//		MenezesMultiroundValue[] poly_values = new MenezesMultiroundValue[no_agents];
+//		for (int i = 0; i<no_agents; i++){
+//			poly_values[i] = new MenezesMultiroundValue(max_value, rng, decreasing);
+//			poly_agents[i] = new PolynomialAgentMultiRound(poly_values[i], i, no_goods, order);
+//		}
+//		SeqAuction poly_auction = new SeqAuction(poly_agents, nth_price, no_goods);
+//		JointCondFactory jcf = new JointCondFactory(no_goods, precision, max_price);
+//		JointCondDistributionEmpirical PP0 = jcf.simulAllAgentsOnePP(poly_auction, no_PP_pts,false,false,true);
+//		
+//		// Compare! 
+//		
+//
+//
+//
+//	}
+
 }

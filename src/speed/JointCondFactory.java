@@ -19,8 +19,8 @@ public class JointCondFactory extends Thread {
 		this.max_price = max_price;
 	}
 	
-	// Uniform off-policy updates with symmetric strategy profile, and differentiating prices from hobs
-	public JointCondDistributionEmpirical offPolicySymmetricReal(SeqAuction auction, int no_simulations) throws IOException {	
+	// Uniform off-policy updates with symmetric strategy profile, and if real == true, differentiate prices from hobs
+	public JointCondDistributionEmpirical offPolicySymmetric(SeqAuction auction, int no_simulations, boolean real) throws IOException {	
 		
 		// Set agents
 		SeqAgent[] agents = new SeqAgent[auction.no_agents];
@@ -47,8 +47,11 @@ public class JointCondFactory extends Thread {
 					w[l] = true;
 				else
 					w[l] = false;
-			jcde.populateReal(w,auction.price,auction.hob[0]);
 
+				if (real == true)
+					jcde.populateReal(w,auction.price,auction.hob[0]);
+				else
+					jcde.populate(w, auction.hob[0]);
 			}
 		}
 		

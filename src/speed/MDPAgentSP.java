@@ -150,7 +150,7 @@ public class MDPAgentSP extends SeqAgent {
 				double value_if_win = v.getValue(winner.getSum()+1);
 				double value_if_lose = v.getValue(winner.getSum());
 				
-				// XXX: dv
+				// 
 				if (discretize_value == true){
 					value_if_win = v_precision*legacy.DiscreteDistribution.bin(value_if_win,v_precision);
 					value_if_lose = v_precision*legacy.DiscreteDistribution.bin(value_if_lose,v_precision);
@@ -191,7 +191,7 @@ public class MDPAgentSP extends SeqAgent {
 	    		// > Loop over past histories 
 	    		for (BooleanArray winner : Cache.getWinningHistory(t)) {
 	    			
-	    			wr = new WinnerAndRealized(winner, realized);	// TODO: do we need a new here? 
+	    			wr = new WinnerAndRealized(winner, realized); 
 	
 					// copy winner array (to append later)
 		    		for (int k = 0; k < winner.d.length; k++)
@@ -204,6 +204,7 @@ public class MDPAgentSP extends SeqAgent {
 					double temp = 0;								// Sum
 		    		for (int j = 0; j < b.length; j++){
 		    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p)
+//		    			Reward[j] = temp + 0.5*(j*jcde.precision)*condDist[j];	// XXX handling...
 		    			Reward[j] = temp;
 		    		}
 
@@ -215,11 +216,18 @@ public class MDPAgentSP extends SeqAgent {
 		    			double temp2 = Reward[i];
 
 		    			// if agent wins round t
-		    			for (int j = 0; j <= i; j++) {			    			// XXX: j <= i or j < i?
+		    			for (int j = 0; j <= i; j++) {
 		    				realized_plus.d[realized.d.length] = j;
 		    				winner_plus.d[winner.d.length] = true;
-		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));	// TODO: Do we need a new here? Can we Cache all possible WinnerAndRealized instances?  
+		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));  
 		    			}
+		    			
+//		    			// XXX: handle tie breaking: assume half chance of winning
+//	    				realized_plus.d[realized.d.length] = i;
+//	    				winner_plus.d[winner.d.length] = true;
+//	    				temp2 += 0.5*condDist[i] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
+//	    				winner_plus.d[winner.d.length] = false;
+//	    				temp2 += 0.5*condDist[i] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			
 		    			// if agent doesn't win round t
 		    			for (int j = i+1; j < condDist.length; j++) {
@@ -307,7 +315,7 @@ public class MDPAgentSP extends SeqAgent {
 		
 		if (discretize_value == true) {
 			
-			// Get strategy calculated in Cache if exist, or compute it and store it into Cache XXX: dv
+			// Get strategy calculated in Cache if exist, or compute it and store it into Cache
 			this.v_id = legacy.DiscreteDistribution.bin(v.getValue(1), v_precision);
 			if (Cache.hasMDPpolicy(v_id) == true){
 				pi = Cache.getMDPpolicy(v_id);
@@ -406,6 +414,7 @@ public class MDPAgentSP extends SeqAgent {
 		// figure out realized prices (hobs)
 		double[] realized = new double[good_id];
 		for (int i = 0; i < realized.length; i++)
+//			realized[i] = auction.price[i];	// XXX
 			realized[i] = auction.hob[agent_idx][i];
 		
 		// Get optimal bid

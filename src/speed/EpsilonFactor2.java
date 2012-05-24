@@ -8,10 +8,56 @@ import java.util.Random;
 public class EpsilonFactor2 {
 
 	double[] utility;
+	double[] utility_diff;
 	
 	public EpsilonFactor2() throws IOException {				
 	}
+	
+	// In both cases, the agents have to have the same  
+	public void StrategyDistance2(SeqAuction auction0, SeqAuction auction1, int no_iters) throws IOException{
+		
+		double[] utility_diff = new double[no_iters];
+		this.utility_diff = utility_diff;
+		
+		// Play auctions
+		for (int j = 0; j<no_iters; j++) {
+	
+			// Cause each agent to take on a new valuation by calling reset() on their valuation function
+			for (int k = 0; k < auction0.agents.length; k++)
+				auction0.agents[k].v.reset();
+		
+//			System.out.println("auction0.agents[0].v.getValue(1) = " + auction0.agents[0].v.getValue(1) + ", auction1.agents[0].v.getValue(1) = " + auction1.agents[0].v.getValue(1));
+			
+			// Play the auction. This will call the agent's reset(), which will cause MDP to be recomputed.
+			// so long as the agent's reset() function calls its computeMDP().
+			auction0.play(true, null);		// true=="quiet mode", null=="don't write to disk"
+			auction1.play(true, null);		// true=="quiet mode", null=="don't write to disk"
+			
+			// record utility of agent 0
+			utility_diff[j] = auction1.profit[0] - auction0.profit[0];
+		}
+	}
 
+	// Calculates refined epsilon factor: generate new PP with S samples, and then evaluate using N data points
+	public double[] RefinedStrategyDistance2(SeqAuction auction0, SeqAuction auction1, JointCondDistributionEmpirical oldP, MDPAgentSP different_agent, int N, int S) throws IOException{
+		
+		JointCondFactory jcf = new JointCondFactory(auction0.no_goods, oldP.precision, oldP.max_price);
+		
+		// generate new PP
+		JointCondDistributionEmpirical newP = jcf.simulAllAgentsOnePP(auction0, N/auction0.no_agents, false, false, false);
+		different_agent.setCondJointDistribution(newP);
+		
+		EpsilonFactor2 ef = new EpsilonFactor2(); 
+		ef.StrategyDistance2(auction0, auction1, S);
+		
+		// put together to return
+		double[] toreturn = new double[] {Statistics.mean(ef.utility_diff), Statistics.stdev(ef.utility_diff)};
+		
+		return toreturn;
+	}
+
+
+	
 	// Calculate the first agent's utility against the others 
 	public void StrategyDistance(SeqAuction auction, int no_iters) throws IOException{
 		
@@ -37,10 +83,10 @@ public class EpsilonFactor2 {
 
 	// Refined calculation of strategy distance. 
 	// 		INPUTS:
-	// auction: all agents endowed with P[T-1]; use no_pts/no_agents points to generate P[T], and no_pts to evaluate utility
+	// auction: all agents endowed with P[T-1]; use N/no_agents points to generate P[T], and N to evaluate utility
 	// 		OUTPUTS:
 	// a double[2] vector; [0] == difference in means, [1] == standard deviation
-	public double[] RefinedStrategyDistance(SeqAuction auction, JointCondDistributionEmpirical oldP, int no_pts) throws IOException{
+	public double[] RefinedStrategyDistance(SeqAuction auction, JointCondDistributionEmpirical oldP, int N) throws IOException{
 		
 		double[] means = new double[2], stdevs = new double[2];
 		
@@ -48,22 +94,21 @@ public class EpsilonFactor2 {
 		
 		// evaluate u(\sigma^t,\sigma^t), also generate P[T] 
 		Cache.clearMDPpolicy();
-		JointCondDistributionEmpirical newP = jcf.simulAllAgentsOneRealPP(auction, no_pts/auction.no_agents, false, false, true);
+		JointCondDistributionEmpirical newP = jcf.simulAllAgentsOnePP(auction, N/auction.no_agents, false, false, true);
 		means[0] = Statistics.mean(jcf.utility);
 		stdevs[0] = Statistics.stdev(jcf.utility);
 		
 		// evaluate u(\sigma^{t+1}, \sigma^t)
-		Cache.clearMDPpolicy();
 		auction.agents[0].setCondJointDistribution(newP);
 		EpsilonFactor2 ef = new EpsilonFactor2(); 
-		ef.StrategyDistance(auction, no_pts);
+		ef.StrategyDistance(auction, N);
 		means[1] = Statistics.mean(ef.utility);
 		stdevs[1] = Statistics.stdev(ef.utility);
 		
 		// put together to return
 		double[] toreturn = new double[2];
 		toreturn[0] = means[1]-means[0];
-		toreturn[1] = ((Math.sqrt(stdevs[0]*stdevs[0] + stdevs[1]*stdevs[1]))/Math.sqrt(no_pts));
+		toreturn[1] = ((Math.sqrt(stdevs[0]*stdevs[0] + stdevs[1]*stdevs[1]))/Math.sqrt(N));
 		
 		return toreturn;
 	}
@@ -86,8 +131,8 @@ public class EpsilonFactor2 {
 		
 		// simulation parameters
 		int no_initial_simulations = 10000000/no_agents;	// generating initial PP		
-		int T = 10;								// no. of Wellman updates
-		int[] NO_PTS = new int[] {1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000};
+		int T = 5;								// no. of Wellman updates
+		int[] NO_PTS = new int[] {1000, 2000, 5000, 10000, 20000, 50000, 100000};
 		int no_per_iteration = 100000;			// no. of games played in each Wellman iteration
 		double order = 1.0;
 
@@ -209,25 +254,40 @@ public class EpsilonFactor2 {
 			// initiate comparison tools
 			EpsilonFactor2 ef = new EpsilonFactor2();				
 			
+			// Different agents, shared values
 			int fix_preference = 0;
-			MDPAgentSP[] cmp_agents = new MDPAgentSP[no_agents];
-			for (int k = 0; k < no_agents; k++)
-				cmp_agents[k] = new MDPAgentSP(new MenezesMultiroundValue(max_value, rng, decreasing), k, fix_preference, discretize_value, v_precision);			
-			SeqAuction cmp_auction = new SeqAuction(cmp_agents, nth_price, no_goods);
-						
+			MDPAgentSP[] agents0 = new MDPAgentSP[no_agents];
+			MDPAgentSP[] agents1 = new MDPAgentSP[no_agents];			
+			MenezesMultiroundValue[] values = new MenezesMultiroundValue[no_agents];	// 
+			for (int k = 0; k < no_agents; k++){
+				values[k] = new MenezesMultiroundValue(max_value, rng, decreasing);
+				agents0[k] = new MDPAgentSP(values[k], k, fix_preference, discretize_value, v_precision);
+				agents1[k] = new MDPAgentSP(values[k], k, fix_preference, discretize_value, v_precision);
+			}
+			SeqAuction auction0 = new SeqAuction(agents0, nth_price, no_goods);
+			SeqAuction auction1 = new SeqAuction(agents1, nth_price, no_goods);
+
+			
 			// compute epsilon factor for final PP
 			for (int j = 0; j < NO_PTS.length; j++){
 				
-				int no_pts = NO_PTS[j];
+				int N = NO_PTS[j];
 				Cache.clearMDPpolicy();
 
-				// compute distance
-				for (int k = 0; k < no_agents; k++)
-					cmp_agents[k].setCondJointDistribution(PP[PP.length-1]);					
-				double[] temp = ef.RefinedStrategyDistance(cmp_auction, PP[PP.length-1], no_pts);
+				// Set distances
+				agents0[0].setCondJointDistribution(PP[PP.length-2]);
+				agents1[0].setCondJointDistribution(PP[PP.length-1]);
+				for (int k = 1; k < no_agents; k++){
+					agents0[k].setCondJointDistribution(PP[PP.length-2]);
+					agents1[k].setCondJointDistribution(PP[PP.length-2]);
+				}
+				
+				
+//				double[] temp = ef.RefinedStrategyDistance(cmp_auction, PP[PP.length-1], N);
+				ef.StrategyDistance2(auction0, auction1, N);
 												
-				fw_epsilon.write(no_pts + "," + temp[0] + "," + temp[1] + "\n"); 
-				System.out.print(no_pts + "," + temp[0] + "," + temp[1] + "\n"); 
+				fw_epsilon.write(N + "," + Statistics.mean(ef.utility_diff) + "," + Statistics.stdev(ef.utility_diff) + "\n"); 
+				System.out.print(N + "," + Statistics.mean(ef.utility_diff) + "," + Statistics.stdev(ef.utility_diff) + "\n"); 
 				
 			}
 			fw_epsilon.close();			
