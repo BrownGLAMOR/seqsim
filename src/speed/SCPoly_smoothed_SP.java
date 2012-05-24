@@ -12,20 +12,24 @@ public class SCPoly_smoothed_SP {
 		Random rng = new Random();
 		
 		// Parmaters to tune
-		boolean real = true;
+		boolean real = false;
 		boolean discretize_value = false;
 		double v_precision = 0.001;
-		int[] NO_PER_ITERATION = new int[]{100000};		// no. of pts for PP update
+		int[] NO_PER_ITERATION = new int[]{1000000};		// no. of pts for PP update
+		double order = 3.0;
+		
+		double epsilon = 0.00000001;
 		
 //		int S0 = 1000, S_refined = 100000;				// S0: initial pts for epsilon calculation; S_refined = 
-		int S_increment = 5000, S_max = 10000;								// no. of points for EU comparison		
+		int S_increment = 10000, S_max = 100000;								// no. of points for EU comparison		
 		
-		String type = "g";								// type of updating procedure XXX
+		String type = "u";								// type of updating procedure XXX
 		int preference;
-		if (type == "s")
-			preference = 3;
-		else
-			preference = 0;
+//		if (type == "s")
+//			preference = 3;
+//		else
+//			preference = 0;
+		preference = 0;
 
 		// Auction parameters
 		boolean decreasing = true;						// decreasing MV in Menezes valuation
@@ -37,9 +41,9 @@ public class SCPoly_smoothed_SP {
 		int nth_price = 2;
 		
 		// simulation parameters
-		double order = 1.0;
 		int no_initial_simulations = 1000000/no_agents;	// generating initial PP		
 		int max_iteration = 5;								// no. of Wellman updates 
+		int min_iteration = 5;								// minimum number of iterations to do
 		
 //			// Cooling scheme
 //			double gamma_0 = 0.9, gamma_end = 1.0;						// target \gamma values
@@ -106,16 +110,27 @@ public class SCPoly_smoothed_SP {
 				strategy[0][i] = poly_agents[0].getBid(0,0);
 			}	
 
-			// initiate updating & comparison agents
+			// initiate updating agents
+			MDPAgentSP[] updating_agents = new MDPAgentSP[no_agents];
+			for (int i = 0; i < no_agents; i++){
+				updating_agents[i] = new MDPAgentSP(values[i], i, preference, discretize_value, v_precision);
+				updating_agents[i].inputEpsilon(epsilon);
+			}
+			
+			// initiate comparing agents
 			MDPAgentSP[] agents0 = new MDPAgentSP[no_agents];
 			MDPAgentSP[] agents1 = new MDPAgentSP[no_agents];
-			
-			agents0[0] = new MDPAgentSP(values[0], 0, preference, discretize_value, v_precision);
-			agents1[0] = new MDPAgentSP(values[0], 0, preference, false, v_precision);		// he cannot use the Cached strategies
+			agents0[0] = new MDPAgentSP(values[0], 0, 0, discretize_value, v_precision);	// these guys should bid optimal? XXX
+			agents1[0] = new MDPAgentSP(values[0], 0, 0, false, v_precision);		// he cannot use the Cached strategies
+				agents0[0].inputEpsilon(epsilon);
+				agents1[0].inputEpsilon(epsilon);
 			for (int i = 1; i < no_agents; i++){
 				agents0[i] = new MDPAgentSP(values[i], i, preference, discretize_value, v_precision);
 				agents1[i] = new MDPAgentSP(values[i], i, preference, discretize_value, v_precision);
+					agents0[i].inputEpsilon(epsilon);
+					agents1[i].inputEpsilon(epsilon);
 			}
+			SeqAuction updating_auction = new SeqAuction(updating_agents, nth_price, no_goods);
 			SeqAuction auction0 = new SeqAuction(agents0, nth_price, no_goods);
 			SeqAuction auction1 = new SeqAuction(agents1, nth_price, no_goods);
 
@@ -128,23 +143,23 @@ public class SCPoly_smoothed_SP {
 				
 				// 2.1) generate new PP
 				for (int i = 0; i < no_agents; i++){
-					agents0[i].setCondJointDistribution(PP[it]);
+					updating_agents[i].setCondJointDistribution(PP[it]);
 //					agents0[i].inputGamma(GAMMA[it]);
 				}
 
 				Cache.clearMDPpolicy();
 				if (type == "u")
-					PP[it+1] = jcf.offPolicySymmetric(auction0, no_per_iteration,real);
+					PP[it+1] = jcf.offPolicySymmetric(updating_auction, no_per_iteration,real);
 				else
-					PP[it+1] = jcf.simulAllAgentsOnePP(auction0, no_per_iteration/no_agents, take_log, record_prices, record_utility);
-//					PP[it+1] = jcf.simulAllAgentsOneRealPP(auction0, no_per_iteration/no_agents, take_log, record_prices, record_utility);
+					PP[it+1] = jcf.simulAllAgentsOnePP(updating_auction, no_per_iteration/no_agents, take_log, record_prices, record_utility);
+//					PP[it+1] = jcf.simulAllAgentsOneRealPP(updating_auction, no_per_iteration/no_agents, take_log, record_prices, record_utility);
 				
 				// 2.2) output first round bids for comparison 
 				if (print_strategy == true) {
 					for (int i = 0; i < no_for_cmp; i++) {
 						values[0].x = v[i];
-						agents0[0].reset(null);		// recompute MDP
-						strategy[it+1][i] = agents0[0].getFirstRoundPi();
+						updating_agents[0].reset(null);		// recompute MDP
+						strategy[it+1][i] = updating_agents[0].getFirstRoundPi();
 					}	
 				}
 				
@@ -155,9 +170,12 @@ public class SCPoly_smoothed_SP {
 					EpsilonFactor2 ef = new EpsilonFactor2();				
 					
 					// compute distance with PP[it+1]
+					agents0[0].setCondJointDistribution(PP[it]);
 					agents1[0].setCondJointDistribution(PP[it+1]);
-					for (int k = 1; k < no_agents; k++)
+					for (int k = 1; k < no_agents; k++){
+						agents0[k].setCondJointDistribution(PP[it]);
 						agents1[k].setCondJointDistribution(PP[it]);
+					}
 					
 					int S = 0;
 					double tstat = 0.0;
@@ -181,7 +199,7 @@ public class SCPoly_smoothed_SP {
 					S_pts[it] = S;
 					
 					// convergence diagnosis
-					if (tstat < 2 && tstat > 0)
+					if (tstat < 2 && tstat > 0 && it > min_iteration)
 						converged = true;
 					
 				}

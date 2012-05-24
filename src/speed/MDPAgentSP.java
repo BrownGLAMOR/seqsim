@@ -67,7 +67,8 @@ public class MDPAgentSP extends SeqAgent {
 		cum_value = new double[price_length];
 		
 		for (int i = 0; i < b.length; i++)
-			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.5);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
+//			b[i] = jcde.precision*((i+(i+1))/2.0 - 0.5);		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
+			b[i] = jcde.precision*i;		// bid = (p_{i}+p_{i+1})/2 - 0.49999*precision
 		
 		tmp_Q = new double[price_length];		
 		Reward = new double[price_length];		
@@ -164,10 +165,13 @@ public class MDPAgentSP extends SeqAgent {
 				// Compute Reward and F(p)
 				temp = 0;
 	    		winning_prob = 0;
-	    		for (int j = 0; j*jcde.precision < optimal_bid && j < condDist.length; j++) {
+	    		int j;
+	    		for (j = 0; j*jcde.precision < optimal_bid && j < condDist.length; j++) {
 	    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p)
 	    			winning_prob += condDist[j];
 	    		}
+//	    		winning_prob -= 0.5*condDist[j];	// XXX: model tie breaking
+	    		
 
 	    		temp += winning_prob*v.getValue(winner.getSum()+1) + (1-winning_prob)*v.getValue(winner.getSum());	    		
 	    		V[t].put(wr, temp);
@@ -222,12 +226,14 @@ public class MDPAgentSP extends SeqAgent {
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));  
 		    			}
 		    			
-//		    			// XXX: handle tie breaking: assume half chance of winning
+		    			// XXX: handle tie breaking: assume half chance of winning
 //	    				realized_plus.d[realized.d.length] = i;
 //	    				winner_plus.d[winner.d.length] = true;
 //	    				temp2 += 0.5*condDist[i] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
+////	    				System.out.print("winning state value = " + V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus)));
 //	    				winner_plus.d[winner.d.length] = false;
 //	    				temp2 += 0.5*condDist[i] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
+////	    				System.out.println(", losing state value = " + V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus)));
 		    			
 		    			// if agent doesn't win round t
 		    			for (int j = i+1; j < condDist.length; j++) {
