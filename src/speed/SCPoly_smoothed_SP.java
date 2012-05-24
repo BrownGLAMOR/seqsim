@@ -13,10 +13,10 @@ public class SCPoly_smoothed_SP {
 		
 		// Parmaters to tune
 		boolean real = false;
-		boolean discretize_value = false;
-		double v_precision = 0.001;
-		int[] NO_PER_ITERATION = new int[]{1000000};		// no. of pts for PP update
-		double order = 3.0;
+		boolean discretize_value = true;
+		double v_precision = 0.0001;
+		int[] NO_PER_ITERATION = new int[]{10000000};		// no. of pts for PP update
+		double order = 1.0;
 		
 		double epsilon = 0.00000001;
 		
@@ -209,7 +209,8 @@ public class SCPoly_smoothed_SP {
 			// write strategies to file
 			if (print_strategy == true){
 
-				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/epsilonpursuit/" + type + no_goods + "_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + max_iteration + "_" + no_per_iteration + "pts.csv");
+//				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/epsilonpursuit/" + type + no_goods + "_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + max_iteration + "_" + no_per_iteration + "pts.csv");
+				FileWriter fw_strat = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/eric/" + type + no_goods + "_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + max_iteration + "_" + no_per_iteration + "pts.csv");
 
 				// write first round bidding functions
 				for (int i = 0; i < it; i++){
@@ -224,7 +225,8 @@ public class SCPoly_smoothed_SP {
 			// Write epsilons to file
 			if (compute_epsilon == true) {
 				
-				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/epsilonpursuit/" + type + no_goods + "epsilon_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + max_iteration + "_" + no_per_iteration + "pts.csv");
+//				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/epsilonpursuit/" + type + no_goods + "epsilon_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + max_iteration + "_" + no_per_iteration + "pts.csv");
+				FileWriter fw_EUdiff = new FileWriter("/Users/jl52/Desktop/Amy_paper/workspace/paper/june1st/SP/eric/" + type + no_goods + "epsilon_" + order + "_" + no_agents + "_" + precision + "_" + discretize_value + v_precision + "_" + max_iteration + "_" + no_per_iteration + "pts.csv");
 				
 				for (int t = 0; t < it; t++){
 					fw_EUdiff.write(S_pts[t] + "," + means[t] + "," + stdevs[t] + "\n"); 

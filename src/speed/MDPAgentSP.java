@@ -1,6 +1,7 @@
 package speed;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -123,7 +124,6 @@ public class MDPAgentSP extends SeqAgent {
 		this.rho_ready = true; 
 	}
 	
-	
 	// Compute optimal bidding	
 	public void computeFullMDP() {
 		
@@ -173,7 +173,7 @@ public class MDPAgentSP extends SeqAgent {
 //	    		winning_prob -= 0.5*condDist[j];	// XXX: model tie breaking
 	    		
 
-	    		temp += winning_prob*v.getValue(winner.getSum()+1) + (1-winning_prob)*v.getValue(winner.getSum());	    		
+	    		temp += winning_prob*value_if_win + (1-winning_prob)*value_if_lose;	 	// XXX: Eric   		
 	    		V[t].put(wr, temp);
 			}
 		}
@@ -182,11 +182,11 @@ public class MDPAgentSP extends SeqAgent {
 		// > Loop over auction t
 		for (t = jcde.no_goods-2; t>-1; t--) {
 
+			winner_plus = new BooleanArray(t+1);	// Needs to redeclare since size changing as t changes
+			realized_plus = new IntegerArray(t+1);
+			
     		// > Loop over possible realized historical prices
 			for (IntegerArray realized : Cache.getCartesianProduct(jcde.bins, t)) {
-				
-				winner_plus = new BooleanArray(t+1);	// Needs to redeclare since size changing as t changes
-				realized_plus = new IntegerArray(t+1);
 				
 				// copy realized prices (to append later)
 				for (int k = 0; k < realized.d.length; k++)
@@ -220,9 +220,10 @@ public class MDPAgentSP extends SeqAgent {
 		    			double temp2 = Reward[i];
 
 		    			// if agent wins round t
+	    				winner_plus.d[winner.d.length] = true;
 		    			for (int j = 0; j <= i; j++) {
+		    				//FIXME: tiebreaker issues
 		    				realized_plus.d[realized.d.length] = j;
-		    				winner_plus.d[winner.d.length] = true;
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));  
 		    			}
 		    			
@@ -236,9 +237,11 @@ public class MDPAgentSP extends SeqAgent {
 ////	    				System.out.println(", losing state value = " + V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus)));
 		    			
 		    			// if agent doesn't win round t
+	    				winner_plus.d[winner.d.length] = false;
 		    			for (int j = i+1; j < condDist.length; j++) {
+		    				//FIXME: assumes auctioneer gives highest opponent bid 
+		    				//  (in most auctions, this would only be true if you won)
 		    				realized_plus.d[realized.d.length] = j;
-		    				winner_plus.d[winner.d.length] = false;
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
 		    			}
 		    			
@@ -252,7 +255,7 @@ public class MDPAgentSP extends SeqAgent {
 	    			
 	    			// store Q values if need to Boltzman smooth later
 	    			if (preference == 3)
-	    				Q[t].put(wr, tmp_Q);
+	    				Q[t].put(wr, tmp_Q.clone());
 	    			
 	    			// just choose the best one
 	    			if (preference == 0 || preference == 3 || preference == 4){
@@ -335,7 +338,7 @@ public class MDPAgentSP extends SeqAgent {
 			}
 			else {
 				computeFullMDP();
-				Cache.storeMDPpolicy(v_id, pi);
+				Cache.storeMDPpolicy(v_id, deepCopy(pi));	// FIXME: may need to copy more deeply
 //				System.out.println("v_id = " + v_id + ", calculate MDP... ");
 			}
 		}
@@ -344,6 +347,21 @@ public class MDPAgentSP extends SeqAgent {
 		}
 	}
 
+	
+	public HashMap<WinnerAndRealized, Double>[] deepCopy(HashMap<WinnerAndRealized, Double>[] pi) {
+		HashMap<WinnerAndRealized, Double>[] newPi = new HashMap[jcde.no_goods]; // optimal bidding function \pi
+		
+		for (int i = 0; i<jcde.no_goods; i++)
+				newPi[i] = new HashMap<WinnerAndRealized, Double>();
+
+		for (int t = 0; t < jcde.no_goods; t++){
+			for (WinnerAndRealized wr : pi[t].keySet()){
+				newPi[t].put(new WinnerAndRealized(new BooleanArray(wr.w.d.clone()), new IntegerArray(wr.r.d.clone())), pi[t].get(wr));
+			}
+		}
+		return newPi;
+	}
+	
 	public void setCondJointDistribution(JointCondDistributionEmpirical jcde) {
 		this.jcde = jcde;
 		
