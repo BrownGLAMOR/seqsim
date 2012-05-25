@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Random;
 
-// TODO: This class still needs to be optimized for speed in populate() and getPMF().
+//       This class still needs to be optimized for speed in populate() and getPMF().
 //       In particular, get rid of the need to make a new Integer[] for each call.
 //       Maybe use thread local storage?
 
@@ -76,7 +76,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		int max_realizations = 1; 
 		for (int i = 0; i<no_goods; i++) {	
 			if (i != 0)
-				max_realizations *= no_bins;	// XXX: I believe this is right
+				max_realizations *= no_bins;
 			
 			this.prob[i] = new HashMap<WinnerAndRealized, double[]>(max_realizations);
 			this.CDF[i] = new HashMap<WinnerAndRealized, double[]>(max_realizations);
@@ -218,10 +218,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 				sum[i].put(wr, 1);
 				
 			} else {
-				p[bin(hob[i],precision)]++;
-
-				// TODO: Include some addition to near by bins as well, or to similar conditional situations as well
-				
+				p[bin(hob[i],precision)]++;				
 				// We don't need to make a copy of IntegerArray here because when put() overwrites an existing entry
 				// in the HashMap, it keeps the existing key.
 				sum[i].put(wr, sum[i].get(wr) + 1);
@@ -254,7 +251,6 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			temp[i] = bin(realized[i], precision);
 		}
 		
-		// XXX: has to NEW a WinnerAndRealized every time. Put it in Cache? 
 		populate(new WinnerAndRealized(new BooleanArray(winner),new IntegerArray(temp)));
 	}
 	
@@ -265,7 +261,7 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		// for all goods
 		for (int i = 0; i<no_goods; i++) {			
 
-			// normalize conditional pdfs and update cdfs XXX: should we do this for all possible WRs? 
+			// normalize conditional pdfs and update cdfs 
 			for (WinnerAndRealized wr : prob[i].keySet()) {
 				double[] p0 = prob[i].get(wr);
 				double[] p1 = jcde1.getPMF(wr);
@@ -281,7 +277,22 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 	
 	// Call this to normalize the collected data into a joint distribution
 	public void normalize() {
+
+		// FIXME: manually adding pseudo counts to all possible opponent bids
+		for (int t = 0; t < 1; t++){
+			for (WinnerAndRealized wr: prob[t].keySet()){
+				double[] p = prob[t].get(wr);
+//				double[] cdf = CDF[t].get(wr);
+				int s = sum[t].get(wr);
 				
+				for (int j = 0; j < p.length; j++){
+					p[j] ++;
+					s++;
+				}
+				sum[t].put(new WinnerAndRealized(new BooleanArray(wr.w.d), new IntegerArray(wr.r.d)), s);		// Need new? XXX				
+			}
+		}
+		
 		for (int i = 0; i<no_goods; i++) {			
 			
 			// normalize conditional pdfs and update cdfs
@@ -332,20 +343,16 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 			throw new IllegalArgumentException("no more goods");
 		
 		// return marginal if first round, and conditional pmf if later rounds
-		if (past.r.d.length == 0)
-			return marg_prob[0];
-		else {
+//		if (past.r.d.length == 0)	FIXME: does this work?
+//			return marg_prob[0];
+//		else {
 			double[] p = prob[past.r.d.length].get(past);
-//			System.out.println("getPMF, past.r.d.length = " + past.r.d.length);
 			
 			if (p == null) {
-				// ut-oh, return the unconditional (marginal) pmf for this good since we have no data
-				// todo: we return this when no samples == 0, but maybe we need logic to 
-				//       return this when no samples < viable threshold
 				p = marg_prob[past.r.d.length];
 			}
 			return p;
-		}
+//		}
 	}
 	
 	// Gets the probability mass function for good numbered "realized.length", conditional

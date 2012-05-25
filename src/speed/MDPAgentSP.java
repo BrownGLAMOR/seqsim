@@ -356,7 +356,7 @@ public class MDPAgentSP extends SeqAgent {
 
 		for (int t = 0; t < jcde.no_goods; t++){
 			for (WinnerAndRealized wr : pi[t].keySet()){
-				newPi[t].put(new WinnerAndRealized(new BooleanArray(wr.w.d.clone()), new IntegerArray(wr.r.d.clone())), pi[t].get(wr));
+				newPi[t].put(new WinnerAndRealized(new BooleanArray(wr.w.d), new IntegerArray(wr.r.d)), pi[t].get(wr));
 			}
 		}
 		return newPi;
