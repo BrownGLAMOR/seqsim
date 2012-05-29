@@ -15,10 +15,11 @@ public class MenezesAgent extends SeqAgent {
 	int no_goods_won;
 	int n, no_agents;
 	int i;
-	MenezesValue valuation;
+	Value valuation;
 	double x, delta_x, max_value, numerator, denominator, highestbid, lowestbid;
+	boolean decreasing;
 	
-	public MenezesAgent(MenezesValue valuation, int no_agents, int agent_idx, int type) {
+	public MenezesAgent(Value valuation, int no_agents, int agent_idx, int type, boolean decreasing) {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
 		this.n = no_agents;
@@ -26,6 +27,7 @@ public class MenezesAgent extends SeqAgent {
 		this.x = valuation.getValue(1);
 		this.delta_x = valuation.getValue(2);
 		this.type = type;
+		this.decreasing = decreasing;
 	}
 		// Calculate the first Bid
 	public double calculateFirstBid() {
@@ -65,7 +67,7 @@ public class MenezesAgent extends SeqAgent {
 				return (1-r)*(delta_x - x)*(delta_x - x) + r*java.lang.Math.sqrt(delta_x - x);
 			}
 		}
-		else if (valuation.decreasing == true) {
+		else if (decreasing == true) {
 			// upper bound of bids
 			numerator = java.lang.Math.pow(delta_x - x, n-1) + (n-2) * java.lang.Math.pow(x, n-1);
 			denominator = (n-1) * java.lang.Math.pow(x, n-2);

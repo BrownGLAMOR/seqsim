@@ -4,11 +4,11 @@ package speed;
 public class WeberAgent extends SeqAgent {
 
 	int agent_idx, no_agents, no_goods_won, no_goods, i;
-	UnitValue valuation;
+	Value valuation;
 	double x;
 	boolean first_price;
 	
-	public WeberAgent(UnitValue valuation, int agent_idx, int no_agents, int no_goods, boolean first_price) {
+	public WeberAgent(Value valuation, int agent_idx, int no_agents, int no_goods, boolean first_price) {
 		super(agent_idx, valuation);
 		this.agent_idx = agent_idx;
 		this.valuation = valuation;

@@ -44,6 +44,7 @@ public class Cache {
 	// store MDP policy computed by agent
 	static void storeMDPpolicy(int v_id, HashMap<WinnerAndRealized, Double>[] pi){
 		MDPpolicies.put(v_id, pi);
+//		System.out.println("MDPpolicies.size() = " + MDPpolicies.size());
 	}
 
 	// store Q map computed by agent

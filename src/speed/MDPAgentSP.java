@@ -47,6 +47,8 @@ public class MDPAgentSP extends SeqAgent {
 	double epsilon, rho, v_precision;
 	double[] GAMMA;
 	
+	boolean usingCachedPi;
+	
 	// make sure things are inputted
 	boolean epsilon_ready = false, gamma_ready = false, rho_ready = false;
 	
@@ -63,6 +65,7 @@ public class MDPAgentSP extends SeqAgent {
 	// Allocate memory for MDP calculation
 	@SuppressWarnings("unchecked")
 	private void allocate() {
+
 		// list of possible bids (to maximize over)
 		b = new double[price_length];
 		cum_value = new double[price_length];
@@ -170,10 +173,10 @@ public class MDPAgentSP extends SeqAgent {
 	    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p)
 	    			winning_prob += condDist[j];
 	    		}
-//	    		winning_prob -= 0.5*condDist[j];	// XXX: model tie breaking
 	    		
+	    		winning_prob -= 0.5*condDist[j];	// FIXME: model tie breaking
 
-	    		temp += winning_prob*value_if_win + (1-winning_prob)*value_if_lose;	 	// XXX: Eric   		
+	    		temp += winning_prob*value_if_win + (1-winning_prob)*value_if_lose;   		
 	    		V[t].put(wr, temp);
 			}
 		}
@@ -208,8 +211,9 @@ public class MDPAgentSP extends SeqAgent {
 					double temp = 0;								// Sum
 		    		for (int j = 0; j < b.length; j++){
 		    			temp += -(j*jcde.precision) * condDist[j];	// add -condDist*f(p)
-//		    			Reward[j] = temp + 0.5*(j*jcde.precision)*condDist[j];	// XXX handling...
-		    			Reward[j] = temp;
+
+		    			Reward[j] = temp + 0.5*(j*jcde.precision)*condDist[j];	// FIXME: tie breaker choices
+//		    			Reward[j] = temp;
 		    		}
 
 	    			
@@ -227,19 +231,17 @@ public class MDPAgentSP extends SeqAgent {
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));  
 		    			}
 		    			
-		    			// XXX: handle tie breaking: assume half chance of winning
+//		    			// handle tie breaking: assume half chance of winning
 //	    				realized_plus.d[realized.d.length] = i;
 //	    				winner_plus.d[winner.d.length] = true;
 //	    				temp2 += 0.5*condDist[i] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
-////	    				System.out.print("winning state value = " + V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus)));
 //	    				winner_plus.d[winner.d.length] = false;
 //	    				temp2 += 0.5*condDist[i] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
-////	    				System.out.println(", losing state value = " + V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus)));
 		    			
 		    			// if agent doesn't win round t
 	    				winner_plus.d[winner.d.length] = false;
 		    			for (int j = i+1; j < condDist.length; j++) {
-		    				//FIXME: assumes auctioneer gives highest opponent bid 
+		    				// FIXME: assumes auctioneer gives highest opponent bid 
 		    				//  (in most auctions, this would only be true if you won)
 		    				realized_plus.d[realized.d.length] = j;
 		    				temp2 += condDist[j] * V[t+1].get(new WinnerAndRealized(winner_plus, realized_plus));
@@ -321,6 +323,8 @@ public class MDPAgentSP extends SeqAgent {
 	@Override
 	public void reset(SeqAuction auction) {
 		this.auction = auction;		
+
+		this.usingCachedPi = false;
 		
 		if (discretize_value == true) {
 			
@@ -328,18 +332,12 @@ public class MDPAgentSP extends SeqAgent {
 			this.v_id = legacy.DiscreteDistribution.bin(v.getValue(1), v_precision);
 			if (Cache.hasMDPpolicy(v_id) == true){
 				pi = Cache.getMDPpolicy(v_id);
-				
-				// print first round bids
-//				System.out.println("v_id = " + v_id + ", pi[0] = " + pi[0].get(new WinnerAndRealized(new BooleanArray(new boolean[] {}), new IntegerArray(new int[] {}))));
-				
-//				if (preference == 3)	// TODO: to also Cache
-//					Q = Cache.getQmap(v_id);
-				
+				this.usingCachedPi = true;
 			}
 			else {
+				allocate();		// FIXME: Need to? 
 				computeFullMDP();
-				Cache.storeMDPpolicy(v_id, deepCopy(pi));	// FIXME: may need to copy more deeply
-//				System.out.println("v_id = " + v_id + ", calculate MDP... ");
+				Cache.storeMDPpolicy(v_id, deepCopy(pi));
 			}
 		}
 		else{
@@ -351,10 +349,11 @@ public class MDPAgentSP extends SeqAgent {
 	public HashMap<WinnerAndRealized, Double>[] deepCopy(HashMap<WinnerAndRealized, Double>[] pi) {
 		HashMap<WinnerAndRealized, Double>[] newPi = new HashMap[jcde.no_goods]; // optimal bidding function \pi
 		
+		// FIXME: no need to copy last round of pi
 		for (int i = 0; i<jcde.no_goods; i++)
 				newPi[i] = new HashMap<WinnerAndRealized, Double>();
 
-		for (int t = 0; t < jcde.no_goods; t++){
+		for (int t = 0; t < jcde.no_goods-1; t++){
 			for (WinnerAndRealized wr : pi[t].keySet()){
 				newPi[t].put(new WinnerAndRealized(new BooleanArray(wr.w.d), new IntegerArray(wr.r.d)), pi[t].get(wr));
 			}
@@ -362,6 +361,7 @@ public class MDPAgentSP extends SeqAgent {
 		return newPi;
 	}
 	
+	@Override
 	public void setCondJointDistribution(JointCondDistributionEmpirical jcde) {
 		this.jcde = jcde;
 		
@@ -391,8 +391,12 @@ public class MDPAgentSP extends SeqAgent {
 			realized.d[i] = JointDistributionEmpirical.bin(input_realized[i], jcde.precision);
 		
 		// Bid truthfully in the last round
-		if (good_id == jcde.no_goods - 1 || preference == -1 || preference == 0 || preference == 1 || preference == 2)
-			return pi[good_id].get(new WinnerAndRealized(winner, realized));
+		if (good_id == jcde.no_goods - 1 || preference == -1 || preference == 0 || preference == 1 || preference == 2){
+			if (good_id == jcde.no_goods - 1)
+				return v.getValue(winner.getSum()+1) - v.getValue(winner.getSum());		// XXX: changed
+			else
+				return pi[good_id].get(new WinnerAndRealized(winner, realized));
+		}
 		// In non-terminal rounds, can do softmaxing
 		else if (preference == 3){
 			tmp_Q = Q[good_id].get(new WinnerAndRealized(winner, realized));

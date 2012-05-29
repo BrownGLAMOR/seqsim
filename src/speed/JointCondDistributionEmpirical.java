@@ -254,8 +254,8 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 		populate(new WinnerAndRealized(new BooleanArray(winner),new IntegerArray(temp)));
 	}
 	
-	// Call this to add another jcde to the current one, with a weight. 
-	//	Basically, PP[0] --> w*PP[0] + (1-w)*PP[1] 
+	// Call this to add another jcde PP[t] to the current one PP[t+1], with a weight. 
+	//	Basically, PP[t+1] <-- w*PP[t+1] + (1-w)*PP[t] 
 	public void addJcde(JointCondDistributionEmpirical jcde1, double w) {
 		
 		// for all goods
@@ -269,10 +269,8 @@ public class JointCondDistributionEmpirical extends JointCondDistribution {
 
 				for (int j = 0; j < p0.length; j++)
 					p0[j] = (w*p0[j] + p1[j])/(1+w);
-
 			}
-			}
-//		normalize();
+		}
 		}
 	
 	// Call this to normalize the collected data into a joint distribution

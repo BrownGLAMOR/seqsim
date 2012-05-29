@@ -33,6 +33,8 @@ public abstract class SeqAgent {
 
 	public void setCondJointDistribution(JointCondDistributionEmpirical jcde){
 	}
+	
+	
 
 	
 }

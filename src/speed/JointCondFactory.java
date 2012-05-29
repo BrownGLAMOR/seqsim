@@ -2,6 +2,7 @@ package speed;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Random;
 import java.util.Set;
 
 public class JointCondFactory extends Thread {
@@ -19,6 +20,50 @@ public class JointCondFactory extends Thread {
 		this.max_price = max_price;
 	}
 	
+	// With prob eta, uniformly explore off-policy, otherwise play on-policy. Record from agents[0]'s perspective. 
+	// 			Works for symmetric profile case, and if real == true, differentiate prices from hobs
+	public JointCondDistributionEmpirical offPolicyEtaSymmetric(SeqAuction auction, double eta, double eta2, int no_simulations, boolean real) throws IOException {	
+		
+		Random rng = new Random();
+		
+		// Set agents
+		SeqAgent[] agents = auction.agents;
+		
+		// Initiate Vector of bids
+		JointCondDistributionEmpirical jcde = new JointCondDistributionEmpirical(no_goods, precision, max_price, false);		
+		boolean[] w = new boolean[no_goods];
+		
+		// Create JCDE -- from agent[0]'s perspective
+		for (int j = 0; j<no_simulations; j++) {
+			
+			// Cause each agent to take on a new valuation by calling reset() on their valuation function
+			for (int k = 0; k<agents.length; k++){
+				agents[k].v.reset();
+				agents[k].reset(auction);
+			}
+
+			// play
+			auction.playWithNoise(max_price, eta, eta2, rng);
+			
+			// Add results from agent[0] to PP distribution
+			for (int l = 0; l < no_goods; l++) {
+				if (auction.winner[l] == 0)
+					w[l] = true;
+				else
+					w[l] = false;
+
+				if (real == true)
+					jcde.populateReal(w,auction.price,auction.hob[0]);
+				else
+					jcde.populate(w, auction.hob[0]);
+			}
+		}
+		
+		jcde.normalize();		
+		return jcde;
+	}
+
+	
 	// Uniform off-policy updates with symmetric strategy profile, and if real == true, differentiate prices from hobs
 	public JointCondDistributionEmpirical offPolicySymmetric(SeqAuction auction, int no_simulations, boolean real) throws IOException {	
 		
@@ -34,8 +79,10 @@ public class JointCondFactory extends Thread {
 		for (int j = 0; j<no_simulations; j++) {
 			
 			// Cause each agent to take on a new valuation by calling reset() on their valuation function
-			for (int k = 1; k<agents.length; k++)
+			for (int k = 1; k<agents.length; k++){
 				agents[k].v.reset();
+				agents[k].reset(auction);
+			}
 		
 			// Play the auction. This will call the agent's reset(), which will cause MDP to be recomputed.
 			// so long as the agent's reset() function calls its computeMDP().

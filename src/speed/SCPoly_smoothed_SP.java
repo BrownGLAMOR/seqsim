@@ -4,7 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-// Do self-confirming smoothed updates initiated from Polynomial strategies, using Menezes decreasing valuation. Try other schemes later.  
+// Do self-confirming updates initiated from Polynomial strategies, using Menezes decreasing valuation. Try other schemes later.  
 public class SCPoly_smoothed_SP {
 	public static void main(String[] args) throws IOException {
 		Cache.init();
