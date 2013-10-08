@@ -311,7 +311,7 @@ public class SeqAuction {
 				poly_agents[k].reset(poly_auction);
 				poly_agents[k].v.reset();
 			}
-			poly_auction.playWithNoise(max_price, eta, rng);
+			poly_auction.playWithNoise(max_price, eta, eta, rng);
 		}
 		
 
