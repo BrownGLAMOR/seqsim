@@ -60,8 +60,8 @@ public class FullCondSC {
 		// initiate agents to compare bids
 		KatzHLValue value = new KatzHLValue(no_agents-1, max_value, rng);		
 		KatzmanUniformAgent katz_agent = new KatzmanUniformAgent(value, no_agents, 0);
-		FullCondMDPAgent mdp_agent_old = new FullCondMDPAgent(value, 1);
-		FullCondMDPAgent mdp_agent_new = new FullCondMDPAgent(value, 1);
+		FullCondMDPAgent mdp_agent_old = new FullCondMDPAgent(1, value);
+		FullCondMDPAgent mdp_agent_new = new FullCondMDPAgent(1, value);
 
 		
 		// 2) Wellman updates
@@ -103,7 +103,7 @@ public class FullCondSC {
 			// 2.2) Do next iteration to generate a new PP
 			FullCondMDPAgent[] mdp_agents = new FullCondMDPAgent[no_agents];
 			for (int i = 0; i < no_agents; i++) {
-				mdp_agents[i] = new FullCondMDPAgent(new KatzHLValue(no_agents-1, max_value, rng), i);
+				mdp_agents[i] = new FullCondMDPAgent(i, new KatzHLValue(no_agents-1, max_value, rng));
 				mdp_agents[i].setCondJointDistribution(PP[it]);
 			}
 			SeqAuction updating_auction = new SeqAuction(mdp_agents, nth_price, no_goods);

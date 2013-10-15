@@ -3,6 +3,8 @@ package speed;
 import java.util.HashMap;
 import java.util.Random;
 
+// FullCondMDPAgent learns the best response strategy.  This was mentioned in
+// a conversation with Jiacui on 2013-10-12.
 public class FullCondMDPAgent extends SeqAgent {
 	
 //	Random rng = new Random();
@@ -36,7 +38,7 @@ public class FullCondMDPAgent extends SeqAgent {
 	
 	WinnerAndRealized wr, wr_plus;
 
-	public FullCondMDPAgent(Value valuation, int agent_idx) {
+	public FullCondMDPAgent(int agent_idx, Value valuation) {
 		super(agent_idx, valuation);
 	}
 	

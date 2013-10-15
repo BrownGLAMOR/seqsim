@@ -85,7 +85,7 @@ public class FullCondSCRandomStart {
 		// agents to update for each stream
 		FullCondMDPAgent[] mdp_reporting_agents = new FullCondMDPAgent[no_cases];
 		for (int i = 0; i < no_cases; i++)
-			mdp_reporting_agents[i] = new FullCondMDPAgent(value, i);
+			mdp_reporting_agents[i] = new FullCondMDPAgent(i, value);
 		
 		
 		// 2) Wellman updates
@@ -121,7 +121,7 @@ public class FullCondSCRandomStart {
 			FullCondMDPAgent[][] mdp_updating_agents = new FullCondMDPAgent[4][no_agents];
 			for (int i = 0; i < no_cases; i++) {
 				for (int j = 0; j < no_agents; j++) {
-					mdp_updating_agents[i][j] = new FullCondMDPAgent(new MenezesValue(max_value, rng, decreasing), i);
+					mdp_updating_agents[i][j] = new FullCondMDPAgent(i, new MenezesValue(max_value, rng, decreasing));
 					mdp_updating_agents[i][j].setCondJointDistribution(PP[it][i]);
 				}
 			}

@@ -21,8 +21,8 @@ public class EpsilonFactor {
 	public void jcdeDistance(Random rng, JointCondDistributionEmpirical P, JointCondDistributionEmpirical Q, Value v, int no_iterations) throws IOException{
 		
 		// pass the same valuation, but set different PPs
-		FullCondMDPAgent agentP = new FullCondMDPAgent(v, 0);
-		FullCondMDPAgent agentQ = new FullCondMDPAgent(v, 1);
+		FullCondMDPAgent agentP = new FullCondMDPAgent(0, v);
+		FullCondMDPAgent agentQ = new FullCondMDPAgent(1, v);
 
 		agentP.setCondJointDistribution(P);
 		agentQ.setCondJointDistribution(Q);

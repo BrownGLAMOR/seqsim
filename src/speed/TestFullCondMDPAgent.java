@@ -17,7 +17,7 @@ public class TestFullCondMDPAgent {
 		// Test if MDP calculate is right (things printed within computeFullMDP)
 		Value v = new SimpleValue(no_goods);
 
-		FullCondMDPAgent agent = new FullCondMDPAgent(v, 1);
+		FullCondMDPAgent agent = new FullCondMDPAgent(1, v);
 		agent.setCondJointDistribution(jcde);
 		agent.computeFullMDP();
 		
