@@ -1,0 +1,1141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class-diagram version="1.1.4" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
+  associations="true" dependencies="false" nesting-relationships="true">  
+  <class id="1" language="java" name="speed.PolynomialAgentMultiRound" project="seqsim" 
+    file="/seqsim/src/speed/PolynomialAgentMultiRound.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="239" width="256" x="2055" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="2" language="java" name="speed.MDPSeqAgent" project="seqsim" file="/seqsim/src/speed/MDPSeqAgent.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="257" width="246" x="4150" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="3" language="java" name="speed.Cache" project="seqsim" file="/seqsim/src/speed/Cache.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="563" width="370" x="4005" y="1243"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="4" language="java" name="speed.JointCondDistribution" project="seqsim" 
+    file="/seqsim/src/speed/JointCondDistribution.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="239" width="272" x="6767" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="5" language="java" name="speed.SetValue" project="seqsim" file="/seqsim/src/speed/SetValue.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="131" width="123" x="3155" y="2008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="6" language="java" name="speed.FullCondMDPAgent4FP" project="seqsim" 
+    file="/seqsim/src/speed/FullCondMDPAgent4FP.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="833" width="314" x="3796" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="7" language="java" name="speed.SeqAuction" project="seqsim" file="/seqsim/src/speed/SeqAuction.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="419" width="269" x="4478" y="1243"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="8" language="java" name="speed.MenezesValue" project="seqsim" file="/seqsim/src/speed/MenezesValue.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="221" width="221" x="3318" y="2008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="9" language="java" name="speed.KatzmanAgent" project="seqsim" file="/seqsim/src/speed/KatzmanAgent.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="293" width="234" x="2819" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="10" language="java" name="speed.KatzmanUniformImpreciseAgent" project="seqsim" 
+    file="/seqsim/src/speed/KatzmanUniformImpreciseAgent.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="239" width="300" x="523" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="11" language="java" name="speed.MDPAgentFP_smoothed" project="seqsim" 
+    file="/seqsim/src/speed/MDPAgentFP_smoothed.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="941" width="314" x="4478" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="12" language="java" name="speed.SimpleValue" project="seqsim" file="/seqsim/src/speed/SimpleValue.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="131" width="123" x="3791" y="2008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="13" language="java" name="speed.UnitValue" project="seqsim" file="/seqsim/src/speed/UnitValue.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="167" width="154" x="3954" y="2008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="14" language="java" name="speed.JointCondDistributionEmpirical" project="seqsim" 
+    file="/seqsim/src/speed/JointCondDistributionEmpirical.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="725" width="298" x="5708" y="1243"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="15" language="java" name="speed.FullCondMDPAgent2" project="seqsim" 
+    file="/seqsim/src/speed/FullCondMDPAgent2.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="653" width="314" x="7079" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="16" language="java" name="speed.FullMDPAgent2" project="seqsim" file="/seqsim/src/speed/FullMDPAgent2.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="401" width="264" x="1126" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="17" language="java" name="speed.FullCondMDPAgent4" project="seqsim" 
+    file="/seqsim/src/speed/FullCondMDPAgent4.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="815" width="314" x="6048" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="18" language="java" name="speed.FullCondMDPAgent3" project="seqsim" 
+    file="/seqsim/src/speed/FullCondMDPAgent3.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="671" width="314" x="7433" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="19" language="java" name="speed.RandomSeqAgent" project="seqsim" 
+    file="/seqsim/src/speed/RandomSeqAgent.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="167" width="233" x="250" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="20" language="java" name="speed.WinnerAndRealized" project="seqsim" 
+    file="/seqsim/src/speed/WinnerAndRealized.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="185" width="260" x="5668" y="2008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="21" language="java" name="speed.MenezesMultiroundValue" project="seqsim" 
+    file="/seqsim/src/speed/MenezesMultiroundValue.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="221" width="270" x="2845" y="2008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="22" language="java" name="speed.SeqAgent" project="seqsim" file="/seqsim/src/speed/SeqAgent.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="167" width="314" x="3756" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="23" language="java" name="speed.Value" project="seqsim" file="/seqsim/src/speed/Value.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="113" width="126" x="3440" y="1243"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="24" language="java" name="speed.KatzmanUniformAgent" project="seqsim" 
+    file="/seqsim/src/speed/KatzmanUniformAgent.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="239" width="198" x="2351" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="25" language="java" name="speed.HOBAgent" project="seqsim" file="/seqsim/src/speed/HOBAgent.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="131" width="168" x="42" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="26" language="java" name="speed.PolynomialAgent" project="seqsim" 
+    file="/seqsim/src/speed/PolynomialAgent.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="185" width="190" x="2589" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="27" language="java" name="speed.FullMDPNumGoodsSeqAgent" project="seqsim" 
+    file="/seqsim/src/speed/FullMDPNumGoodsSeqAgent.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="347" width="264" x="1430" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="28" language="java" name="speed.DMUValue" project="seqsim" file="/seqsim/src/speed/DMUValue.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="203" width="172" x="3579" y="2008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="29" language="java" name="speed.SimpleAgent" project="seqsim" file="/seqsim/src/speed/SimpleAgent.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="131" width="138" x="3093" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="30" language="java" name="speed.MenezesAgent" project="seqsim" file="/seqsim/src/speed/MenezesAgent.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="419" width="218" x="3271" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="31" language="java" name="speed.MDPAgentSP_smoothed" project="seqsim" 
+    file="/seqsim/src/speed/MDPAgentSP_smoothed.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="869" width="314" x="4832" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="32" language="java" name="speed.WeberAgent" project="seqsim" file="/seqsim/src/speed/WeberAgent.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="239" width="206" x="3529" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="33" language="java" name="speed.FullMDPSeqAgent" project="seqsim" 
+    file="/seqsim/src/speed/FullMDPSeqAgent.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="563" width="281" x="1734" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="34" language="java" name="speed.KatzHLValue" project="seqsim" file="/seqsim/src/speed/KatzHLValue.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="221" width="185" x="523" y="2008"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="35" language="java" name="speed.MDPAgentSP" project="seqsim" file="/seqsim/src/speed/MDPAgentSP.java" 
+    binary="false" corner="BOTTOM_RIGHT">    
+    <position height="959" width="468" x="5186" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="36" language="java" name="speed.FullCondMDPAgent" project="seqsim" 
+    file="/seqsim/src/speed/FullCondMDPAgent.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="581" width="314" x="5694" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="37" language="java" name="speed.JointCondDistributionEmpirical_old" project="seqsim" 
+    file="/seqsim/src/speed/JointCondDistributionEmpirical_old.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="581" width="277" x="6172" y="1243"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="38" language="java" name="speed.JointDistributionEmpirical" project="seqsim" 
+    file="/seqsim/src/speed/JointDistributionEmpirical.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="599" width="232" x="1288" y="1243"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="39" language="java" name="speed.FullCondMDPsmoothedAgent" project="seqsim" 
+    file="/seqsim/src/speed/FullCondMDPsmoothedAgent.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="869" width="325" x="6402" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="40" language="java" name="speed.JointDistribution" project="seqsim" 
+    file="/seqsim/src/speed/JointDistribution.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="257" width="223" x="863" y="244"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <generalization id="41">    
+    <end type="SOURCE" refId="38"/>    
+    <end type="TARGET" refId="40"/>  
+  </generalization>  
+  <association id="42">    
+    <end type="SOURCE" refId="2" navigable="false">      
+      <attribute id="43" name="auction"/>      
+      <multiplicity id="44" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="45">    
+    <end type="SOURCE" refId="36" navigable="false">      
+      <attribute id="46" name="auction"/>      
+      <multiplicity id="47" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="48">    
+    <end type="SOURCE" refId="10"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="49">    
+    <end type="SOURCE" refId="35" navigable="false">      
+      <attribute id="50" name="auction"/>      
+      <multiplicity id="51" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="52">    
+    <end type="SOURCE" refId="32"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="53">    
+    <end type="SOURCE" refId="18" navigable="false">      
+      <attribute id="54" name="jcde"/>      
+      <multiplicity id="55" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="56">    
+    <bendpoint x="5677" y="1243"/>    
+    <end type="SOURCE" refId="36" navigable="false">      
+      <attribute id="57" name="tmp_wr"/>      
+      <multiplicity id="58" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="59">    
+    <end type="SOURCE" refId="26"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="60">    
+    <bendpoint x="5238" y="1243"/>    
+    <end type="SOURCE" refId="31" navigable="false">      
+      <attribute id="61" name="wr"/>      
+      <multiplicity id="62" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="63">    
+    <end type="SOURCE" refId="33" navigable="false">      
+      <attribute id="64" name="valuation"/>      
+      <multiplicity id="65" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="66">    
+    <bendpoint x="6120" y="1243"/>    
+    <end type="SOURCE" refId="39" navigable="false">      
+      <attribute id="67" name="wr_plus"/>      
+      <multiplicity id="68" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="69">    
+    <end type="SOURCE" refId="24" navigable="false">      
+      <attribute id="70" name="v"/>      
+      <multiplicity id="71" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="72">    
+    <end type="SOURCE" refId="30" navigable="false">      
+      <attribute id="73" name="valuation"/>      
+      <multiplicity id="74" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="75">    
+    <bendpoint x="6036" y="1243"/>    
+    <end type="SOURCE" refId="17" navigable="false">      
+      <attribute id="76" name="tmp_wr"/>      
+      <multiplicity id="77" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="78">    
+    <end type="SOURCE" refId="39" navigable="false">      
+      <attribute id="79" name="jcde"/>      
+      <multiplicity id="80" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="81">    
+    <bendpoint x="5415" y="1243"/>    
+    <end type="SOURCE" refId="35" navigable="false">      
+      <attribute id="82" name="wr"/>      
+      <multiplicity id="83" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="84">    
+    <end type="SOURCE" refId="16" navigable="false">      
+      <attribute id="85" name="jde"/>      
+      <multiplicity id="86" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="38" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="87">    
+    <bendpoint x="6563" y="1243"/>    
+    <end type="SOURCE" refId="18" navigable="false">      
+      <attribute id="88" name="wr_plus"/>      
+      <multiplicity id="89" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="90">    
+    <end type="SOURCE" refId="3" navigable="false">      
+      <attribute id="91" name="idx2WR"/>      
+      <multiplicity id="92" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="93">    
+    <end type="SOURCE" refId="27" navigable="false">      
+      <attribute id="94" name="jde"/>      
+      <multiplicity id="95" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="38" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="96">    
+    <end type="SOURCE" refId="31" navigable="false">      
+      <attribute id="97" name="jcde"/>      
+      <multiplicity id="98" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="99">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="100">    
+    <bendpoint x="6521" y="1243"/>    
+    <end type="SOURCE" refId="15" navigable="false">      
+      <attribute id="101" name="tmp_wr"/>      
+      <multiplicity id="102" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="103">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="23"/>  
+  </generalization>  
+  <generalization id="104">    
+    <end type="SOURCE" refId="13"/>    
+    <end type="TARGET" refId="23"/>  
+  </generalization>  
+  <association id="105">    
+    <end type="SOURCE" refId="33" navigable="false">      
+      <attribute id="106" name="auction"/>      
+      <multiplicity id="107" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="108">    
+    <end type="SOURCE" refId="11" navigable="false">      
+      <attribute id="109" name="auction"/>      
+      <multiplicity id="110" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="111">    
+    <end type="SOURCE" refId="18"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="112">    
+    <end type="SOURCE" refId="26" navigable="false">      
+      <attribute id="113" name="valuation"/>      
+      <multiplicity id="114" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="115">    
+    <bendpoint x="4426" y="244"/>    
+    <end type="SOURCE" refId="22" navigable="false">      
+      <attribute id="116" name="auction"/>      
+      <multiplicity id="117" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="118">    
+    <end type="SOURCE" refId="15"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="119">    
+    <end type="SOURCE" refId="39" navigable="false">      
+      <attribute id="120" name="auction"/>      
+      <multiplicity id="121" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="122">    
+    <end type="SOURCE" refId="36"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="123">    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="124" name="jcde"/>      
+      <multiplicity id="125" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="126">    
+    <end type="SOURCE" refId="37" navigable="false">      
+      <attribute id="127" name="wr_tmp"/>      
+      <multiplicity id="128" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="129">    
+    <end type="SOURCE" refId="8"/>    
+    <end type="TARGET" refId="23"/>  
+  </generalization>  
+  <association id="130">    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="131" name="valuation"/>      
+      <multiplicity id="132" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="133">    
+    <end type="SOURCE" refId="17" navigable="false">      
+      <attribute id="134" name="auction"/>      
+      <multiplicity id="135" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="136">    
+    <bendpoint x="4447" y="1243"/>    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="137" name="wr_plus"/>      
+      <multiplicity id="138" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="139">    
+    <end type="SOURCE" refId="34"/>    
+    <end type="TARGET" refId="23"/>  
+  </generalization>  
+  <generalization id="140">    
+    <end type="SOURCE" refId="28"/>    
+    <end type="TARGET" refId="23"/>  
+  </generalization>  
+  <generalization id="141">    
+    <end type="SOURCE" refId="17"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="142">    
+    <end type="SOURCE" refId="11" navigable="false">      
+      <attribute id="143" name="valuation"/>      
+      <multiplicity id="144" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="145">    
+    <bendpoint x="6542" y="1243"/>    
+    <end type="SOURCE" refId="18" navigable="false">      
+      <attribute id="146" name="tmp_wr"/>      
+      <multiplicity id="147" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="148">    
+    <bendpoint x="5436" y="1243"/>    
+    <end type="SOURCE" refId="35" navigable="false">      
+      <attribute id="149" name="wr_plus"/>      
+      <multiplicity id="150" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="151">    
+    <end type="SOURCE" refId="33" navigable="false">      
+      <attribute id="152" name="jde"/>      
+      <multiplicity id="153" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="38" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="154">    
+    <end type="SOURCE" refId="31" navigable="false">      
+      <attribute id="155" name="valuation"/>      
+      <multiplicity id="156" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="157">    
+    <end type="SOURCE" refId="33"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <generalization id="158">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="159">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="160" name="valuation"/>      
+      <multiplicity id="161" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="162">    
+    <end type="SOURCE" refId="36" navigable="false">      
+      <attribute id="163" name="jcde"/>      
+      <multiplicity id="164" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="165">    
+    <end type="SOURCE" refId="14" navigable="false">      
+      <attribute id="166" name="wr_tmp"/>      
+      <multiplicity id="167" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="168">    
+    <bendpoint x="6500" y="1243"/>    
+    <end type="SOURCE" refId="15" navigable="false">      
+      <attribute id="169" name="wr_plus"/>      
+      <multiplicity id="170" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="171">    
+    <bendpoint x="6141" y="1243"/>    
+    <end type="SOURCE" refId="39" navigable="false">      
+      <attribute id="172" name="tmp_wr"/>      
+      <multiplicity id="173" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="174">    
+    <bendpoint x="5082" y="1243"/>    
+    <end type="SOURCE" refId="11" navigable="false">      
+      <attribute id="175" name="wr"/>      
+      <multiplicity id="176" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="177">    
+    <end type="SOURCE" refId="21"/>    
+    <end type="TARGET" refId="23"/>  
+  </generalization>  
+  <association id="178">    
+    <bendpoint x="4405" y="1243"/>    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="179" name="tmp_wr"/>      
+      <multiplicity id="180" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="181">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <generalization id="182">    
+    <end type="SOURCE" refId="27"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <generalization id="183">    
+    <end type="SOURCE" refId="39"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <generalization id="184">    
+    <end type="SOURCE" refId="16"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <generalization id="185">    
+    <end type="SOURCE" refId="37"/>    
+    <end type="TARGET" refId="4"/>  
+  </generalization>  
+  <association id="186">    
+    <bendpoint x="4426" y="1243"/>    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="187" name="wr"/>      
+      <multiplicity id="188" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="189">    
+    <bendpoint x="6057" y="1243"/>    
+    <end type="SOURCE" refId="17" navigable="false">      
+      <attribute id="190" name="wr_plus"/>      
+      <multiplicity id="191" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="192">    
+    <end type="SOURCE" refId="14"/>    
+    <end type="TARGET" refId="4"/>  
+  </generalization>  
+  <association id="193">    
+    <end type="SOURCE" refId="3" navigable="false">      
+      <attribute id="194" name="allWR"/>      
+      <multiplicity id="195" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="196">    
+    <bendpoint x="6078" y="1243"/>    
+    <end type="SOURCE" refId="17" navigable="false">      
+      <attribute id="197" name="wr"/>      
+      <multiplicity id="198" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="199">    
+    <bendpoint x="3765" y="244"/>    
+    <end type="SOURCE" refId="22" navigable="false">      
+      <attribute id="200" name="v"/>      
+      <multiplicity id="201" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="202">    
+    <end type="SOURCE" refId="24"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <generalization id="203">    
+    <end type="SOURCE" refId="31"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <generalization id="204">    
+    <end type="SOURCE" refId="11"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="205">    
+    <end type="SOURCE" refId="15" navigable="false">      
+      <attribute id="206" name="jcde"/>      
+      <multiplicity id="207" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="208">    
+    <end type="SOURCE" refId="39" navigable="false">      
+      <attribute id="209" name="valuation"/>      
+      <multiplicity id="210" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="211">    
+    <end type="SOURCE" refId="16" navigable="false">      
+      <attribute id="212" name="auction"/>      
+      <multiplicity id="213" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="214">    
+    <end type="SOURCE" refId="14" navigable="false">      
+      <attribute id="215" name="past"/>      
+      <multiplicity id="216" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="217">    
+    <bendpoint x="5457" y="1243"/>    
+    <end type="SOURCE" refId="35" navigable="false">      
+      <attribute id="218" name="tmp_wr"/>      
+      <multiplicity id="219" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="220">    
+    <bendpoint x="5656" y="1243"/>    
+    <end type="SOURCE" refId="36" navigable="false">      
+      <attribute id="221" name="wr"/>      
+      <multiplicity id="222" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="223">    
+    <end type="SOURCE" refId="35"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="224">    
+    <end type="SOURCE" refId="35" navigable="false">      
+      <attribute id="225" name="jcde"/>      
+      <multiplicity id="226" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="227">    
+    <end type="SOURCE" refId="37" navigable="false">      
+      <attribute id="228" name="log"/>      
+      <multiplicity id="229" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="230">    
+    <end type="SOURCE" refId="32" navigable="false">      
+      <attribute id="231" name="valuation"/>      
+      <multiplicity id="232" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="233">    
+    <end type="SOURCE" refId="29"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="234">    
+    <end type="SOURCE" refId="15" navigable="false">      
+      <attribute id="235" name="auction"/>      
+      <multiplicity id="236" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="237">    
+    <end type="SOURCE" refId="11" navigable="false">      
+      <attribute id="238" name="jcde"/>      
+      <multiplicity id="239" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="240">    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="241" name="auction"/>      
+      <multiplicity id="242" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="243">    
+    <end type="SOURCE" refId="19"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <generalization id="244">    
+    <end type="SOURCE" refId="30"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="245">    
+    <bendpoint x="532" y="1243"/>    
+    <end type="SOURCE" refId="10" navigable="false">      
+      <attribute id="246" name="v"/>      
+      <multiplicity id="247" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="34" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="248">    
+    <end type="SOURCE" refId="37" navigable="false">      
+      <attribute id="249" name="past"/>      
+      <multiplicity id="250" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="251">    
+    <bendpoint x="5061" y="1243"/>    
+    <end type="SOURCE" refId="11" navigable="false">      
+      <attribute id="252" name="tmp_wr"/>      
+      <multiplicity id="253" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="254">    
+    <bendpoint x="5103" y="1243"/>    
+    <end type="SOURCE" refId="11" navigable="false">      
+      <attribute id="255" name="wr_plus"/>      
+      <multiplicity id="256" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="257">    
+    <end type="SOURCE" refId="25"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="258">    
+    <bendpoint x="6479" y="1243"/>    
+    <end type="SOURCE" refId="15" navigable="false">      
+      <attribute id="259" name="wr"/>      
+      <multiplicity id="260" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="261">    
+    <bendpoint x="5635" y="1243"/>    
+    <end type="SOURCE" refId="36" navigable="false">      
+      <attribute id="262" name="wr_plus"/>      
+      <multiplicity id="263" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="264">    
+    <bendpoint x="5259" y="1243"/>    
+    <end type="SOURCE" refId="31" navigable="false">      
+      <attribute id="265" name="tmp_wr"/>      
+      <multiplicity id="266" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="267">    
+    <bendpoint x="6099" y="1243"/>    
+    <end type="SOURCE" refId="39" navigable="false">      
+      <attribute id="268" name="wr"/>      
+      <multiplicity id="269" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="270">    
+    <end type="SOURCE" refId="17" navigable="false">      
+      <attribute id="271" name="valuation"/>      
+      <multiplicity id="272" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="273">    
+    <end type="SOURCE" refId="31" navigable="false">      
+      <attribute id="274" name="auction"/>      
+      <multiplicity id="275" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="276">    
+    <end type="SOURCE" refId="27" navigable="false">      
+      <attribute id="277" name="auction"/>      
+      <multiplicity id="278" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="279">    
+    <bendpoint x="4447" y="244"/>    
+    <end type="SOURCE" refId="7" navigable="false">      
+      <attribute id="280" name="agents"/>      
+      <multiplicity id="281" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="22" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="282">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="23"/>  
+  </generalization>  
+  <association id="283">    
+    <bendpoint x="5280" y="1243"/>    
+    <end type="SOURCE" refId="31" navigable="false">      
+      <attribute id="284" name="wr_plus"/>      
+      <multiplicity id="285" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="286">    
+    <end type="SOURCE" refId="29" navigable="false">      
+      <attribute id="287" name="valuation"/>      
+      <multiplicity id="288" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="289">    
+    <end type="SOURCE" refId="18" navigable="false">      
+      <attribute id="290" name="auction"/>      
+      <multiplicity id="291" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="292">    
+    <end type="SOURCE" refId="17" navigable="false">      
+      <attribute id="293" name="jcde"/>      
+      <multiplicity id="294" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="295">    
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="22"/>  
+  </generalization>  
+  <association id="296">    
+    <end type="SOURCE" refId="9" navigable="false">      
+      <attribute id="297" name="valuation"/>      
+      <multiplicity id="298" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="23" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="299">    
+    <bendpoint x="6584" y="1243"/>    
+    <end type="SOURCE" refId="18" navigable="false">      
+      <attribute id="300" name="wr"/>      
+      <multiplicity id="301" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+    accessors="true" visibility="true">    
+    <attributes public="true" package="true" protected="true" private="true" static="true"/>    
+    <operations public="true" package="true" protected="true" private="true" static="true"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>
